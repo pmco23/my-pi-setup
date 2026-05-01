@@ -10,7 +10,7 @@
 
 ## Test
 
-- `cd extensions/workflow-orchestrator && npm test` — runs 51 unit tests
+- `cd extensions/workflow-orchestrator && npm test` — runs 54 unit tests
 
 ## Lint / Format
 

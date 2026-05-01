@@ -29,7 +29,6 @@ function defaultConfig(mode = 'user-in-the-loop') {
       'review-against-plan': ['execute', 'code-review', 'none'],
       'code-review': ['execute', 'review-against-plan', 'none'],
       'project-intake': ['plan', 'none'],
-      'workflow-orchestrator': ['project-intake', 'brainstorm-spec', 'acceptance-criteria', 'plan', 'execute', 'review-against-plan', 'code-review', 'none'],
     },
     support_skills: {
       'find-docs': {

@@ -21,7 +21,7 @@
 
 - **Add a new extension command**: add handler in `src/commands.js`, register in `index.ts`, add test in `test/commands.test.js`.
 - **Change evaluator logic**: edit `src/evaluator.js`, update `test/evaluator.test.js`.
-- **Change config shape**: edit `defaultConfig()` in `src/config.js`, update template in `skills/workflow-orchestrator/assets/`, update tests.
+- **Change config shape**: edit `defaultConfig()` in `src/config.js`, update tests.
 - **Add a new skill**: create `skills/<name>/SKILL.md`, add to `transitions` and `allowed_skills` in `src/config.js`.
 - **Reinstall after changes**: run `./scripts/install.sh` then `/reload` in pi.
 
@@ -52,5 +52,4 @@ Expected: 51 tests, 0 failures.
 
 - `deprecated/prompts/`: historical reference only.
 - `settings/global-settings.json`: reference copy, not used by pi directly.
-- `skills/workflow-orchestrator/scripts/`: legacy CLI scripts, superseded by extension modules.
-- `.pi/project-map/graph/graph.json`: regenerate via graphify, do not hand-edit.
+- `.pi/project-map/graph/graph.json`: regenerate via `/workflow:refresh`, do not hand-edit.

@@ -35,4 +35,3 @@ All under `extensions/workflow-orchestrator/test/`:
 - No integration tests that run commands inside a real pi RPC session.
 - No tests for the `agent_end` hook wiring in `index.ts` (only pure `planAutoContinuation` is tested).
 - No test for graphify output parsing (graphify is invoked by the skill, not the extension).
-- Legacy CLI scripts (`evaluate-handoff.js`, `init-project-workflow.js`) are not covered by the extension test suite.

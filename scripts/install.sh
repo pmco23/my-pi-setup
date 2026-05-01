@@ -5,13 +5,13 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 mkdir -p "$HOME/.agents/skills" "$HOME/.pi/agent/prompts" "$HOME/.pi/agent/extensions" "$HOME/.pi/agent"
 
-rsync -a "$ROOT/skills/" "$HOME/.agents/skills/"
+rsync -a --delete "$ROOT/skills/" "$HOME/.agents/skills/"
 rm -f "$HOME/.pi/agent/prompts"/workflow-*.md
 if [[ -d "$ROOT/prompts" ]]; then
-  rsync -a "$ROOT/prompts/" "$HOME/.pi/agent/prompts/"
+  rsync -a --delete "$ROOT/prompts/" "$HOME/.pi/agent/prompts/"
 fi
 if [[ -d "$ROOT/extensions" ]]; then
-  rsync -a "$ROOT/extensions/" "$HOME/.pi/agent/extensions/"
+  rsync -a --delete "$ROOT/extensions/" "$HOME/.pi/agent/extensions/"
 fi
 
 SETTINGS="$HOME/.pi/agent/settings.json"
@@ -52,7 +52,6 @@ Available extension commands:
 - /workflow:resume
 
 Available skill commands:
-- /skill:workflow-orchestrator
 - /skill:project-intake
 - /skill:brainstorm-spec
 - /skill:acceptance-criteria

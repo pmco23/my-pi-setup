@@ -155,13 +155,13 @@ You can also invoke skills directly:
 
 ```text
 /skill:project-intake
+/skill:project-intake
 /skill:brainstorm-spec
 /skill:acceptance-criteria
 /skill:plan
 /skill:execute
 /skill:review-against-plan
 /skill:code-review
-/skill:workflow-orchestrator
 ```
 
 Use direct skills when you want to jump to a specific stage instead of using the orchestrator.

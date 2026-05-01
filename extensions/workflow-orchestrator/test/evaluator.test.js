@@ -24,7 +24,6 @@ function baseConfig(overrides = {}) {
       execute: ['review-against-plan'],
       'review-against-plan': ['execute', 'code-review', 'none'],
       'code-review': ['execute', 'review-against-plan', 'none'],
-      'workflow-orchestrator': ['brainstorm-spec', 'acceptance-criteria', 'plan', 'execute', 'review-against-plan', 'code-review', 'none'],
     },
     active_workflow: { id: null, mode: null, current_skill: null, next_skill: null, artifact_log: null, updated_at: null },
     ...overrides,

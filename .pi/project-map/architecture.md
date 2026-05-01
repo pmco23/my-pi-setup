@@ -26,7 +26,7 @@ deprecated/prompts/     → old prompt templates (not installed)
 
 - **Community 0 (19 members)**: Command handlers and config — `commands.js`, `config.js`. Central hub of the extension.
 - **Community 1 (14 members)**: Auto-continuation and state — `auto.js`, `state.js`. Manages workflow state transitions and post-agent evaluation.
-- **Community 2 (7 members)**: Legacy CLI evaluator script — `scripts/evaluate-handoff.js`. Standalone CLI wrapper.
+- **Community 2 (7 members)**: Legacy CLI evaluator script — removed, graph data is stale for this community. Will be cleaned on next `/workflow:refresh`.
 - **Community 3 (6 members)**: Prompt builders — `prompts.js`. Builds `/skill:<name>` prompts.
 - **Community 4 (5 members)**: Evaluator module — `evaluator.js`. Deterministic continue/pause decisions.
 - **Community 5 (5 members)**: Handoff parser — `handoff.js`. Extracts and validates handoff JSON from assistant markdown.

@@ -84,7 +84,6 @@ After installing, restart pi or run:
 ### Skill commands
 
 ```text
-/skill:workflow-orchestrator
 /skill:project-intake
 /skill:brainstorm-spec
 /skill:acceptance-criteria

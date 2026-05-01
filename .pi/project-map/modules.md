@@ -39,7 +39,4 @@ All under `skills/`:
 
 ## Legacy / Standalone Scripts
 
-| Script | Purpose |
-|--------|---------|
-| `skills/workflow-orchestrator/scripts/evaluate-handoff.js` | CLI wrapper for evaluator (legacy, superseded by extension module) |
-| `skills/workflow-orchestrator/scripts/init-project-workflow.js` | CLI config initializer (legacy, superseded by extension) |
+Removed. The `skills/workflow-orchestrator/` directory (including `scripts/evaluate-handoff.js` and `scripts/init-project-workflow.js`) has been deleted. The extension modules in `src/evaluator.js` and `src/config.js` are the authoritative replacements.

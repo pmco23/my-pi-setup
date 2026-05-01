@@ -23,7 +23,7 @@
 ## Project Config
 
 - Stored at `.pi/workflow-orchestrator.json` per project.
-- Config template lives in `skills/workflow-orchestrator/assets/workflow-orchestrator.template.json`.
+- Config template lives in extension `src/config.js` (`defaultConfig()`).
 - Extension generates config from `defaultConfig()` in `src/config.js`.
 - Config is JSON with `version: 1`.
 

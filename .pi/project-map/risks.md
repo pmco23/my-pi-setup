@@ -23,7 +23,7 @@
 
 - **Graphify dependency**: graphify must be installed separately (Python). If missing, onboarding produces no graph artifacts.
 - **pi version coupling**: extension uses `@mariozechner/pi-coding-agent` types. Pi API changes could break the extension.
-- **Installer overwrites**: `install.sh` uses rsync without `--delete` for skills/extensions, so removed files in the repo are not cleaned from the install target.
+- **Installer overwrites**: `install.sh` uses rsync `--delete` for skills/extensions. Removing a skill from the repo will also remove it from the install target.
 
 ## Security
 
