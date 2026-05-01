@@ -9,6 +9,24 @@ Thank you for contributing to my-pi-setup.
 - rsync
 - Python 3 + [graphify](https://pypi.org/project/graphifyy/) (for onboarding features)
 
+## Reference documentation
+
+Always check pi's own documentation before making changes to skills, extensions, or prompt templates:
+
+```text
+~/.nvm/versions/node/<version>/lib/node_modules/@mariozechner/pi-coding-agent/docs/
+```
+
+Key docs:
+
+- `docs/extensions.md` — extension API, events, commands, tools
+- `docs/skills.md` — skill format, frontmatter, validation, discovery
+- `docs/settings.md` — all pi settings and resource paths
+- `docs/prompt-templates.md` — prompt template format and arguments
+- `docs/packages.md` — pi package distribution
+
+Pi evolves. Do not rely on assumptions — verify against current docs before implementing.
+
 ## Setup
 
 ```bash

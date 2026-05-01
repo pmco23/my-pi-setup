@@ -6,6 +6,32 @@ Project instructions for AI coding agents (pi, Claude Code, Codex, etc.).
 
 This is a portable pi workflow setup containing skills, a pi extension, and installer scripts. It provides a structured workflow for turning ideas into reviewed implementations.
 
+## Pi documentation
+
+Always consult pi's own docs before modifying skills, extensions, or settings. Pi evolves and assumptions may be outdated.
+
+Docs location (resolve your Node version):
+
+```text
+~/.nvm/versions/node/<version>/lib/node_modules/@mariozechner/pi-coding-agent/docs/
+```
+
+Or ask pi directly:
+
+```text
+Read the pi docs for extensions/skills/settings.
+```
+
+Key references:
+
+- `docs/extensions.md` — extension API, events, lifecycle, commands, tools
+- `docs/skills.md` — Agent Skills standard, frontmatter, discovery, validation
+- `docs/settings.md` — all settings, resource paths, precedence
+- `docs/prompt-templates.md` — template format, arguments, loading rules
+- `docs/packages.md` — package distribution and manifest
+
+Do not guess pi API behavior. Verify against docs first.
+
 ## Before editing
 
 - Read `.pi/project-map/agent-guidance.md` for full project context.
