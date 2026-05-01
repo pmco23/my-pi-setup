@@ -1,0 +1,119 @@
+{
+  "0": [
+    "extensions_workflow_orchestrator_src_commands_js",
+    "extensions_workflow_orchestrator_src_config_js",
+    "src_commands_createcommandenv",
+    "src_commands_handlecontext",
+    "src_commands_handlecontinue",
+    "src_commands_handleinit",
+    "src_commands_handleonboard",
+    "src_commands_handlepause",
+    "src_commands_handleresume",
+    "src_commands_handlestart",
+    "src_commands_handlestatus",
+    "src_commands_parsemodeandrest",
+    "src_config_defaultconfig",
+    "src_config_getconfigpath",
+    "src_config_getprojectroot",
+    "src_config_getworkflowsdir",
+    "src_config_initconfig",
+    "src_config_loadconfig",
+    "src_config_saveconfig"
+  ],
+  "1": [
+    "extensions_workflow_orchestrator_src_auto_js",
+    "extensions_workflow_orchestrator_src_state_js",
+    "src_auto_hasactiveworkflow",
+    "src_auto_latestassistantmarkdown",
+    "src_auto_messagetext",
+    "src_auto_planautocontinuation",
+    "src_state_artifactlogpath",
+    "src_state_clearworkflow",
+    "src_state_createworkflowid",
+    "src_state_nowiso",
+    "src_state_pauseworkflow",
+    "src_state_resumeworkflow",
+    "src_state_startworkflow",
+    "src_state_updateactiveworkflow"
+  ],
+  "2": [
+    "scripts_evaluate_handoff_fail",
+    "scripts_evaluate_handoff_main",
+    "scripts_evaluate_handoff_readjson",
+    "scripts_evaluate_handoff_usage",
+    "scripts_evaluate_handoff_validateconfig",
+    "scripts_evaluate_handoff_validatehandoff",
+    "skills_workflow_orchestrator_scripts_evaluate_handoff_js"
+  ],
+  "3": [
+    "extensions_workflow_orchestrator_src_prompts_js",
+    "src_prompts_buildcontinueprompt",
+    "src_prompts_buildonboardprompt",
+    "src_prompts_buildskillprompt",
+    "src_prompts_buildstartprompt",
+    "src_prompts_firstskillforgoal"
+  ],
+  "4": [
+    "extensions_workflow_orchestrator_src_evaluator_js",
+    "src_evaluator_evaluatehandoff",
+    "src_evaluator_resolvemode",
+    "src_evaluator_validateconfig",
+    "src_evaluator_validatehandoff"
+  ],
+  "5": [
+    "extensions_workflow_orchestrator_src_handoff_js",
+    "src_handoff_extractjsonblocks",
+    "src_handoff_extractlatesthandoff",
+    "src_handoff_lookslikehandoff",
+    "src_handoff_parsejsonblock"
+  ],
+  "6": [
+    "extensions_workflow_orchestrator_src_audit_js",
+    "src_audit_appendauditentry",
+    "src_audit_readauditentries",
+    "src_audit_sanitize"
+  ],
+  "7": [
+    "extensions_workflow_orchestrator_test_auto_test_js",
+    "test_auto_test_activeconfig",
+    "test_auto_test_handoff",
+    "test_auto_test_markdownfor"
+  ],
+  "8": [
+    "extensions_workflow_orchestrator_index_ts",
+    "pi_coding_agent",
+    "workflow_orchestrator_index_workfloworchestratorextension"
+  ],
+  "9": [
+    "extensions_workflow_orchestrator_test_commands_test_js",
+    "test_commands_test_env",
+    "test_commands_test_tmpdir"
+  ],
+  "10": [
+    "extensions_workflow_orchestrator_test_evaluator_test_js",
+    "test_evaluator_test_baseconfig",
+    "test_evaluator_test_basehandoff"
+  ],
+  "11": [
+    "extensions_workflow_orchestrator_test_audit_test_js",
+    "test_audit_test_tmpdir"
+  ],
+  "12": [
+    "extensions_workflow_orchestrator_test_config_test_js",
+    "test_config_test_tmpdir"
+  ],
+  "13": [
+    "extensions_workflow_orchestrator_test_handoff_test_js",
+    "test_handoff_test_handoffjson"
+  ],
+  "14": [
+    "scripts_init_project_workflow_usage",
+    "skills_workflow_orchestrator_scripts_init_project_workflow_js"
+  ],
+  "15": [
+    "extensions_workflow_orchestrator_test_prompts_test_js"
+  ],
+  "16": [
+    "extensions_workflow_orchestrator_test_state_test_js"
+  ]
+}

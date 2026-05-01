@@ -1,0 +1,7 @@
+# Workflow state (personal/session-specific)
+.pi/workflow-orchestrator.json
+.pi/workflows/
+
+# Graphify cache and temp files
+.pi/project-map/graph/graphify-out/
+.pi/project-map/graph/.graphify_*
