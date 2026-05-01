@@ -176,12 +176,7 @@ cd ~/.pi/agent/extensions/workflow-orchestrator
 npm test
 ```
 
-Expected:
-
-```text
-48 tests passed
-0 failed
-```
+Expected: 56 tests, 0 failures.
 
 Verify commands via pi RPC or interactive autocomplete:
 

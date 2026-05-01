@@ -28,7 +28,7 @@ All under `extensions/workflow-orchestrator/test/`:
 
 ## Current Coverage
 
-51 tests, all passing.
+56 tests, all passing.
 
 ## Gaps
 

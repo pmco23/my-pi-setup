@@ -26,7 +26,7 @@ All under `skills/`:
 | Skill | Purpose |
 |-------|---------|
 | `project-intake` | Graphify-first codebase onboarding |
-| `workflow-orchestrator` | Skill-level orchestration instructions (complements extension) |
+| `workflow-orchestrator` | Removed — superseded by the extension |
 | `brainstorm-spec` | Collaborative idea exploration → design spec |
 | `acceptance-criteria` | Design spec → testable acceptance criteria |
 | `plan` | Acceptance criteria → ordered task plan |
