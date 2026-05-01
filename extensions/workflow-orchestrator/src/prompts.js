@@ -30,6 +30,26 @@ function buildStartPrompt({ mode, goal, workflowId, artifactLog, firstSkill }) {
   });
 }
 
+function buildOnboardPrompt({ mode, workflowId, artifactLog, projectMap }) {
+  return buildSkillPrompt('project-intake', {
+    goal: 'Map and onboard this existing codebase before feature work.',
+    mode,
+    workflowId,
+    artifactLog,
+    context: [
+      `Project map path: ${projectMap?.path || '.pi/project-map'}`,
+      `Agent guidance path: ${projectMap?.agent_guidance || '.pi/project-map/agent-guidance.md'}`,
+      `Graph output path: ${projectMap?.graph?.path || '.pi/project-map/graph'}`,
+    ],
+    instructions: [
+      'Use graphify from the beginning of the intake flow.',
+      'Create or update .pi/project-map/ files.',
+      'Write graphify outputs under .pi/project-map/graph/.',
+      'Do not modify source code.',
+    ].join('\n'),
+  });
+}
+
 function buildContinuePrompt(config) {
   const active = config.active_workflow || {};
   if (!active.next_skill) throw new Error('No active workflow next_skill to continue');
@@ -41,4 +61,4 @@ function buildContinuePrompt(config) {
   });
 }
 
-module.exports = { buildSkillPrompt, buildStartPrompt, buildContinuePrompt, firstSkillForGoal };
+module.exports = { buildSkillPrompt, buildStartPrompt, buildOnboardPrompt, buildContinuePrompt, firstSkillForGoal };

@@ -41,6 +41,20 @@ export default function workflowOrchestratorExtension(pi: ExtensionAPI) {
 		},
 	});
 
+	pi.registerCommand("workflow:onboard", {
+		description: "Onboard/map an existing codebase with graphify-first project intake",
+		handler: async (args, ctx) => {
+			await commands.handleOnboard(args, commands.createCommandEnv(ctx, pi));
+		},
+	});
+
+	pi.registerCommand("workflow:context", {
+		description: "Show project-map context status",
+		handler: async (args, ctx) => {
+			await commands.handleContext(args, commands.createCommandEnv(ctx, pi));
+		},
+	});
+
 	pi.registerCommand("workflow:continue", {
 		description: "Continue the active workflow",
 		handler: async (args, ctx) => {

@@ -1,7 +1,7 @@
 const { getProjectRoot, loadConfig, saveConfig, initConfig } = require('./config');
 const { startWorkflow, pauseWorkflow, resumeWorkflow } = require('./state');
 const { appendAuditEntry } = require('./audit');
-const { buildStartPrompt, buildContinuePrompt, firstSkillForGoal } = require('./prompts');
+const { buildStartPrompt, buildOnboardPrompt, buildContinuePrompt, firstSkillForGoal } = require('./prompts');
 
 function parseModeAndRest(args, fallbackMode) {
   const parts = String(args || '').trim().split(/\s+/).filter(Boolean);
@@ -84,6 +84,64 @@ async function handleStart(args, env, forcedMode) {
   return { ok: true, projectRoot, config, prompt };
 }
 
+async function handleOnboard(args, env) {
+  const projectRoot = getProjectRoot(env.cwd);
+  let loaded = loadConfig(projectRoot);
+  if (!loaded.ok) {
+    const parsed = parseModeAndRest(args, 'user-in-the-loop');
+    initConfig(projectRoot, parsed.mode);
+    loaded = loadConfig(projectRoot);
+  }
+  const parsed = parseModeAndRest(args, loaded.config.default_mode);
+  const mode = parsed.mode;
+  let config = startWorkflow(loaded.config, { mode, firstSkill: 'project-intake' });
+  saveConfig(projectRoot, config);
+  appendAuditEntry(projectRoot, config.active_workflow.artifact_log, {
+    event: 'workflow_onboard_start',
+    mode,
+    next_skill: 'project-intake',
+    project_map: config.project_map,
+  });
+  const prompt = buildOnboardPrompt({
+    mode,
+    workflowId: config.active_workflow.id,
+    artifactLog: config.active_workflow.artifact_log,
+    projectMap: config.project_map,
+  });
+  env.sendUserMessage(prompt);
+  return { ok: true, projectRoot, config, prompt };
+}
+
+async function handleContext(_args, env) {
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const projectRoot = getProjectRoot(env.cwd);
+  const loaded = loadConfig(projectRoot);
+  if (!loaded.ok) {
+    env.notify(`Workflow config not available: ${loaded.reason}`, 'warning');
+    return { ok: false, reason: loaded.reason, projectRoot };
+  }
+  const map = loaded.config.project_map || {};
+  const guidance = map.agent_guidance || '.pi/project-map/agent-guidance.md';
+  const graph = map.graph || {};
+  const files = {
+    guidance: path.join(projectRoot, guidance),
+    graphHtml: path.join(projectRoot, graph.html || '.pi/project-map/graph/graph.html'),
+    graphJson: path.join(projectRoot, graph.json || '.pi/project-map/graph/graph.json'),
+    graphAudit: path.join(projectRoot, graph.audit || '.pi/project-map/graph/audit.md'),
+  };
+  const summary = [
+    `Project map: ${map.path || '.pi/project-map'}`,
+    `Agent guidance: ${fs.existsSync(files.guidance) ? 'present' : 'missing'} (${guidance})`,
+    `Graph HTML: ${fs.existsSync(files.graphHtml) ? 'present' : 'missing'}`,
+    `Graph JSON: ${fs.existsSync(files.graphJson) ? 'present' : 'missing'}`,
+    `Graph audit: ${fs.existsSync(files.graphAudit) ? 'present' : 'missing'}`,
+    `Last updated: ${map.last_updated || 'unknown'}`,
+  ].join('\n');
+  env.notify(summary, 'info');
+  return { ok: true, projectRoot, config: loaded.config, summary, files };
+}
+
 async function handleContinue(args, env) {
   const projectRoot = getProjectRoot(env.cwd);
   const loaded = loadConfig(projectRoot);
@@ -130,6 +188,8 @@ module.exports = {
   handleInit,
   handleStatus,
   handleStart,
+  handleOnboard,
+  handleContext,
   handleContinue,
   handlePause,
   handleResume,

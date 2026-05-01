@@ -3,6 +3,7 @@ const path = require('node:path');
 const childProcess = require('node:child_process');
 
 const DEFAULT_SEQUENCE = ['brainstorm-spec', 'acceptance-criteria', 'plan', 'execute', 'review-against-plan', 'code-review'];
+const DEFAULT_ALLOWED_SKILLS = ['project-intake', ...DEFAULT_SEQUENCE];
 
 function defaultConfig(mode = 'user-in-the-loop') {
   const auto = mode === 'auto';
@@ -12,7 +13,7 @@ function defaultConfig(mode = 'user-in-the-loop') {
     default_sequence: [...DEFAULT_SEQUENCE],
     auto_continue: {
       enabled: auto,
-      allowed_skills: [...DEFAULT_SEQUENCE],
+      allowed_skills: [...DEFAULT_ALLOWED_SKILLS],
       stop_on_open_questions: true,
       stop_on_low_confidence: true,
       stop_on_failed_validation: true,
@@ -27,7 +28,8 @@ function defaultConfig(mode = 'user-in-the-loop') {
       execute: ['review-against-plan'],
       'review-against-plan': ['execute', 'code-review', 'none'],
       'code-review': ['execute', 'review-against-plan', 'none'],
-      'workflow-orchestrator': ['brainstorm-spec', 'acceptance-criteria', 'plan', 'execute', 'review-against-plan', 'code-review', 'none'],
+      'project-intake': ['plan', 'none'],
+      'workflow-orchestrator': ['project-intake', 'brainstorm-spec', 'acceptance-criteria', 'plan', 'execute', 'review-against-plan', 'code-review', 'none'],
     },
     support_skills: {
       'find-docs': {
@@ -42,6 +44,19 @@ function defaultConfig(mode = 'user-in-the-loop') {
         use_when: 'Complex relationships, architecture, domain modeling, documentation mapping, or large-codebase impact analysis is needed.',
         allowed_in: ['brainstorm-spec', 'plan', 'review-against-plan', 'code-review'],
       },
+    },
+    project_map: {
+      enabled: true,
+      path: '.pi/project-map',
+      agent_guidance: '.pi/project-map/agent-guidance.md',
+      graph: {
+        enabled: true,
+        path: '.pi/project-map/graph',
+        html: '.pi/project-map/graph/graph.html',
+        json: '.pi/project-map/graph/graph.json',
+        audit: '.pi/project-map/graph/audit.md',
+      },
+      last_updated: null,
     },
     active_workflow: { id: null, mode: null, current_skill: null, next_skill: null, artifact_log: null, updated_at: null, paused: false, pause_reason: null, last_processed_entry_id: null },
   };
@@ -92,4 +107,4 @@ function initConfig(projectRoot, mode = 'user-in-the-loop', options = {}) {
   return { status: 'created', configPath, workflowsDir: getWorkflowsDir(projectRoot), config };
 }
 
-module.exports = { DEFAULT_SEQUENCE, defaultConfig, getProjectRoot, getConfigPath, getWorkflowsDir, loadConfig, saveConfig, initConfig };
+module.exports = { DEFAULT_SEQUENCE, DEFAULT_ALLOWED_SKILLS, defaultConfig, getProjectRoot, getConfigPath, getWorkflowsDir, loadConfig, saveConfig, initConfig };

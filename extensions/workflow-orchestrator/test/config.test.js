@@ -11,6 +11,9 @@ test('defaultConfig sets auto_continue based on mode', () => {
   assert.equal(defaultConfig('user-in-the-loop').auto_continue.enabled, false);
   assert.equal(defaultConfig('auto').auto_continue.enabled, true);
   assert.ok(defaultConfig().support_skills['find-docs']);
+  assert.ok(defaultConfig().auto_continue.allowed_skills.includes('project-intake'));
+  assert.ok(defaultConfig().transitions['project-intake'].includes('none'));
+  assert.equal(defaultConfig().project_map.graph.enabled, true);
 });
 
 test('initConfig creates project config and workflows directory', () => {

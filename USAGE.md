@@ -17,6 +17,14 @@ brainstorm-spec
 
 Use `workflow-orchestrator` to coordinate the flow and persist project state.
 
+For existing projects, run onboarding first:
+
+```text
+/workflow:onboard
+```
+
+This uses `project-intake` and graphify-first mapping to create `.pi/project-map/`.
+
 ## Starting in a new project
 
 From inside a project folder:
@@ -67,6 +75,34 @@ Behavior:
 - pi continues only when the deterministic evaluator allows it
 - pi pauses on open questions, low confidence, blockers, failed validation, risky actions, or invalid handoffs
 
+## Existing project onboarding
+
+For a project not originally built with this workflow:
+
+```text
+/workflow:init user-in-the-loop
+/workflow:onboard
+/workflow:context
+```
+
+`/workflow:onboard` creates or updates:
+
+```text
+.pi/project-map/intake.md
+.pi/project-map/commands.md
+.pi/project-map/architecture.md
+.pi/project-map/modules.md
+.pi/project-map/testing.md
+.pi/project-map/conventions.md
+.pi/project-map/risks.md
+.pi/project-map/agent-guidance.md
+.pi/project-map/graph/graph.html
+.pi/project-map/graph/graph.json
+.pi/project-map/graph/audit.md
+```
+
+`/workflow:context` reports whether project guidance and graph artifacts exist.
+
 ## Continuing later
 
 From the same project folder:
@@ -108,6 +144,7 @@ This should summarize:
 You can also invoke skills directly:
 
 ```text
+/skill:project-intake
 /skill:brainstorm-spec
 /skill:acceptance-criteria
 /skill:plan
@@ -144,6 +181,7 @@ Each project may contain:
 ```text
 .pi/workflow-orchestrator.json
 .pi/workflows/<workflow-id>.jsonl
+.pi/project-map/
 ```
 
 These are project-specific and should be committed only if you want to share workflow state with collaborators.
@@ -162,6 +200,15 @@ brainstorm-spec → acceptance-criteria → plan → execute → review-against-
 ```
 
 ## Typical existing project flow
+
+First onboard the codebase:
+
+```text
+/workflow:init user-in-the-loop
+/workflow:onboard
+```
+
+Then start feature work.
 
 For a new feature:
 

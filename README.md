@@ -57,6 +57,8 @@ After installing, restart pi or run:
 /workflow:manual
 /workflow:continue
 /workflow:status
+/workflow:onboard
+/workflow:context
 /workflow:pause
 /workflow:resume
 ```
@@ -65,6 +67,7 @@ After installing, restart pi or run:
 
 ```text
 /skill:workflow-orchestrator
+/skill:project-intake
 /skill:brainstorm-spec
 /skill:acceptance-criteria
 /skill:plan
@@ -83,11 +86,12 @@ Support skills are also included when present:
 
 ## Per-project workflow state
 
-The installed resources are global, but each project keeps its own workflow state:
+The installed resources are global, but each project keeps its own workflow state and project map:
 
 ```text
 .pi/workflow-orchestrator.json
 .pi/workflows/
+.pi/project-map/
 ```
 
 Initialize a project with:
@@ -100,6 +104,12 @@ or:
 
 ```text
 /workflow:init auto
+```
+
+For an existing codebase, onboard/map it before feature work:
+
+```text
+/workflow:onboard
 ```
 
 ## Backup current machine state

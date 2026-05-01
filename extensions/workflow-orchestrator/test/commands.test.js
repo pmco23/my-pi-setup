@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const { handleInit, handleStart, handleContinue, handleStatus, handlePause, handleResume, parseModeAndRest } = require('../src/commands');
+const { handleInit, handleStart, handleOnboard, handleContext, handleContinue, handleStatus, handlePause, handleResume, parseModeAndRest } = require('../src/commands');
 const { loadConfig } = require('../src/config');
 
 function tmpdir() { return fs.mkdtempSync(path.join(os.tmpdir(), 'wf-cmd-')); }
@@ -62,6 +62,28 @@ test('handleStart fails closed when config missing', async () => {
   const result = await handleStart('auto build app', e);
   assert.equal(result.ok, false);
   assert.equal(e.sent.length, 0);
+});
+
+test('handleOnboard initializes config if needed and sends project-intake prompt', async () => {
+  const root = tmpdir();
+  const e = env(root);
+  const result = await handleOnboard('user-in-the-loop', e);
+  assert.equal(result.ok, true);
+  assert.match(e.sent.at(-1).message, /^\/skill:project-intake/);
+  assert.match(e.sent.at(-1).message, /Use graphify from the beginning/);
+  const config = loadConfig(root).config;
+  assert.equal(config.active_workflow.next_skill, 'project-intake');
+  assert.equal(config.project_map.graph.enabled, true);
+});
+
+test('handleContext reports missing project map files', async () => {
+  const root = tmpdir();
+  const e = env(root);
+  await handleInit('auto', e);
+  const result = await handleContext('', e);
+  assert.equal(result.ok, true);
+  assert.match(result.summary, /Agent guidance: missing/);
+  assert.match(result.summary, /Graph JSON: missing/);
 });
 
 test('handleContinue sends active next skill prompt', async () => {

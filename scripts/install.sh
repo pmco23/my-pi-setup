@@ -45,11 +45,14 @@ Available extension commands:
 - /workflow:manual
 - /workflow:continue
 - /workflow:status
+- /workflow:onboard
+- /workflow:context
 - /workflow:pause
 - /workflow:resume
 
 Available skill commands:
 - /skill:workflow-orchestrator
+- /skill:project-intake
 - /skill:brainstorm-spec
 - /skill:acceptance-criteria
 - /skill:plan
