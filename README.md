@@ -12,6 +12,7 @@ extensions/               Global extensions installed to ~/.pi/agent/extensions/
 deprecated/prompts/       Old workflow prompt templates kept for reference, not installed
 settings/                 Reference global pi settings
 scripts/install.sh        Install this setup on a machine
+scripts/uninstall.sh      Remove this setup from a machine
 scripts/backup-current.sh Refresh this repo from the current machine
 docs/                     Design notes and future extension discussion
 USAGE.md                  How to use the workflow day to day
@@ -128,6 +129,22 @@ For an existing codebase, onboard/map it before feature work:
 ```text
 /workflow:onboard
 ```
+
+## Uninstall
+
+To remove everything from the current machine:
+
+```bash
+./scripts/uninstall.sh
+```
+
+This removes the extension and workflow skills but leaves:
+
+- `~/.pi/agent/settings.json` intact
+- Support skills (`find-docs`, `ast-grep`, `graphify`) in place
+- Project-local `.pi/` directories untouched
+
+After uninstalling, restart pi or run `/reload`.
 
 ## Backup current machine state
 
