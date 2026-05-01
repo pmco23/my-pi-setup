@@ -41,7 +41,7 @@ test('latestAssistantMarkdown returns the latest assistant message text', () => 
 });
 
 test('planAutoContinuation continues on valid auto handoff', () => {
-  const result = planAutoContinuation({ config: activeConfig('auto'), markdown: markdownFor(handoff()), entryId: 'entry-1' });
+  const result = planAutoContinuation({ config: activeConfig('auto'), markdown: markdownFor(handoff()), entryId: 'entry-1', isWorkflowSkillResponse: true });
   assert.equal(result.action, 'continue');
   assert.equal(result.nextSkill, 'execute');
   assert.match(result.prompt, /^\/skill:execute/);
@@ -49,14 +49,20 @@ test('planAutoContinuation continues on valid auto handoff', () => {
 });
 
 test('planAutoContinuation pauses on user-in-the-loop config', () => {
-  const result = planAutoContinuation({ config: activeConfig('user-in-the-loop'), markdown: markdownFor(handoff({ workflow_mode: 'auto' })), entryId: 'entry-1' });
+  const result = planAutoContinuation({ config: activeConfig('user-in-the-loop'), markdown: markdownFor(handoff({ workflow_mode: 'auto' })), entryId: 'entry-1', isWorkflowSkillResponse: true });
   assert.equal(result.action, 'pause');
   assert.match(result.reason, /User-in-the-loop/);
   assert.equal(result.config.active_workflow.paused, true);
 });
 
-test('planAutoContinuation pauses on invalid or missing handoff when workflow active', () => {
-  const result = planAutoContinuation({ config: activeConfig('auto'), markdown: 'no handoff', entryId: 'entry-1' });
+test('planAutoContinuation skips silently on missing handoff when not a workflow skill response', () => {
+  const result = planAutoContinuation({ config: activeConfig('auto'), markdown: 'no handoff here', entryId: 'entry-1', isWorkflowSkillResponse: false });
+  assert.equal(result.action, 'none');
+  assert.match(result.reason, /non-workflow prompt/);
+});
+
+test('planAutoContinuation pauses on missing handoff when IS a workflow skill response', () => {
+  const result = planAutoContinuation({ config: activeConfig('auto'), markdown: 'no handoff here', entryId: 'entry-1', isWorkflowSkillResponse: true });
   assert.equal(result.action, 'pause');
   assert.match(result.reason, /No fenced JSON/);
   assert.equal(result.config.active_workflow.paused, true);
@@ -69,6 +75,12 @@ test('planAutoContinuation ignores duplicate processed entry', () => {
   assert.equal(result.action, 'none');
 });
 
+test('planAutoContinuation evaluates valid handoff even without flag (manual /skill: invocation)', () => {
+  const result = planAutoContinuation({ config: activeConfig('auto'), markdown: markdownFor(handoff()), entryId: 'entry-2', isWorkflowSkillResponse: false });
+  assert.equal(result.action, 'continue');
+  assert.equal(result.nextSkill, 'execute');
+});
+
 test('planAutoContinuation no-ops without active workflow', () => {
   const result = planAutoContinuation({ config: defaultConfig('auto'), markdown: markdownFor(handoff()), entryId: 'entry-1' });
   assert.equal(result.action, 'none');
@@ -79,6 +91,7 @@ test('planAutoContinuation clears workflow when next skill is none', () => {
     config: activeConfig('auto'),
     markdown: markdownFor(handoff({ current_skill: 'review-against-plan', next_skill: 'none' })),
     entryId: 'entry-1',
+    isWorkflowSkillResponse: true,
   });
   assert.equal(result.action, 'pause');
   assert.equal(result.artifactLog, '.pi/workflows/wf-1.jsonl');

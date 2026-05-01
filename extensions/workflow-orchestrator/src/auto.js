@@ -30,7 +30,7 @@ function hasActiveWorkflow(config) {
   return Boolean(config?.active_workflow?.id && config?.active_workflow?.next_skill);
 }
 
-function planAutoContinuation({ config, markdown, entryId, modeOverride }) {
+function planAutoContinuation({ config, markdown, entryId, modeOverride, isWorkflowSkillResponse }) {
   if (!hasActiveWorkflow(config)) {
     return { action: 'none', reason: 'No active workflow' };
   }
@@ -42,6 +42,11 @@ function planAutoContinuation({ config, markdown, entryId, modeOverride }) {
   const artifactLog = config.active_workflow.artifact_log;
   const parsed = extractLatestHandoff(markdown || '');
   if (!parsed.ok) {
+    // If this was not a workflow skill response, silently skip — don't pause on side conversations
+    if (!isWorkflowSkillResponse) {
+      return { action: 'none', reason: 'No handoff in response (non-workflow prompt)' };
+    }
+    // If it WAS a workflow skill response and failed to produce a handoff, pause
     const updatedConfig = pauseWorkflow(config, `No valid handoff: ${parsed.reason}`);
     return {
       action: 'pause',
@@ -52,6 +57,7 @@ function planAutoContinuation({ config, markdown, entryId, modeOverride }) {
     };
   }
 
+  // Valid handoff found — always evaluate regardless of flag
   const decision = evaluateHandoff({ config, handoff: parsed.handoff, modeOverride });
   let updatedConfig = updateActiveWorkflow(config, parsed.handoff, { lastProcessedEntryId: entryId });
 
