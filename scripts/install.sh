@@ -3,13 +3,10 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
-mkdir -p "$HOME/.agents/skills" "$HOME/.pi/agent/prompts" "$HOME/.pi/agent/extensions" "$HOME/.pi/agent"
+mkdir -p "$HOME/.agents/skills" "$HOME/.pi/agent/extensions" "$HOME/.pi/agent"
 
 rsync -a --delete "$ROOT/skills/" "$HOME/.agents/skills/"
 rm -f "$HOME/.pi/agent/prompts"/workflow-*.md
-if [[ -d "$ROOT/prompts" ]]; then
-  rsync -a --delete "$ROOT/prompts/" "$HOME/.pi/agent/prompts/"
-fi
 if [[ -d "$ROOT/extensions" ]]; then
   rsync -a --delete "$ROOT/extensions/" "$HOME/.pi/agent/extensions/"
 fi
