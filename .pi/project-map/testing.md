@@ -11,6 +11,12 @@ cd extensions/workflow-orchestrator
 npm test
 ```
 
+Or from root:
+
+```bash
+npm test
+```
+
 ## Test Files
 
 All under `extensions/workflow-orchestrator/test/`:
@@ -19,12 +25,12 @@ All under `extensions/workflow-orchestrator/test/`:
 |------|--------|
 | `evaluator.test.js` | Deterministic decisions, mode precedence, schema validation |
 | `handoff.test.js` | JSON extraction, malformed handling, fail-closed behavior |
-| `config.test.js` | Init, load, save, force-overwrite, project_map defaults |
+| `config.test.js` | Init, load, save, force-overwrite, project_map defaults, transitions |
 | `state.test.js` | Workflow start/update/pause/resume/clear |
 | `audit.test.js` | JSONL append, multi-line, secret redaction |
-| `prompts.test.js` | Skill prompt building, onboard prompt, continue prompt |
-| `commands.test.js` | Init/status/start/onboard/context/continue/pause/resume handlers |
-| `auto.test.js` | Auto-continuation planning, duplicate guard, fail-closed |
+| `prompts.test.js` | Skill prompt building, onboard prompt, refresh prompt, continue prompt |
+| `commands.test.js` | Init/status/start/onboard/refresh/context/continue/pause/resume handlers |
+| `auto.test.js` | Auto-continuation planning, hybrid flag, duplicate guard, fail-closed, side-question safety |
 
 ## Current Coverage
 
@@ -33,5 +39,5 @@ All under `extensions/workflow-orchestrator/test/`:
 ## Gaps
 
 - No integration tests that run commands inside a real pi RPC session.
-- No tests for the `agent_end` hook wiring in `index.ts` (only pure `planAutoContinuation` is tested).
+- No tests for the `agent_end` hook wiring or `pendingWorkflowSkillResponse` flag lifecycle in `index.ts` (only pure `planAutoContinuation` is tested).
 - No test for graphify output parsing (graphify is invoked by the skill, not the extension).

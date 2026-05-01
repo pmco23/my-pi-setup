@@ -9,17 +9,20 @@ Portable pi workflow setup repository. Contains global skills, a workflow-orches
 - Node.js (extension runtime via pi/jiti)
 - JavaScript (extension modules, plain CommonJS)
 - TypeScript (extension entrypoint, loaded by pi via jiti)
-- Bash (installer/backup scripts)
+- Bash (installer/uninstaller/backup scripts)
 - Markdown (skills, docs)
 - Python (graphify support tool)
 
 ## Important Files
 
-- `README.md`: overview and install guide
+- `README.md`: overview, prerequisites, and install guide
 - `USAGE.md`: day-to-day workflow usage
-- `scripts/install.sh`: installs skills, extensions, and settings globally
-- `scripts/backup-current.sh`: refreshes repo from installed global state
-- `settings/global-settings.json`: reference global pi settings
+- `AGENTS.md`: agent instructions (loaded by pi automatically)
+- `CONTRIBUTING.md`: contributor guide
+- `package.json`: root test script
+- `scripts/install.sh`: installs skills and extension globally
+- `scripts/uninstall.sh`: removes skills and extension globally
+- `scripts/backup-current.sh`: refreshes repo from installed state
 - `extensions/workflow-orchestrator/index.ts`: pi extension entrypoint
 - `extensions/workflow-orchestrator/package.json`: extension package
 - `docs/workflow-extension-discussion.md`: design notes and remaining improvements
@@ -27,6 +30,7 @@ Portable pi workflow setup repository. Contains global skills, a workflow-orches
 ## Entrypoints
 
 - `scripts/install.sh`: user runs this to install the setup
+- `scripts/uninstall.sh`: user runs this to remove the setup
 - `extensions/workflow-orchestrator/index.ts`: pi loads this as a global extension
 - `skills/*/SKILL.md`: pi loads these as global skills
 
@@ -34,6 +38,8 @@ Portable pi workflow setup repository. Contains global skills, a workflow-orches
 
 - `README.md`
 - `USAGE.md`
+- `AGENTS.md`
+- `CONTRIBUTING.md`
 - `docs/`
 - `extensions/workflow-orchestrator/`
 - `skills/`

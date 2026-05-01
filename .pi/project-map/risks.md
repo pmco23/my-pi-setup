@@ -2,28 +2,27 @@
 
 ## Architecture Risks
 
-- **commands.js is a hub**: 10 edges, handles 8+ commands. If it grows further, consider splitting by command group.
-- **config.js is used everywhere**: changes to config shape affect evaluator, commands, auto, state, and prompts.
+- **commands.js is a hub**: 11 edges, handles 11 commands (init, status, start, auto, manual, onboard, refresh, context, continue, pause, resume). If it grows further, consider splitting by command group.
+- **config.js is used everywhere**: `getProjectRoot` and `loadConfig` have 10 edges each. Changes to config shape affect evaluator, commands, auto, state, and prompts.
 - **No config migration**: `version: 1` is hardcoded. Schema changes will break existing project configs unless migration is added.
 
 ## Graph Hotspots
 
 - `handleStart` and `handleOnboard` (9 edges each): similar flows, possible duplication.
-- `getProjectRoot` and `loadConfig` (9 edges each): called from every command handler. A failure here blocks everything.
-- `planAutoContinuation` (8 edges): core auto-mode logic. Bugs here affect workflow safety.
+- `planAutoContinuation` (8 edges): core auto-mode logic with hybrid flag. Bugs here affect workflow safety.
 
 ## Testing Gaps
 
-- `index.ts` `agent_end` wiring is not directly tested.
-- No integration test with real pi RPC.
-- Graphify output parsing is delegated to the skill, not validated by the extension.
-- Legacy CLI scripts are not regression-tested alongside extension modules.
+- `index.ts` `agent_end` wiring and the `pendingWorkflowSkillResponse` flag lifecycle are not directly unit-tested.
+- No integration test with real pi RPC session.
+- No test for graphify output parsing (delegated to the skill).
 
 ## Operational Risks
 
 - **Graphify dependency**: graphify must be installed separately (Python). If missing, onboarding produces no graph artifacts.
 - **pi version coupling**: extension uses `@mariozechner/pi-coding-agent` types. Pi API changes could break the extension.
-- **Installer overwrites**: `install.sh` uses rsync `--delete` for skills/extensions. Removing a skill from the repo will also remove it from the install target.
+- **Installer `--delete` behavior**: removing a skill or extension file from the repo removes it from the install target. Intentional but requires awareness.
+- **Third-party skills**: `find-docs`, `ast-grep`, `graphify` are bundled but not maintained by us. Could go stale.
 
 ## Security
 

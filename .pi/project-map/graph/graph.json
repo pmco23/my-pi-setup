@@ -127,32 +127,39 @@
       "source_location": "L87"
     },
     {
+      "id": "src_commands_handlerefresh",
+      "label": "handleRefresh()",
+      "file_type": "code",
+      "source_file": "extensions/workflow-orchestrator/src/commands.js",
+      "source_location": "L115"
+    },
+    {
       "id": "src_commands_handlecontext",
       "label": "handleContext()",
       "file_type": "code",
       "source_file": "extensions/workflow-orchestrator/src/commands.js",
-      "source_location": "L115"
+      "source_location": "L128"
     },
     {
       "id": "src_commands_handlecontinue",
       "label": "handleContinue()",
       "file_type": "code",
       "source_file": "extensions/workflow-orchestrator/src/commands.js",
-      "source_location": "L145"
+      "source_location": "L158"
     },
     {
       "id": "src_commands_handlepause",
       "label": "handlePause()",
       "file_type": "code",
       "source_file": "extensions/workflow-orchestrator/src/commands.js",
-      "source_location": "L164"
+      "source_location": "L177"
     },
     {
       "id": "src_commands_handleresume",
       "label": "handleResume()",
       "file_type": "code",
       "source_file": "extensions/workflow-orchestrator/src/commands.js",
-      "source_location": "L175"
+      "source_location": "L188"
     },
     {
       "id": "extensions_workflow_orchestrator_src_config_js",
@@ -173,42 +180,42 @@
       "label": "getProjectRoot()",
       "file_type": "code",
       "source_file": "extensions/workflow-orchestrator/src/config.js",
-      "source_location": "L65"
+      "source_location": "L64"
     },
     {
       "id": "src_config_getconfigpath",
       "label": "getConfigPath()",
       "file_type": "code",
       "source_file": "extensions/workflow-orchestrator/src/config.js",
-      "source_location": "L73"
+      "source_location": "L72"
     },
     {
       "id": "src_config_getworkflowsdir",
       "label": "getWorkflowsDir()",
       "file_type": "code",
       "source_file": "extensions/workflow-orchestrator/src/config.js",
-      "source_location": "L77"
+      "source_location": "L76"
     },
     {
       "id": "src_config_loadconfig",
       "label": "loadConfig()",
       "file_type": "code",
       "source_file": "extensions/workflow-orchestrator/src/config.js",
-      "source_location": "L81"
+      "source_location": "L80"
     },
     {
       "id": "src_config_saveconfig",
       "label": "saveConfig()",
       "file_type": "code",
       "source_file": "extensions/workflow-orchestrator/src/config.js",
-      "source_location": "L91"
+      "source_location": "L90"
     },
     {
       "id": "src_config_initconfig",
       "label": "initConfig()",
       "file_type": "code",
       "source_file": "extensions/workflow-orchestrator/src/config.js",
-      "source_location": "L98"
+      "source_location": "L97"
     },
     {
       "id": "extensions_workflow_orchestrator_src_evaluator_js",
@@ -316,11 +323,18 @@
       "source_location": "L33"
     },
     {
+      "id": "src_prompts_buildrefreshprompt",
+      "label": "buildRefreshPrompt()",
+      "file_type": "code",
+      "source_file": "extensions/workflow-orchestrator/src/prompts.js",
+      "source_location": "L53"
+    },
+    {
       "id": "src_prompts_buildcontinueprompt",
       "label": "buildContinuePrompt()",
       "file_type": "code",
       "source_file": "extensions/workflow-orchestrator/src/prompts.js",
-      "source_location": "L53"
+      "source_location": "L74"
     },
     {
       "id": "extensions_workflow_orchestrator_src_state_js",
@@ -481,7 +495,7 @@
       "label": "baseHandoff()",
       "file_type": "code",
       "source_file": "extensions/workflow-orchestrator/test/evaluator.test.js",
-      "source_location": "L34"
+      "source_location": "L33"
     },
     {
       "id": "extensions_workflow_orchestrator_test_handoff_test_js",
@@ -510,69 +524,6 @@
       "file_type": "code",
       "source_file": "extensions/workflow-orchestrator/test/state.test.js",
       "source_location": "L1"
-    },
-    {
-      "id": "skills_workflow_orchestrator_scripts_evaluate_handoff_js",
-      "label": "evaluate-handoff.js",
-      "file_type": "code",
-      "source_file": "skills/workflow-orchestrator/scripts/evaluate-handoff.js",
-      "source_location": "L1"
-    },
-    {
-      "id": "scripts_evaluate_handoff_usage",
-      "label": "usage()",
-      "file_type": "code",
-      "source_file": "skills/workflow-orchestrator/scripts/evaluate-handoff.js",
-      "source_location": "L5"
-    },
-    {
-      "id": "scripts_evaluate_handoff_readjson",
-      "label": "readJson()",
-      "file_type": "code",
-      "source_file": "skills/workflow-orchestrator/scripts/evaluate-handoff.js",
-      "source_location": "L10"
-    },
-    {
-      "id": "scripts_evaluate_handoff_fail",
-      "label": "fail()",
-      "file_type": "code",
-      "source_file": "skills/workflow-orchestrator/scripts/evaluate-handoff.js",
-      "source_location": "L15"
-    },
-    {
-      "id": "scripts_evaluate_handoff_validateconfig",
-      "label": "validateConfig()",
-      "file_type": "code",
-      "source_file": "skills/workflow-orchestrator/scripts/evaluate-handoff.js",
-      "source_location": "L19"
-    },
-    {
-      "id": "scripts_evaluate_handoff_validatehandoff",
-      "label": "validateHandoff()",
-      "file_type": "code",
-      "source_file": "skills/workflow-orchestrator/scripts/evaluate-handoff.js",
-      "source_location": "L31"
-    },
-    {
-      "id": "scripts_evaluate_handoff_main",
-      "label": "main()",
-      "file_type": "code",
-      "source_file": "skills/workflow-orchestrator/scripts/evaluate-handoff.js",
-      "source_location": "L48"
-    },
-    {
-      "id": "skills_workflow_orchestrator_scripts_init_project_workflow_js",
-      "label": "init-project-workflow.js",
-      "file_type": "code",
-      "source_file": "skills/workflow-orchestrator/scripts/init-project-workflow.js",
-      "source_location": "L1"
-    },
-    {
-      "id": "scripts_init_project_workflow_usage",
-      "label": "usage()",
-      "file_type": "code",
-      "source_file": "skills/workflow-orchestrator/scripts/init-project-workflow.js",
-      "source_location": "L5"
     }
   ],
   "edges": [
@@ -740,7 +691,7 @@
     },
     {
       "source": "extensions_workflow_orchestrator_src_commands_js",
-      "target": "src_commands_handlecontext",
+      "target": "src_commands_handlerefresh",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "extensions/workflow-orchestrator/src/commands.js",
@@ -749,11 +700,20 @@
     },
     {
       "source": "extensions_workflow_orchestrator_src_commands_js",
+      "target": "src_commands_handlecontext",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "extensions/workflow-orchestrator/src/commands.js",
+      "source_location": "L128",
+      "weight": 1.0
+    },
+    {
+      "source": "extensions_workflow_orchestrator_src_commands_js",
       "target": "src_commands_handlecontinue",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "extensions/workflow-orchestrator/src/commands.js",
-      "source_location": "L145",
+      "source_location": "L158",
       "weight": 1.0
     },
     {
@@ -762,7 +722,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "extensions/workflow-orchestrator/src/commands.js",
-      "source_location": "L164",
+      "source_location": "L177",
       "weight": 1.0
     },
     {
@@ -771,7 +731,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "extensions/workflow-orchestrator/src/commands.js",
-      "source_location": "L175",
+      "source_location": "L188",
       "weight": 1.0
     },
     {
@@ -802,12 +762,21 @@
       "weight": 1.0
     },
     {
+      "source": "src_commands_handlerefresh",
+      "target": "src_commands_parsemodeandrest",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "extensions/workflow-orchestrator/src/commands.js",
+      "source_location": "L122",
+      "weight": 1.0
+    },
+    {
       "source": "src_commands_handlecontinue",
       "target": "src_commands_parsemodeandrest",
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "extensions/workflow-orchestrator/src/commands.js",
-      "source_location": "L152",
+      "source_location": "L165",
       "weight": 1.0
     },
     {
@@ -825,7 +794,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "extensions/workflow-orchestrator/src/config.js",
-      "source_location": "L65",
+      "source_location": "L64",
       "weight": 1.0
     },
     {
@@ -834,7 +803,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "extensions/workflow-orchestrator/src/config.js",
-      "source_location": "L73",
+      "source_location": "L72",
       "weight": 1.0
     },
     {
@@ -843,7 +812,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "extensions/workflow-orchestrator/src/config.js",
-      "source_location": "L77",
+      "source_location": "L76",
       "weight": 1.0
     },
     {
@@ -852,7 +821,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "extensions/workflow-orchestrator/src/config.js",
-      "source_location": "L81",
+      "source_location": "L80",
       "weight": 1.0
     },
     {
@@ -861,7 +830,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "extensions/workflow-orchestrator/src/config.js",
-      "source_location": "L91",
+      "source_location": "L90",
       "weight": 1.0
     },
     {
@@ -870,7 +839,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "extensions/workflow-orchestrator/src/config.js",
-      "source_location": "L98",
+      "source_location": "L97",
       "weight": 1.0
     },
     {
@@ -879,7 +848,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "extensions/workflow-orchestrator/src/config.js",
-      "source_location": "L82",
+      "source_location": "L81",
       "weight": 1.0
     },
     {
@@ -888,7 +857,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "extensions/workflow-orchestrator/src/config.js",
-      "source_location": "L92",
+      "source_location": "L91",
       "weight": 1.0
     },
     {
@@ -897,7 +866,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "extensions/workflow-orchestrator/src/config.js",
-      "source_location": "L100",
+      "source_location": "L99",
       "weight": 1.0
     },
     {
@@ -906,7 +875,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "extensions/workflow-orchestrator/src/config.js",
-      "source_location": "L104",
+      "source_location": "L103",
       "weight": 1.0
     },
     {
@@ -915,7 +884,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "extensions/workflow-orchestrator/src/config.js",
-      "source_location": "L105",
+      "source_location": "L104",
       "weight": 1.0
     },
     {
@@ -924,7 +893,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "extensions/workflow-orchestrator/src/config.js",
-      "source_location": "L106",
+      "source_location": "L105",
       "weight": 1.0
     },
     {
@@ -1073,11 +1042,20 @@
     },
     {
       "source": "extensions_workflow_orchestrator_src_prompts_js",
-      "target": "src_prompts_buildcontinueprompt",
+      "target": "src_prompts_buildrefreshprompt",
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "extensions/workflow-orchestrator/src/prompts.js",
       "source_location": "L53",
+      "weight": 1.0
+    },
+    {
+      "source": "extensions_workflow_orchestrator_src_prompts_js",
+      "target": "src_prompts_buildcontinueprompt",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "extensions/workflow-orchestrator/src/prompts.js",
+      "source_location": "L74",
       "weight": 1.0
     },
     {
@@ -1108,12 +1086,21 @@
       "weight": 1.0
     },
     {
+      "source": "src_prompts_buildrefreshprompt",
+      "target": "src_prompts_buildskillprompt",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "extensions/workflow-orchestrator/src/prompts.js",
+      "source_location": "L54",
+      "weight": 1.0
+    },
+    {
       "source": "src_prompts_buildcontinueprompt",
       "target": "src_prompts_buildskillprompt",
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "extensions/workflow-orchestrator/src/prompts.js",
-      "source_location": "L56",
+      "source_location": "L77",
       "weight": 1.0
     },
     {
@@ -1275,7 +1262,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "extensions/workflow-orchestrator/test/evaluator.test.js",
-      "source_location": "L34",
+      "source_location": "L33",
       "weight": 1.0
     },
     {
@@ -1284,114 +1271,6 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "extensions/workflow-orchestrator/test/handoff.test.js",
-      "source_location": "L5",
-      "weight": 1.0
-    },
-    {
-      "source": "skills_workflow_orchestrator_scripts_evaluate_handoff_js",
-      "target": "scripts_evaluate_handoff_usage",
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "skills/workflow-orchestrator/scripts/evaluate-handoff.js",
-      "source_location": "L5",
-      "weight": 1.0
-    },
-    {
-      "source": "skills_workflow_orchestrator_scripts_evaluate_handoff_js",
-      "target": "scripts_evaluate_handoff_readjson",
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "skills/workflow-orchestrator/scripts/evaluate-handoff.js",
-      "source_location": "L10",
-      "weight": 1.0
-    },
-    {
-      "source": "skills_workflow_orchestrator_scripts_evaluate_handoff_js",
-      "target": "scripts_evaluate_handoff_fail",
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "skills/workflow-orchestrator/scripts/evaluate-handoff.js",
-      "source_location": "L15",
-      "weight": 1.0
-    },
-    {
-      "source": "skills_workflow_orchestrator_scripts_evaluate_handoff_js",
-      "target": "scripts_evaluate_handoff_validateconfig",
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "skills/workflow-orchestrator/scripts/evaluate-handoff.js",
-      "source_location": "L19",
-      "weight": 1.0
-    },
-    {
-      "source": "skills_workflow_orchestrator_scripts_evaluate_handoff_js",
-      "target": "scripts_evaluate_handoff_validatehandoff",
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "skills/workflow-orchestrator/scripts/evaluate-handoff.js",
-      "source_location": "L31",
-      "weight": 1.0
-    },
-    {
-      "source": "skills_workflow_orchestrator_scripts_evaluate_handoff_js",
-      "target": "scripts_evaluate_handoff_main",
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "skills/workflow-orchestrator/scripts/evaluate-handoff.js",
-      "source_location": "L48",
-      "weight": 1.0
-    },
-    {
-      "source": "scripts_evaluate_handoff_main",
-      "target": "scripts_evaluate_handoff_usage",
-      "relation": "calls",
-      "confidence": "EXTRACTED",
-      "source_file": "skills/workflow-orchestrator/scripts/evaluate-handoff.js",
-      "source_location": "L50",
-      "weight": 1.0
-    },
-    {
-      "source": "scripts_evaluate_handoff_main",
-      "target": "scripts_evaluate_handoff_fail",
-      "relation": "calls",
-      "confidence": "EXTRACTED",
-      "source_file": "skills/workflow-orchestrator/scripts/evaluate-handoff.js",
-      "source_location": "L55",
-      "weight": 1.0
-    },
-    {
-      "source": "scripts_evaluate_handoff_main",
-      "target": "scripts_evaluate_handoff_readjson",
-      "relation": "calls",
-      "confidence": "EXTRACTED",
-      "source_file": "skills/workflow-orchestrator/scripts/evaluate-handoff.js",
-      "source_location": "L62",
-      "weight": 1.0
-    },
-    {
-      "source": "scripts_evaluate_handoff_main",
-      "target": "scripts_evaluate_handoff_validateconfig",
-      "relation": "calls",
-      "confidence": "EXTRACTED",
-      "source_file": "skills/workflow-orchestrator/scripts/evaluate-handoff.js",
-      "source_location": "L65",
-      "weight": 1.0
-    },
-    {
-      "source": "scripts_evaluate_handoff_main",
-      "target": "scripts_evaluate_handoff_validatehandoff",
-      "relation": "calls",
-      "confidence": "EXTRACTED",
-      "source_file": "skills/workflow-orchestrator/scripts/evaluate-handoff.js",
-      "source_location": "L65",
-      "weight": 1.0
-    },
-    {
-      "source": "skills_workflow_orchestrator_scripts_init_project_workflow_js",
-      "target": "scripts_init_project_workflow_usage",
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "skills/workflow-orchestrator/scripts/init-project-workflow.js",
       "source_location": "L5",
       "weight": 1.0
     },
@@ -1412,7 +1291,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "extensions/workflow-orchestrator/src/auto.js",
-      "source_location": "L45",
+      "source_location": "L50",
       "weight": 1.0
     },
     {
@@ -1422,7 +1301,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "extensions/workflow-orchestrator/src/auto.js",
-      "source_location": "L55",
+      "source_location": "L61",
       "weight": 1.0
     },
     {
@@ -1432,7 +1311,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "extensions/workflow-orchestrator/src/auto.js",
-      "source_location": "L56",
+      "source_location": "L62",
       "weight": 1.0
     },
     {
@@ -1442,7 +1321,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "extensions/workflow-orchestrator/src/auto.js",
-      "source_location": "L59",
+      "source_location": "L65",
       "weight": 1.0
     },
     {
@@ -1452,7 +1331,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "extensions/workflow-orchestrator/src/auto.js",
-      "source_location": "L81",
+      "source_location": "L87",
       "weight": 1.0
     },
     {
@@ -1636,13 +1515,43 @@
       "weight": 1.0
     },
     {
+      "source": "src_commands_handlerefresh",
+      "target": "src_config_getprojectroot",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "extensions/workflow-orchestrator/src/commands.js",
+      "source_location": "L116",
+      "weight": 1.0
+    },
+    {
+      "source": "src_commands_handlerefresh",
+      "target": "src_config_loadconfig",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "extensions/workflow-orchestrator/src/commands.js",
+      "source_location": "L117",
+      "weight": 1.0
+    },
+    {
+      "source": "src_commands_handlerefresh",
+      "target": "src_prompts_buildrefreshprompt",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "extensions/workflow-orchestrator/src/commands.js",
+      "source_location": "L123",
+      "weight": 1.0
+    },
+    {
       "source": "src_commands_handlecontext",
       "target": "src_config_getprojectroot",
       "relation": "calls",
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "extensions/workflow-orchestrator/src/commands.js",
-      "source_location": "L118",
+      "source_location": "L131",
       "weight": 1.0
     },
     {
@@ -1652,7 +1561,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "extensions/workflow-orchestrator/src/commands.js",
-      "source_location": "L119",
+      "source_location": "L132",
       "weight": 1.0
     },
     {
@@ -1662,7 +1571,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "extensions/workflow-orchestrator/src/commands.js",
-      "source_location": "L146",
+      "source_location": "L159",
       "weight": 1.0
     },
     {
@@ -1672,7 +1581,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "extensions/workflow-orchestrator/src/commands.js",
-      "source_location": "L147",
+      "source_location": "L160",
       "weight": 1.0
     },
     {
@@ -1682,7 +1591,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "extensions/workflow-orchestrator/src/commands.js",
-      "source_location": "L158",
+      "source_location": "L171",
       "weight": 1.0
     },
     {
@@ -1692,7 +1601,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "extensions/workflow-orchestrator/src/commands.js",
-      "source_location": "L159",
+      "source_location": "L172",
       "weight": 1.0
     },
     {
@@ -1702,7 +1611,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "extensions/workflow-orchestrator/src/commands.js",
-      "source_location": "L165",
+      "source_location": "L178",
       "weight": 1.0
     },
     {
@@ -1712,7 +1621,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "extensions/workflow-orchestrator/src/commands.js",
-      "source_location": "L166",
+      "source_location": "L179",
       "weight": 1.0
     },
     {
@@ -1722,7 +1631,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "extensions/workflow-orchestrator/src/commands.js",
-      "source_location": "L169",
+      "source_location": "L182",
       "weight": 1.0
     },
     {
@@ -1732,7 +1641,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "extensions/workflow-orchestrator/src/commands.js",
-      "source_location": "L170",
+      "source_location": "L183",
       "weight": 1.0
     },
     {
@@ -1742,7 +1651,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "extensions/workflow-orchestrator/src/commands.js",
-      "source_location": "L176",
+      "source_location": "L189",
       "weight": 1.0
     },
     {
@@ -1752,7 +1661,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "extensions/workflow-orchestrator/src/commands.js",
-      "source_location": "L177",
+      "source_location": "L190",
       "weight": 1.0
     },
     {
@@ -1762,7 +1671,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "extensions/workflow-orchestrator/src/commands.js",
-      "source_location": "L179",
+      "source_location": "L192",
       "weight": 1.0
     },
     {
@@ -1772,7 +1681,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "extensions/workflow-orchestrator/src/commands.js",
-      "source_location": "L180",
+      "source_location": "L193",
       "weight": 1.0
     },
     {
