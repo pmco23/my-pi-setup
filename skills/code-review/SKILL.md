@@ -10,6 +10,7 @@ Use this skill to review implementation quality, regardless of whether the chang
 ## Operating Mode
 
 - Review, do not implement, unless the user explicitly asks for fixes.
+- If `.pi/project-map/agent-guidance.md` exists, read it to understand project conventions, style patterns, risky areas, and protected files.
 - Be evidence-based and specific.
 - Inspect changed files, diffs, tests, and relevant surrounding code.
 - Prioritize issues by impact.
@@ -33,7 +34,8 @@ Use any available inputs:
 4. Check maintainability, readability, architecture, and consistency with project style.
 5. Check tests and validation coverage.
 6. Check security, privacy, accessibility, performance, and compatibility where relevant.
-7. Produce prioritized findings and an acceptance recommendation.
+7. Run validation commands independently when safe and non-destructive.
+8. Produce prioritized findings and an acceptance recommendation.
 
 ## Review Criteria
 
@@ -167,3 +169,25 @@ Auto handoff:
 - Do not duplicate `review-against-plan`; focus on code quality and engineering risk.
 - If the change does not match the plan, mention it briefly and recommend `review-against-plan` for full scope analysis.
 - If fixes are needed, recommend handing findings to `execute`.
+
+## Handoff Confidence and Signals
+
+Set handoff confidence:
+
+- `"high"`: verdict is clear (Approved or obvious blockers).
+- `"medium"`: some findings need discussion or evidence is incomplete.
+- `"low"`: cannot assess quality without more context.
+
+Include `signals` in the auto handoff JSON when relevant:
+
+- `"blockers": true` — if verdict is "Needs changes" or "Blocked".
+- `"failed_validation": true` — if any validation command failed during review.
+
+## Self-Check Before Handoff
+
+Verify:
+
+- Every blocker has a concrete file path, evidence, and suggested fix or direction.
+- Positive notes section is not empty — acknowledge at least one good choice.
+- Findings are not duplicating `review-against-plan` scope (plan coverage, AC mapping).
+- If no issues found, explicitly state what was checked.

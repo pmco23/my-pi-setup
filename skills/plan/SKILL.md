@@ -12,6 +12,7 @@ Use this skill to turn a request, design spec, or acceptance criteria into a cle
 - Prefer understanding before changing.
 - Do not edit files, install packages, or run destructive commands unless explicitly requested.
 - Read relevant files and documentation as needed.
+- If `.pi/project-map/agent-guidance.md` exists, read it to understand project architecture, conventions, validation commands, and risky areas before planning.
 - Ask clarifying questions only when missing information would materially change the plan.
 - Keep plans practical and ordered.
 - Produce stable task IDs so `execute` and `review-against-plan` can track coverage.
@@ -31,10 +32,27 @@ Use any available inputs:
 2. Inspect relevant project files when the task depends on existing code.
 3. Identify constraints, risks, assumptions, and out-of-scope work.
 4. Break the work into ordered tasks with stable IDs: `P1`, `P2`, `P3`, ...
-5. Map tasks to requirements or acceptance criteria when available.
-6. Include validation steps: tests, commands, manual checks, or review points.
-7. Call out decisions the user must make before execution.
-8. Produce a handoff for `execute`.
+5. Mark dependencies between tasks.
+6. Map tasks to requirements or acceptance criteria when available.
+7. Include validation steps: tests, commands, manual checks, or review points.
+8. Call out decisions the user must make before execution.
+9. Produce a handoff for `execute`.
+
+## Plan Size
+
+- For small tasks (bug fix, minor feature): 2–5 tasks.
+- For medium features: 5–12 tasks.
+- For large features: consider splitting into multiple plans with a phase boundary.
+- If a plan exceeds 15 tasks, ask whether to split or proceed.
+
+## Effort Estimation
+
+When the user asks for effort estimates:
+
+- Use relative sizing: small (≤1 hour), medium (1–4 hours), large (4+ hours).
+- Base estimates on: number of files changed, complexity of logic, test coverage needed, risk level.
+- Mark estimates as rough and note what could make them wrong.
+- Do not estimate if the codebase is unknown and no project-map exists.
 
 ## Support Skills
 
@@ -101,13 +119,18 @@ Use this structure unless the user requests otherwise:
 ## Plan
 - P1: <task>
   - Covers: <FR/AC IDs or requirement names>
+  - Depends on: <P IDs, or "none">
   - Notes: <implementation guidance if useful>
 - P2: <task>
   - Covers: <FR/AC IDs or requirement names>
+  - Depends on: <P IDs, or "none">
 
 ## Validation
 - V1: <test/check/command/manual verification>
 - V2: <test/check/command/manual verification>
+
+## Decisions Required Before Execution
+- <decision the user must make, or "None">
 
 ## Risks
 - R1: <risk and mitigation>
@@ -147,5 +170,7 @@ Auto handoff:
 - Avoid speculative implementation detail unless useful.
 - Prefer concrete file paths, commands, and checkpoints when known.
 - Use stable IDs for tasks, validation checks, risks, assumptions, and open questions.
+- Mark dependencies between tasks when they exist. Tasks with no dependencies can be executed in parallel.
 - If acceptance criteria are missing or fuzzy, recommend using `acceptance-criteria` before execution.
 - If the task is already well-defined and safe, end by asking whether to proceed with `execute`.
+- Set confidence to `"medium"` if open questions or required decisions remain. Set `"high"` only when the plan is unambiguous and ready to execute.

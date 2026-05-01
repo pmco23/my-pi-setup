@@ -15,6 +15,7 @@ Use this skill to help the user explore an idea and turn the discussion into a c
 - Offer options with tradeoffs when the direction is not obvious.
 - Do not edit project files unless the user explicitly asks.
 - The final artifact should be a design spec, not an execution plan.
+- If `.pi/project-map/agent-guidance.md` exists, read it to ground the design in the actual project architecture, conventions, and constraints.
 
 ## Workflow
 
@@ -39,6 +40,26 @@ Use these selectively:
 - What could go wrong?
 - What should be easy to change later?
 - How will we know this worked?
+
+## When to Converge
+
+Produce the design spec when:
+
+- The user says "let's go with that", "sounds good", "write it up", or similar.
+- The user has answered the key questions and a clear direction has emerged.
+- You have explored at least 2 alternatives and the user picked one.
+- Remaining uncertainties can be captured as open questions rather than blocking the spec.
+
+Do not converge if:
+
+- The user is still asking exploratory questions.
+- No clear direction has been chosen.
+- Critical constraints are unknown.
+
+## Scope Control
+
+- If the idea grows beyond what a single spec can cover, suggest splitting into multiple specs.
+- If brainstorming has gone more than 5–6 exchanges without convergence, summarize what has been discussed and ask explicitly: "Shall I write up the spec based on what we have, or do you want to explore more?"
 
 ## Support Skills
 
@@ -106,6 +127,9 @@ When the discussion is ready to converge, produce:
 ## Non-Goals
 - <explicitly out-of-scope item>
 
+## MVP / Simplest Useful Version
+<what the first deliverable version looks like, if applicable>
+
 ## Users / Use Cases
 - <user or scenario>
 
@@ -141,13 +165,17 @@ When the discussion is ready to converge, produce:
 - Q1: <question>
 
 ## Next Step
-Recommended skill: `acceptance-criteria` unless criteria are already clear; otherwise `plan`
+Recommended skill: `acceptance-criteria` unless criteria are already clear and testable; otherwise `plan`
 Reason: The design spec should become testable acceptance criteria before implementation planning.
 
 User prompt:
 - Shall I continue with `acceptance-criteria` to turn this spec into testable acceptance criteria?
 
 Auto handoff:
+Choose `next_skill` based on specificity:
+- If requirements are vague or need testable criteria: `acceptance-criteria`
+- If requirements are already precise and testable: `plan`
+
 ```json
 {
   "workflow_mode": "auto",

@@ -43,7 +43,8 @@ Required outputs:
 ## Workflow
 
 1. Detect project root and create `.pi/project-map/` and `.pi/project-map/graph/` if missing.
-2. Quick scan important files:
+2. Check if this is a refresh (existing `.pi/project-map/` files present) or first-time onboard.
+3. Quick scan important files:
    - README/docs
    - package/config files
    - source directories
@@ -51,14 +52,16 @@ Required outputs:
    - CI workflows
    - env examples
    - generated-code indicators
-3. Select graphify inputs.
-4. Invoke/use `graphify` early on the selected inputs.
-5. Move or copy graphify outputs into `.pi/project-map/graph/`:
+   - existing AGENTS.md or CLAUDE.md
+4. Select graphify inputs.
+5. Invoke/use `graphify` early on the selected inputs.
+6. Move or copy graphify outputs into `.pi/project-map/graph/`:
    - graph HTML → `.pi/project-map/graph/graph.html`
    - graph JSON → `.pi/project-map/graph/graph.json`
    - report/audit → `.pi/project-map/graph/audit.md`
-6. Synthesize graph insights and repository scan into project-map markdown files.
-7. End with a workflow handoff to `plan` or `none`.
+7. Synthesize graph insights and repository scan into project-map markdown files.
+8. Run self-check.
+9. End with a workflow handoff to `plan` or `none`.
 
 ## Graphify Input Selection
 
@@ -80,7 +83,18 @@ Exclude:
 - secrets or env files containing credentials
 - large binary assets unless relevant
 
-If the corpus is huge, ask before graphifying the whole repository.
+If the corpus has >200 source files or >2,000,000 words, ask before graphifying the entire repository. Offer to focus on the most important subdirectories.
+
+## Refresh Mode
+
+When called as a refresh (not first-time onboard):
+
+- Read existing `.pi/project-map/` files first.
+- Identify what has changed in the codebase since the last onboard.
+- Re-run graphify to detect structural changes.
+- Preserve valid historical context that still applies.
+- Note significant changes explicitly in updated files.
+- Update `agent-guidance.md` with any new risks, modules, conventions, or commands.
 
 ## Output Requirements
 
@@ -241,5 +255,27 @@ Auto handoff:
 
 - Do not claim graphify insights unless graphify ran or graph artifacts already existed.
 - If graphify cannot run, still create project-map files and explain the gap in `risks.md` and final handoff.
-- Keep `agent-guidance.md` short enough to be read at the start of future tasks.
+- Keep `agent-guidance.md` short enough to be read at the start of future tasks (≤100 lines).
 - If the user asks to start feature work immediately after onboarding, recommend `plan` next.
+- If the project has an existing `AGENTS.md` or `CLAUDE.md`, reference it in `agent-guidance.md` and avoid duplicating its instructions.
+- If the user indicated a goal or task alongside onboarding, set `next_skill` to `plan` in the handoff. Otherwise set it to `none` and ask what they want to work on.
+
+## Self-Check Before Handoff
+
+Verify before producing the final response:
+
+- `agent-guidance.md` is ≤100 lines and actionable.
+- `commands.md` includes at least one runnable validation command.
+- `architecture.md` references graphify communities if graph ran.
+- `risks.md` identifies at least one concrete risk or explicitly states none found.
+- Every required output file exists and is non-empty.
+- No absolute paths appear in any output file.
+- If this is a refresh, changes since last onboard are noted.
+
+## After Onboarding
+
+Recommend the user:
+
+- Add `.pi/project-map/` to version control for collaborators.
+- Add `.pi/workflow-orchestrator.json` and `.pi/workflows/` to `.gitignore`.
+- Add `.pi/project-map/graph/graphify-out/` and `.pi/project-map/graph/.graphify_*` to `.gitignore`.

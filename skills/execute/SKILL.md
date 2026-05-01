@@ -11,9 +11,11 @@ Use this skill to carry out a concrete task safely and verify the result.
 
 - Work from the user's request or an existing plan.
 - Inspect before editing.
+- If `.pi/project-map/agent-guidance.md` exists, read it for project validation commands, conventions, risky areas, and "do not touch" items before implementing.
 - Make the smallest correct change.
 - Prefer precise edits over broad rewrites.
 - Track plan task IDs when provided: `P1`, `P2`, `P3`, ...
+- Respect task dependencies from the plan. Complete prerequisite tasks before dependent ones.
 - Run relevant validation when feasible.
 - Stop and ask before destructive, irreversible, credential-related, or high-risk actions.
 
@@ -30,11 +32,19 @@ Use any available inputs:
 
 1. Confirm the target task from the request or plan.
 2. Inspect relevant files and current behavior.
-3. Implement changes in small, coherent steps.
-4. Run formatting, linting, tests, builds, or focused checks when available.
-5. Fix issues discovered during validation when in scope.
-6. Perform a self-review against the task IDs, acceptance criteria, and validation expectations.
-7. Summarize changed files, completed task IDs, validation results, deviations, and reviewer focus.
+3. Respect task dependencies: complete prerequisite tasks before dependent ones. If a dependency cannot be completed, pause and report.
+4. Implement changes in small, coherent steps.
+5. Run formatting, linting, tests, builds, or focused checks when available.
+6. Fix issues discovered during validation when in scope.
+7. If an implementation attempt makes things worse, stop, revert, and report.
+8. Perform a self-review against the task IDs, acceptance criteria, and validation expectations.
+9. Summarize changed files, completed task IDs, validation results, deviations, and reviewer focus.
+
+## Progress and Checkpoints
+
+- If the plan has many tasks, report progress after completing each logical group rather than waiting until the end.
+- If a task fails validation, report immediately rather than continuing to the next task.
+- Suggest a commit checkpoint after completing a coherent group of changes that pass validation.
 
 ## Editing Guidelines
 
@@ -161,3 +171,33 @@ Pause and ask the user if:
 - The change requires secrets, credentials, or external account access.
 - A command may delete data, rewrite history, or perform a production operation.
 - Tests reveal a broader unrelated failure.
+- An implementation attempt makes things worse (tests that passed before now fail).
+- A dependency task cannot be completed (blocked, deferred, or unclear).
+
+When stopping due to a mistake:
+
+- Revert the problematic change if possible.
+- Report what went wrong and what was reverted.
+- Ask the user how to proceed.
+
+## Handoff Confidence and Signals
+
+Set handoff confidence based on validation results:
+
+- `"high"`: all expected validation passed, no deviations.
+- `"medium"`: some validation not run, minor deviations, or partial completion.
+- `"low"`: validation failed, significant deviations, or blockers found.
+
+When producing the auto handoff JSON, include a `signals` field if relevant:
+
+```json
+"signals": {
+  "failed_validation": true,
+  "blockers": true,
+  "destructive_or_risky": true
+}
+```
+
+- `failed_validation`: any validation command failed.
+- `blockers`: implementation revealed blockers not in the original plan.
+- `destructive_or_risky`: the next step involves risky operations.

@@ -14,6 +14,7 @@ Use this skill to make fuzzy requirements testable before implementation plannin
 - Ask focused questions only when ambiguity would materially affect acceptance.
 - Do not create an implementation plan; leave task decomposition to `plan`.
 - Do not edit files unless the user explicitly asks.
+- If `.pi/project-map/agent-guidance.md` exists, read it to understand project validation commands, test patterns, and conventions when defining validation methods.
 
 ## Inputs
 
@@ -29,9 +30,20 @@ Use any available inputs:
 2. Extract functional and non-functional requirements.
 3. Convert requirements into acceptance criteria with stable IDs: `AC1`, `AC2`, `AC3`, ...
 4. Include edge cases, error states, permissions, accessibility, performance, compatibility, and security criteria when relevant.
-5. Define validation methods for each criterion: automated test, manual check, demo, log inspection, etc.
-6. Identify non-goals, assumptions, and open questions.
-7. Produce a handoff for `plan`.
+5. Include negative criteria when relevant: "Must NOT expose user data in logs", "Must NOT break existing API consumers."
+6. Define validation methods for each criterion: automated test, manual check, demo, log inspection, etc.
+7. Group and prioritize criteria when there are more than 5.
+8. Identify non-goals, assumptions, and open questions.
+9. Run self-check.
+10. Produce a handoff for `plan`.
+
+## Grouping and Priority
+
+When producing more than 5 criteria:
+
+- Group related criteria under headings (e.g., "Authentication", "Error Handling", "Performance").
+- Mark each criterion with priority: must-have (MVP), should-have, or nice-to-have.
+- This helps `plan` decompose efficiently and scope MVP work.
 
 ## Criteria Quality Bar
 
@@ -48,6 +60,7 @@ Each acceptance criterion should be:
 Use support skills when they make acceptance criteria more accurate:
 
 - Use `find-docs` when acceptance depends on documented framework/API behavior, platform limits, accessibility requirements, security guidance, or CLI/service semantics.
+- Use `ast-grep` when acceptance depends on understanding current code behavior, existing patterns, or call sites that must be preserved.
 
 Support skill findings should become testable acceptance criteria, edge cases, assumptions, or open questions.
 
@@ -153,3 +166,15 @@ Auto handoff:
 - If criteria are not testable, rewrite them until they are.
 - If the user says "good enough" or "MVP," explicitly separate MVP criteria from later enhancements.
 - Recommend using `plan` next once criteria are stable.
+- Set confidence to `"medium"` in the handoff if open questions remain. Set `"high"` only if all criteria are unambiguous and no questions are outstanding.
+
+## Self-Check Before Handoff
+
+Verify:
+
+- Every AC is testable (someone could write a pass/fail check for it).
+- No AC uses vague terms without quantification ("fast", "secure", "user-friendly").
+- Edge cases cover at least: empty input, invalid input, unauthorized access, concurrent access (when relevant).
+- Definition of Done includes at least one validation command or test expectation.
+- AC IDs are stable and sequential.
+- Negative criteria are included where regressions, data loss, or security violations are possible.

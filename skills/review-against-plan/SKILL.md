@@ -11,6 +11,7 @@ Use this skill to compare completed changes with the original plan or design spe
 
 - Review, do not implement, unless the user explicitly asks for fixes.
 - Compare actual changes against the plan/spec/acceptance criteria, not just general code quality.
+- If `.pi/project-map/agent-guidance.md` exists, read it to understand risky areas, conventions, validation commands, and protected files when assessing deviations and risks.
 - Be objective and evidence-based.
 - Inspect relevant files, diffs, tests, and command output when available.
 - Call out both matches and gaps.
@@ -33,11 +34,22 @@ If the plan/spec is missing, ask for it or reconstruct expected behavior from th
 
 1. Identify the intended scope from the plan/spec and task IDs.
 2. Inspect changed files and implementation details.
-3. Map each planned item, task ID, requirement, and acceptance criterion to implementation status.
-4. Review validation evidence: tests, lint, build, manual checks, or missing checks.
-5. Identify deviations, regressions, incomplete work, and unplanned changes.
-6. Assess risks: correctness, maintainability, security, performance, UX, compatibility.
-7. Produce a concise review with acceptance recommendation and handoff.
+3. Compare the `execute` self-review against actual changes. Note any discrepancies between what execute reported and what actually happened.
+4. Map each planned item, task ID, requirement, and acceptance criterion to implementation status.
+5. Review validation evidence: tests, lint, build, manual checks, or missing checks.
+6. Run independent validation when feasible and safe.
+7. Identify deviations, regressions, incomplete work, and unplanned changes.
+8. Assess risks: correctness, maintainability, security, performance, UX, compatibility.
+9. Produce a concise review with acceptance recommendation and handoff.
+
+## Independent Validation
+
+When feasible:
+
+- Re-run validation commands mentioned in the plan (V1, V2, ...) to verify independently.
+- If execute reported "passed" but you find evidence of failure, escalate to blocker.
+- If validation was "not run" by execute, run it now when safe and non-destructive.
+- Do not run destructive commands, production operations, or credential-dependent checks without user approval.
 
 ## Review Criteria
 
@@ -50,6 +62,7 @@ Check for:
 - Code quality: simple, maintainable, consistent with project style.
 - Integration: APIs, data models, migrations, configs, docs, and tests align.
 - Validation: relevant checks were run and passed, or gaps are documented.
+- Regression safety: no pre-existing passing tests now fail. No previously working features are broken.
 - Risk: known risks are mitigated or tracked.
 
 ## Support Skills
@@ -179,3 +192,16 @@ Auto handoff:
 - If evidence is insufficient, say what should be checked next.
 - If fixes are needed, recommend handing the review back to `execute` with the blocker list.
 - If plan coverage is good but engineering quality needs deeper inspection, recommend `code-review`.
+
+## Handoff Confidence and Signals
+
+Set handoff confidence:
+
+- `"high"`: verdict is clear and recommendation is unambiguous.
+- `"medium"`: verdict has nuance or evidence is incomplete.
+- `"low"`: cannot determine verdict without more information.
+
+Include `signals` in the auto handoff JSON when relevant:
+
+- `"blockers": true` — if verdict is "Needs changes" or "Blocked".
+- `"failed_validation": true` — if any validation failed during independent re-check.
