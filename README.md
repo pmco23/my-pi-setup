@@ -17,6 +17,23 @@ docs/                     Design notes and future extension discussion
 USAGE.md                  How to use the workflow day to day
 ```
 
+## Prerequisites
+
+- [pi](https://github.com/badlogic/pi-mono) installed and available on PATH
+- Node.js ≥ 18 (for extension runtime and tests)
+- rsync (used by installer scripts)
+- Python 3 + [graphify](https://pypi.org/project/graphifyy/) (optional, for `/workflow:onboard` and `/workflow:refresh`)
+
+## Local development
+
+Clone and run tests:
+
+```bash
+git clone https://github.com/pmco23/my-pi-setup.git
+cd my-pi-setup
+npm test
+```
+
 ## Install
 
 From this folder:

@@ -1,0 +1,11 @@
+{
+  "name": "my-pi-setup",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Portable pi workflow setup: skills, extension, and installer",
+  "scripts": {
+    "test": "cd extensions/workflow-orchestrator && npm test",
+    "install-setup": "./scripts/install.sh",
+    "backup": "./scripts/backup-current.sh"
+  }
+}
