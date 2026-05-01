@@ -94,7 +94,7 @@ After installing, restart pi or run:
 /skill:code-review
 ```
 
-Support skills are also included when present:
+Support skills (third-party, bundled for portability):
 
 ```text
 /skill:find-docs
