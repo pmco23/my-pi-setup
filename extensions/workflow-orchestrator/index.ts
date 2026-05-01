@@ -103,6 +103,43 @@ export default function workflowOrchestratorExtension(pi: ExtensionAPI) {
 		},
 	});
 
+	// Warn on git push if project context is stale
+	pi.on("tool_call", async (event, ctx) => {
+		if (event.toolName !== "bash") return;
+		const cmd = event.input?.command || "";
+		if (!/\bgit\s+push\b/.test(cmd)) return;
+
+		const fs = require("node:fs");
+		const path = require("node:path");
+		const projectRoot = getProjectRoot(ctx.cwd);
+		const guidancePath = path.join(projectRoot, ".pi", "project-map", "agent-guidance.md");
+		if (!fs.existsSync(guidancePath)) return;
+
+		const guidanceMtime = fs.statSync(guidancePath).mtimeMs;
+		const srcDirs = ["src", "lib", "extensions", "skills", "scripts"];
+		let stale = false;
+		for (const dir of srcDirs) {
+			const fullDir = path.join(projectRoot, dir);
+			if (!fs.existsSync(fullDir)) continue;
+			try {
+				const files = fs.readdirSync(fullDir, { recursive: true, withFileTypes: true });
+				for (const f of files) {
+					if (!f.isFile()) continue;
+					const filePath = path.join(f.parentPath || f.path, f.name);
+					if (fs.statSync(filePath).mtimeMs > guidanceMtime) {
+						stale = true;
+						break;
+					}
+				}
+			} catch {}
+			if (stale) break;
+		}
+
+		if (stale) {
+			ctx.ui.notify("Project context (.pi/project-map/) may be stale. Consider /workflow:refresh.", "warning");
+		}
+	});
+
 	pi.on("agent_end", async (event, ctx) => {
 		// Capture and clear the flag
 		const isWorkflowSkillResponse = pendingWorkflowSkillResponse;

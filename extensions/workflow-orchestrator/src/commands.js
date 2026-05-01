@@ -25,7 +25,24 @@ async function handleInit(args, env) {
   const projectRoot = getProjectRoot(env.cwd);
   const result = initConfig(projectRoot, mode);
   env.notify(`Workflow config ${result.status}: ${result.configPath}`, result.status === 'created' ? 'success' : 'info');
+  // Install pre-push hook if git repo and hook not present
+  installPrePushHook(projectRoot, env);
   return { ...result, projectRoot };
+}
+
+function installPrePushHook(projectRoot, env) {
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const hooksDir = path.join(projectRoot, '.git', 'hooks');
+  if (!fs.existsSync(path.join(projectRoot, '.git'))) return;
+  const hookPath = path.join(hooksDir, 'pre-push');
+  if (fs.existsSync(hookPath)) return; // don't overwrite existing hooks
+  const hookSource = path.join(__dirname, '..', 'assets', 'pre-push-hook.sh');
+  if (!fs.existsSync(hookSource)) return;
+  fs.mkdirSync(hooksDir, { recursive: true });
+  fs.copyFileSync(hookSource, hookPath);
+  fs.chmodSync(hookPath, '755');
+  env.notify('Installed pre-push hook for stale context warnings.', 'info');
 }
 
 async function handleStatus(_args, env) {

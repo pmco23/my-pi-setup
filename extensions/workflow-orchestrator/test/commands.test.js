@@ -43,6 +43,32 @@ test('handleStatus summarizes config without sending messages', async () => {
   assert.equal(e.sent.length, 0);
 });
 
+test('handleInit installs pre-push hook when git repo exists', async () => {
+  const root = tmpdir();
+  const fs = require('node:fs');
+  const path = require('node:path');
+  // Create .git directory to simulate a git repo
+  fs.mkdirSync(path.join(root, '.git', 'hooks'), { recursive: true });
+  const e = env(root);
+  await handleInit('auto', e);
+  const hookPath = path.join(root, '.git', 'hooks', 'pre-push');
+  assert.equal(fs.existsSync(hookPath), true);
+  const content = fs.readFileSync(hookPath, 'utf8');
+  assert.match(content, /project-map/);
+});
+
+test('handleInit does not overwrite existing pre-push hook', async () => {
+  const root = tmpdir();
+  const fs = require('node:fs');
+  const path = require('node:path');
+  fs.mkdirSync(path.join(root, '.git', 'hooks'), { recursive: true });
+  const hookPath = path.join(root, '.git', 'hooks', 'pre-push');
+  fs.writeFileSync(hookPath, '#!/bin/sh\necho custom hook');
+  const e = env(root);
+  await handleInit('auto', e);
+  assert.equal(fs.readFileSync(hookPath, 'utf8'), '#!/bin/sh\necho custom hook');
+});
+
 test('handleStart initializes active workflow and sends first skill prompt', async () => {
   const root = tmpdir();
   const e = env(root);
