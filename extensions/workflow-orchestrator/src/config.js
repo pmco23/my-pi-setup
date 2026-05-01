@@ -33,15 +33,15 @@ function defaultConfig(mode = 'user-in-the-loop') {
     support_skills: {
       'find-docs': {
         use_when: 'External library, framework, SDK, CLI, or cloud-service behavior needs current documentation verification.',
-        allowed_in: ['brainstorm-spec', 'acceptance-criteria', 'plan', 'execute', 'review-against-plan', 'code-review'],
+        allowed_in: ['project-intake', 'brainstorm-spec', 'acceptance-criteria', 'plan', 'execute', 'review-against-plan', 'code-review'],
       },
       'ast-grep': {
         use_when: 'Structural code search, call-site analysis, pattern verification, refactor discovery, or anti-pattern detection is needed.',
-        allowed_in: ['plan', 'execute', 'review-against-plan', 'code-review'],
+        allowed_in: ['project-intake', 'acceptance-criteria', 'plan', 'execute', 'review-against-plan', 'code-review'],
       },
       graphify: {
         use_when: 'Complex relationships, architecture, domain modeling, documentation mapping, or large-codebase impact analysis is needed.',
-        allowed_in: ['brainstorm-spec', 'plan', 'review-against-plan', 'code-review'],
+        allowed_in: ['project-intake', 'brainstorm-spec', 'plan', 'review-against-plan', 'code-review'],
       },
     },
     project_map: {
