@@ -1,7 +1,7 @@
 const { getProjectRoot, loadConfig, saveConfig, initConfig } = require('./config');
 const { startWorkflow, pauseWorkflow, resumeWorkflow } = require('./state');
 const { appendAuditEntry } = require('./audit');
-const { buildStartPrompt, buildOnboardPrompt, buildContinuePrompt, firstSkillForGoal } = require('./prompts');
+const { buildStartPrompt, buildOnboardPrompt, buildRefreshPrompt, buildContinuePrompt, firstSkillForGoal } = require('./prompts');
 
 function parseModeAndRest(args, fallbackMode) {
   const parts = String(args || '').trim().split(/\s+/).filter(Boolean);
@@ -112,6 +112,19 @@ async function handleOnboard(args, env) {
   return { ok: true, projectRoot, config, prompt };
 }
 
+async function handleRefresh(args, env) {
+  const projectRoot = getProjectRoot(env.cwd);
+  const loaded = loadConfig(projectRoot);
+  if (!loaded.ok) {
+    env.notify(`Workflow config not available: ${loaded.reason}. Run /workflow:init first.`, 'warning');
+    return { ok: false, reason: loaded.reason, projectRoot };
+  }
+  const parsed = parseModeAndRest(args, loaded.config.default_mode);
+  const prompt = buildRefreshPrompt({ mode: parsed.mode, projectMap: loaded.config.project_map });
+  env.sendUserMessage(prompt);
+  return { ok: true, projectRoot, config: loaded.config, prompt };
+}
+
 async function handleContext(_args, env) {
   const fs = require('node:fs');
   const path = require('node:path');
@@ -189,6 +202,7 @@ module.exports = {
   handleStatus,
   handleStart,
   handleOnboard,
+  handleRefresh,
   handleContext,
   handleContinue,
   handlePause,

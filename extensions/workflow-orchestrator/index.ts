@@ -48,6 +48,13 @@ export default function workflowOrchestratorExtension(pi: ExtensionAPI) {
 		},
 	});
 
+	pi.registerCommand("workflow:refresh", {
+		description: "Refresh the project map after codebase changes",
+		handler: async (args, ctx) => {
+			await commands.handleRefresh(args, commands.createCommandEnv(ctx, pi));
+		},
+	});
+
 	pi.registerCommand("workflow:context", {
 		description: "Show project-map context status",
 		handler: async (args, ctx) => {

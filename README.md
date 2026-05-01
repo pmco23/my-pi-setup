@@ -58,6 +58,7 @@ After installing, restart pi or run:
 /workflow:continue
 /workflow:status
 /workflow:onboard
+/workflow:refresh
 /workflow:context
 /workflow:pause
 /workflow:resume

@@ -103,6 +103,16 @@ For a project not originally built with this workflow:
 
 `/workflow:context` reports whether project guidance and graph artifacts exist.
 
+## Refreshing project context
+
+After significant codebase changes (new modules, refactors, dependency updates, architecture shifts):
+
+```text
+/workflow:refresh
+```
+
+This re-runs `project-intake` with graphify and updates all `.pi/project-map/*` files without disturbing the active workflow state.
+
 ## Continuing later
 
 From the same project folder:

@@ -46,6 +46,7 @@ Available extension commands:
 - /workflow:continue
 - /workflow:status
 - /workflow:onboard
+- /workflow:refresh
 - /workflow:context
 - /workflow:pause
 - /workflow:resume

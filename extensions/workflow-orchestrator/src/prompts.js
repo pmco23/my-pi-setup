@@ -50,6 +50,27 @@ function buildOnboardPrompt({ mode, workflowId, artifactLog, projectMap }) {
   });
 }
 
+function buildRefreshPrompt({ mode, projectMap }) {
+  return buildSkillPrompt('project-intake', {
+    goal: 'Refresh the existing project map. The codebase may have changed since the last onboarding.',
+    mode,
+    context: [
+      `Project map path: ${projectMap?.path || '.pi/project-map'}`,
+      `Agent guidance path: ${projectMap?.agent_guidance || '.pi/project-map/agent-guidance.md'}`,
+      `Graph output path: ${projectMap?.graph?.path || '.pi/project-map/graph'}`,
+      `Last updated: ${projectMap?.last_updated || 'unknown'}`,
+    ],
+    instructions: [
+      'This is a refresh, not initial onboarding.',
+      'Use graphify from the beginning to detect structural changes.',
+      'Update all .pi/project-map/ files with current codebase state.',
+      'Write graphify outputs under .pi/project-map/graph/.',
+      'Preserve useful historical context in agent-guidance.md when still valid.',
+      'Do not modify source code.',
+    ].join('\n'),
+  });
+}
+
 function buildContinuePrompt(config) {
   const active = config.active_workflow || {};
   if (!active.next_skill) throw new Error('No active workflow next_skill to continue');
@@ -61,4 +82,4 @@ function buildContinuePrompt(config) {
   });
 }
 
-module.exports = { buildSkillPrompt, buildStartPrompt, buildOnboardPrompt, buildContinuePrompt, firstSkillForGoal };
+module.exports = { buildSkillPrompt, buildStartPrompt, buildOnboardPrompt, buildRefreshPrompt, buildContinuePrompt, firstSkillForGoal };

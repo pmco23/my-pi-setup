@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { buildSkillPrompt, buildStartPrompt, buildOnboardPrompt, buildContinuePrompt, firstSkillForGoal } = require('../src/prompts');
+const { buildSkillPrompt, buildStartPrompt, buildOnboardPrompt, buildRefreshPrompt, buildContinuePrompt, firstSkillForGoal } = require('../src/prompts');
 const { defaultConfig } = require('../src/config');
 
 test('buildSkillPrompt builds slash skill command with context', () => {
@@ -29,6 +29,15 @@ test('buildOnboardPrompt uses project-intake and graphify-first instructions', (
   assert.match(prompt, /^\/skill:project-intake/);
   assert.match(prompt, /Use graphify from the beginning/);
   assert.match(prompt, /.pi\/project-map\/graph/);
+});
+
+test('buildRefreshPrompt includes refresh instructions and last_updated', () => {
+  const pm = { ...defaultConfig().project_map, last_updated: '2026-05-01T00:00:00Z' };
+  const prompt = buildRefreshPrompt({ mode: 'user-in-the-loop', projectMap: pm });
+  assert.match(prompt, /^\/skill:project-intake/);
+  assert.match(prompt, /refresh/i);
+  assert.match(prompt, /Use graphify from the beginning/);
+  assert.match(prompt, /Last updated: 2026-05-01/);
 });
 
 test('buildContinuePrompt resumes from active workflow next skill', () => {
