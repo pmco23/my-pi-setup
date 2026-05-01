@@ -1,0 +1,115 @@
+# My Pi Setup
+
+Portable backup and installer for my global pi workflow setup.
+
+## What this includes
+
+This repository contains reusable pi resources:
+
+```text
+skills/                   Global skills installed to ~/.agents/skills/
+extensions/               Global extensions installed to ~/.pi/agent/extensions/
+deprecated/prompts/       Old workflow prompt templates kept for reference, not installed
+settings/                 Reference global pi settings
+scripts/install.sh        Install this setup on a machine
+scripts/backup-current.sh Refresh this repo from the current machine
+docs/                     Design notes and future extension discussion
+USAGE.md                  How to use the workflow day to day
+```
+
+## Install
+
+From this folder:
+
+```bash
+./scripts/install.sh
+```
+
+The installer copies:
+
+```text
+skills/*     -> ~/.agents/skills/
+extensions/* -> ~/.pi/agent/extensions/
+```
+
+It also ensures global pi settings include:
+
+```json
+{
+  "enableSkillCommands": true
+}
+```
+
+After installing, restart pi or run:
+
+```text
+/reload
+```
+
+## What gets installed
+
+### Extension commands
+
+```text
+/workflow:init
+/workflow:start
+/workflow:auto
+/workflow:manual
+/workflow:continue
+/workflow:status
+/workflow:pause
+/workflow:resume
+```
+
+### Skill commands
+
+```text
+/skill:workflow-orchestrator
+/skill:brainstorm-spec
+/skill:acceptance-criteria
+/skill:plan
+/skill:execute
+/skill:review-against-plan
+/skill:code-review
+```
+
+Support skills are also included when present:
+
+```text
+/skill:find-docs
+/skill:ast-grep
+/skill:graphify
+```
+
+## Per-project workflow state
+
+The installed resources are global, but each project keeps its own workflow state:
+
+```text
+.pi/workflow-orchestrator.json
+.pi/workflows/
+```
+
+Initialize a project with:
+
+```text
+/workflow:init user-in-the-loop
+```
+
+or:
+
+```text
+/workflow:init auto
+```
+
+## Backup current machine state
+
+To refresh this repository from the currently installed global pi setup:
+
+```bash
+./scripts/backup-current.sh
+```
+
+## Usage
+
+See [`USAGE.md`](USAGE.md) for day-to-day workflow instructions.
