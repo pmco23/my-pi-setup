@@ -22,7 +22,7 @@ USAGE.md                  How to use the workflow day to day
 - [pi](https://github.com/badlogic/pi-mono) installed and available on PATH
 - Node.js ≥ 18 (for extension runtime and tests)
 - rsync (used by installer scripts)
-- Python 3 + [graphify](https://pypi.org/project/graphifyy/) (optional, for `/workflow:onboard` and `/workflow:refresh`)
+- Python 3 + [graphify](https://pypi.org/project/graphifyy/) (optional, for `/skill:project-intake`)
 
 ## Local development
 
@@ -85,17 +85,8 @@ The installer copies `onyx` to `~/.pi/agent/themes/onyx.json`, so it is availabl
 ### Extension commands
 
 ```text
-/my-pi:setup
 /workflow:init
-/workflow:start
-/workflow:auto
-/workflow:manual
 /workflow:continue
-/workflow:upgrade-config
-/workflow:status
-/workflow:onboard
-/workflow:refresh
-/workflow:context
 /workflow:pause
 /workflow:resume
 ```
@@ -134,7 +125,6 @@ The installed resources are global, but each project keeps its own workflow stat
 Optionally configure pi theme/settings with:
 
 ```text
-/my-pi:setup
 ```
 
 Initialise a project:
@@ -143,12 +133,15 @@ Initialise a project:
 /workflow:init
 ```
 
-Then start a workflow — the mode you pass here is the single source of truth:
+The wizard sets mode (auto or user-in-the-loop), theme, thinking level, compaction, and retry.
+
+For an existing codebase, map it first:
 
 ```text
-/workflow:auto <goal>        → pi drives automatically
-/workflow:manual <goal>      → you approve every step
+/skill:project-intake
 ```
+
+Then invoke a skill to start working. In auto mode, pi chains automatically. In user-in-the-loop mode, run `/workflow:continue` after each skill.
 
 For an existing codebase, onboard/map it before feature work:
 

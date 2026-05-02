@@ -77,7 +77,7 @@ npm test
 2. Follow the [Agent Skills standard](https://agentskills.io/specification):
    - Frontmatter: `name` (must match directory), `description` (≤1024 chars, specific).
    - Name: lowercase, hyphens, ≤64 chars, no leading/trailing/consecutive hyphens.
-3. Add the skill name to `auto_continue.allowed_skills` and `transitions` in `extensions/workflow-orchestrator/src/config.js` if it should participate in the workflow.
+3. Add the skill name to `transitions` in `extensions/workflow-orchestrator/src/config.js` if it should participate in the workflow.
 4. Update tests in `test/config.test.js` or `test/evaluator.test.js` if transitions change.
 5. Run `npm test`.
 6. Update `README.md`, `USAGE.md`, and `scripts/install.sh` output.
@@ -142,7 +142,7 @@ The installer prints `Updated bundled graphify skill: <old> -> <new>` when a ver
 - Do not edit installed files directly (`~/.pi/agent/extensions/`, `~/.agents/skills/`). Edit the repo, then run `./scripts/install.sh`.
 - Do not add npm runtime dependencies unless strictly necessary and tested.
 - Do not commit `.pi/workflow-orchestrator.json` or `.pi/workflows/` (they are gitignored).
-- Do not hand-edit `.pi/project-map/graph/graph.json` — regenerate with `/workflow:refresh`.
+- Do not hand-edit `.pi/project-map/graph/graph.json` — regenerate with `/skill:project-intake`.
 - Do not add absolute paths in skills or extension code.
 
 ## Refreshing project context
@@ -152,7 +152,7 @@ After significant changes, update the project map:
 ```bash
 ./scripts/install.sh
 # then in pi:
-/workflow:refresh
+/skill:project-intake
 ```
 
 Or commit the updated `.pi/project-map/` files so other contributors benefit.

@@ -1,11 +1,12 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { defaultConfig } = require('../src/config');
-const { startWorkflow } = require('../src/state');
+const { startWorkflow, updateActiveWorkflow } = require('../src/state');
 const { latestAssistantMarkdown, messageText, planAutoContinuation } = require('../src/auto');
 
 function activeConfig(mode = 'auto') {
-  return startWorkflow(defaultConfig(mode), { mode, firstSkill: 'execute', workflowId: 'wf-1', timestamp: '2026-05-01T00:00:00.000Z' });
+  const c = defaultConfig(mode);
+  return startWorkflow(c, { firstSkill: 'execute', workflowId: 'wf-1', timestamp: '2026-05-01T00:00:00.000Z' });
 }
 
 function handoff(overrides = {}) {
@@ -17,7 +18,7 @@ function handoff(overrides = {}) {
     stop_reason: null,
     confidence: 'high',
     reason: 'Ready',
-    inputs: { primary_artifact: 'Plan', required_context: [], open_questions: [] },
+    inputs: { primary_artifact: 'Plan output', required_context: [], open_questions: [] },
     ...overrides,
   };
 }
@@ -41,60 +42,62 @@ test('latestAssistantMarkdown returns the latest assistant message text', () => 
 });
 
 test('planAutoContinuation continues on valid auto handoff', () => {
-  const result = planAutoContinuation({ config: activeConfig('auto'), markdown: markdownFor(handoff()), entryId: 'entry-1', isWorkflowSkillResponse: true });
+  const result = planAutoContinuation({ config: activeConfig('auto'), markdown: markdownFor(handoff()), entryId: 'e1' });
   assert.equal(result.action, 'continue');
   assert.equal(result.nextSkill, 'execute');
   assert.match(result.prompt, /^\/skill:execute/);
-  assert.equal(result.config.active_workflow.last_processed_entry_id, 'entry-1');
+  assert.equal(result.config.active_workflow.last_processed_entry_id, 'e1');
 });
 
-test('planAutoContinuation pauses on user-in-the-loop config', () => {
-  const result = planAutoContinuation({ config: activeConfig('user-in-the-loop'), markdown: markdownFor(handoff({ workflow_mode: 'auto' })), entryId: 'entry-1', isWorkflowSkillResponse: true });
-  assert.equal(result.action, 'pause');
-  assert.match(result.reason, /User-in-the-loop/);
-  assert.equal(result.config.active_workflow.paused, true);
+test('planAutoContinuation suggests (not chains) in user-in-the-loop mode', () => {
+  const result = planAutoContinuation({ config: activeConfig('user-in-the-loop'), markdown: markdownFor(handoff()), entryId: 'e1' });
+  assert.equal(result.action, 'suggest');
+  assert.equal(result.nextSkill, 'execute');
+  assert.match(result.prompt, /^\/skill:execute/);
 });
 
-test('planAutoContinuation skips silently on missing handoff when not a workflow skill response', () => {
-  const result = planAutoContinuation({ config: activeConfig('auto'), markdown: 'no handoff here', entryId: 'entry-1', isWorkflowSkillResponse: false });
+test('planAutoContinuation skips silently when no handoff in user-in-the-loop mode', () => {
+  const result = planAutoContinuation({ config: activeConfig('user-in-the-loop'), markdown: 'no handoff here', entryId: 'e1' });
   assert.equal(result.action, 'none');
-  assert.match(result.reason, /non-workflow prompt/);
 });
 
-test('planAutoContinuation pauses on missing handoff when IS a workflow skill response', () => {
-  const result = planAutoContinuation({ config: activeConfig('auto'), markdown: 'no handoff here', entryId: 'entry-1', isWorkflowSkillResponse: true });
+test('planAutoContinuation pauses when no handoff in auto mode', () => {
+  const result = planAutoContinuation({ config: activeConfig('auto'), markdown: 'no handoff here', entryId: 'e1' });
   assert.equal(result.action, 'pause');
-  assert.match(result.reason, /No fenced JSON/);
   assert.equal(result.config.active_workflow.paused, true);
 });
 
 test('planAutoContinuation ignores duplicate processed entry', () => {
   const config = activeConfig('auto');
-  config.active_workflow.last_processed_entry_id = 'entry-1';
-  const result = planAutoContinuation({ config, markdown: markdownFor(handoff()), entryId: 'entry-1' });
+  config.active_workflow.last_processed_entry_id = 'e1';
+  const result = planAutoContinuation({ config, markdown: markdownFor(handoff()), entryId: 'e1' });
   assert.equal(result.action, 'none');
-});
-
-test('planAutoContinuation evaluates valid handoff even without flag (manual /skill: invocation)', () => {
-  const result = planAutoContinuation({ config: activeConfig('auto'), markdown: markdownFor(handoff()), entryId: 'entry-2', isWorkflowSkillResponse: false });
-  assert.equal(result.action, 'continue');
-  assert.equal(result.nextSkill, 'execute');
 });
 
 test('planAutoContinuation no-ops without active workflow', () => {
-  const result = planAutoContinuation({ config: defaultConfig('auto'), markdown: markdownFor(handoff()), entryId: 'entry-1' });
+  const result = planAutoContinuation({ config: defaultConfig('auto'), markdown: markdownFor(handoff()), entryId: 'e1' });
   assert.equal(result.action, 'none');
 });
 
-test('planAutoContinuation completes and clears workflow when next skill is none', () => {
+test('planAutoContinuation completes when next_skill is none', () => {
   const result = planAutoContinuation({
     config: activeConfig('auto'),
-    markdown: markdownFor(handoff({ current_skill: 'review-against-plan', next_skill: 'none' })),
-    entryId: 'entry-1',
-    isWorkflowSkillResponse: true,
+    markdown: markdownFor(handoff({ current_skill: 'code-review', next_skill: 'none', requires_user: true, stop_reason: 'workflow complete' })),
+    entryId: 'e1',
   });
   assert.equal(result.action, 'complete');
-  assert.equal(result.artifactLog, '.pi/workflows/wf-1.jsonl');
   assert.equal(result.config.active_workflow.id, null);
   assert.equal(result.audit.decision, 'complete');
+});
+
+test('planAutoContinuation captures goal from first handoff', () => {
+  const config = activeConfig('auto');
+  config.active_workflow.goal = null;
+  const result = planAutoContinuation({
+    config,
+    markdown: markdownFor(handoff({ inputs: { primary_artifact: 'Build a notes app', required_context: [], open_questions: [] } })),
+    entryId: 'e1',
+  });
+  assert.equal(result.action, 'continue');
+  assert.equal(result.config.active_workflow.goal, 'Build a notes app');
 });

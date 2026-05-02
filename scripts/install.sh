@@ -6,7 +6,6 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 mkdir -p "$HOME/.agents/skills" "$HOME/.pi/agent/extensions" "$HOME/.pi/agent" "$HOME/.pi/agent/themes"
 
 # Refresh bundled graphify skill from installed package if a newer version is available.
-# This prevents install.sh from overwriting a freshly-upgraded graphify skill with an old repo copy.
 if command -v graphify &>/dev/null; then
   GRAPHIFY_INSTALLED_SKILL="$HOME/.pi/agent/skills/graphify"
   GRAPHIFY_REPO_SKILL="$ROOT/skills/graphify"
@@ -57,22 +56,13 @@ Reload pi resources with /reload or restart pi.
 Installed global theme:
 - onyx
 
-Available extension commands:
-- /my-pi:setup
-- /workflow:init
-- /workflow:start
-- /workflow:auto
-- /workflow:manual
-- /workflow:continue
-- /workflow:upgrade-config
-- /workflow:status
-- /workflow:onboard
-- /workflow:refresh
-- /workflow:context
-- /workflow:pause
-- /workflow:resume
+Extension commands:
+- /workflow:init       → setup wizard (mode, theme, thinking level, compaction, retry)
+- /workflow:continue   → advance or resume
+- /workflow:pause      → pause
+- /workflow:resume     → clear pause
 
-Available skill commands:
+Skill commands:
 - /skill:project-intake
 - /skill:brainstorm-spec
 - /skill:implementation-research
@@ -81,4 +71,6 @@ Available skill commands:
 - /skill:execute
 - /skill:review-against-plan
 - /skill:code-review
+
+Run /workflow:init to set up a project.
 EOF

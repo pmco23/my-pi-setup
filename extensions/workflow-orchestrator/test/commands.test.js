@@ -3,192 +3,139 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const { handleInit, handleUpgradeConfig, handleStart, handleOnboard, handleRefresh, handleContext, handleContinue, handleStatus, handlePause, handleResume, handlePiSetup, syncModeToConfig, parseModeAndRest } = require('../src/commands');
+const { handleInit, handleContinue, handlePause, handleResume, projectMapStaleness } = require('../src/commands');
 const { loadConfig } = require('../src/config');
 
 function tmpdir() { return fs.mkdtempSync(path.join(os.tmpdir(), 'wf-cmd-')); }
-function env(cwd) {
+
+function env(cwd, selects = [], confirms = []) {
   const sent = [];
   const notifications = [];
   return {
     cwd,
+    homeDir: os.tmpdir(),
     sent,
     notifications,
     notify: (message, level) => notifications.push({ message, level }),
     sendUserMessage: (message, options) => sent.push({ message, options }),
+    select: async () => selects.shift(),
+    confirm: async () => { const v = confirms.shift(); return v !== undefined ? v : true; },
+    input: async (title, placeholder) => placeholder || '',
   };
 }
 
-test('parseModeAndRest handles optional mode', () => {
-  assert.deepEqual(parseModeAndRest('auto build app', 'user-in-the-loop'), { mode: 'auto', rest: 'build app', explicit: true });
-  assert.deepEqual(parseModeAndRest('build app', 'user-in-the-loop'), { mode: 'user-in-the-loop', rest: 'build app', explicit: false });
-});
-
-test('syncModeToConfig sets auto_continue.enabled and default_mode', () => {
-  const { defaultConfig } = require('../src/config');
-  const manual = defaultConfig('user-in-the-loop');
-  const synced = syncModeToConfig(manual, 'auto');
-  assert.equal(synced.default_mode, 'auto');
-  assert.equal(synced.auto_continue.enabled, true);
-  const backToManual = syncModeToConfig(synced, 'user-in-the-loop');
-  assert.equal(backToManual.default_mode, 'user-in-the-loop');
-  assert.equal(backToManual.auto_continue.enabled, false);
-});
-
-test('handleInit creates config', async () => {
+test('handleInit creates v2 config with auto mode via wizard', async () => {
   const root = tmpdir();
-  const e = env(root);
-  const result = await handleInit('auto', e);
-  assert.equal(result.status, 'created');
-  assert.equal(loadConfig(root).config.default_mode, 'auto');
-  assert.equal(e.notifications[0].level, 'success');
-});
-
-test('handleUpgradeConfig upgrades existing config', async () => {
-  const root = tmpdir();
-  const e = env(root);
-  await handleInit('auto', e);
-  const result = await handleUpgradeConfig('', e);
+  const e = env(root,
+    ['Project (.pi/settings.json)', 'auto — pi chains skills until blocked', 'onyx (bundled custom dark theme)', 'medium'],
+    [true, true]  // compaction, retry
+  );
+  const result = await handleInit('', e);
   assert.equal(result.ok, true);
-  assert.ok(loadConfig(root).config.default_sequence.includes('implementation-research'));
+  assert.equal(result.mode, 'auto');
+  const config = loadConfig(root);
+  assert.equal(config.ok, true);
+  assert.equal(config.config.version, 2);
+  assert.equal(config.config.mode, 'auto');
+  assert.equal(config.config.auto_continue.enabled, true);
+  assert.equal(e.notifications.at(-1).level, 'success');
 });
 
-test('handleStatus summarizes config without sending messages', async () => {
+test('handleInit creates v2 config with user-in-the-loop mode', async () => {
   const root = tmpdir();
-  const e = env(root);
-  await handleInit('user-in-the-loop', e);
-  const status = await handleStatus('', e);
-  assert.equal(status.ok, true);
-  assert.match(status.summary, /Workflow mode: user-in-the-loop/);
-  assert.equal(e.sent.length, 0);
-});
-
-test('handleInit installs pre-push hook when git repo exists', async () => {
-  const root = tmpdir();
-  const fs = require('node:fs');
-  const path = require('node:path');
-  // Create .git directory to simulate a git repo
-  fs.mkdirSync(path.join(root, '.git', 'hooks'), { recursive: true });
-  const e = env(root);
-  await handleInit('auto', e);
-  const hookPath = path.join(root, '.git', 'hooks', 'pre-push');
-  assert.equal(fs.existsSync(hookPath), true);
-  const content = fs.readFileSync(hookPath, 'utf8');
-  assert.match(content, /project-map/);
-});
-
-test('handleInit does not overwrite existing pre-push hook', async () => {
-  const root = tmpdir();
-  const fs = require('node:fs');
-  const path = require('node:path');
-  fs.mkdirSync(path.join(root, '.git', 'hooks'), { recursive: true });
-  const hookPath = path.join(root, '.git', 'hooks', 'pre-push');
-  fs.writeFileSync(hookPath, '#!/bin/sh\necho custom hook');
-  const e = env(root);
-  await handleInit('auto', e);
-  assert.equal(fs.readFileSync(hookPath, 'utf8'), '#!/bin/sh\necho custom hook');
-});
-
-test('handleStart syncs config mode — auto start on user-in-the-loop init', async () => {
-  const root = tmpdir();
-  const e = env(root);
-  await handleInit('user-in-the-loop', e);
-  assert.equal(loadConfig(root).config.auto_continue.enabled, false);
-  await handleStart('auto build hello world', e);
-  const config = loadConfig(root).config;
-  assert.equal(config.default_mode, 'auto');
-  assert.equal(config.auto_continue.enabled, true);
-});
-
-test('handleStart syncs config mode — user-in-the-loop start on auto init', async () => {
-  const root = tmpdir();
-  const e = env(root);
-  await handleInit('auto', e);
-  assert.equal(loadConfig(root).config.auto_continue.enabled, true);
-  await handleStart('user-in-the-loop build hello world', e);
-  const config = loadConfig(root).config;
-  assert.equal(config.default_mode, 'user-in-the-loop');
-  assert.equal(config.auto_continue.enabled, false);
-});
-
-test('handleContinue syncs config mode when explicit mode is passed', async () => {
-  const root = tmpdir();
-  const e = env(root);
-  await handleInit('user-in-the-loop', e);
-  await handleStart('user-in-the-loop build hello world', e);
-  assert.equal(loadConfig(root).config.auto_continue.enabled, false);
-  await handleContinue('auto', e);
-  assert.equal(loadConfig(root).config.auto_continue.enabled, true);
-  assert.equal(loadConfig(root).config.default_mode, 'auto');
-});
-
-test('handleContinue does not sync config when no explicit mode is passed', async () => {
-  const root = tmpdir();
-  const e = env(root);
-  await handleInit('user-in-the-loop', e);
-  await handleStart('user-in-the-loop build hello world', e);
-  await handleContinue('', e);
-  assert.equal(loadConfig(root).config.auto_continue.enabled, false);
-  assert.equal(loadConfig(root).config.default_mode, 'user-in-the-loop');
-});
-
-test('handleStart initializes active workflow and sends first skill prompt', async () => {
-  const root = tmpdir();
-  const e = env(root);
-  await handleInit('auto', e);
-  const result = await handleStart('auto build a notes app', e);
+  const e = env(root,
+    ['Project (.pi/settings.json)', 'user-in-the-loop — pi suggests, you confirm each step', 'dark', 'medium'],
+    [true, true]
+  );
+  const result = await handleInit('', e);
   assert.equal(result.ok, true);
-  assert.match(e.sent.at(-1).message, /^\/skill:plan/);
-  const config = loadConfig(root).config;
-  assert.equal(config.active_workflow.mode, 'auto');
-  assert.equal(config.active_workflow.next_skill, 'plan');
-  assert.equal(fs.existsSync(path.join(root, config.active_workflow.artifact_log)), true);
+  assert.equal(result.mode, 'user-in-the-loop');
+  const config = loadConfig(root);
+  assert.equal(config.config.mode, 'user-in-the-loop');
+  assert.equal(config.config.auto_continue.enabled, false);
 });
 
-test('handleStart fails closed when config missing', async () => {
+test('handleInit prompts before overwriting existing config', async () => {
   const root = tmpdir();
+  // first init
+  const e1 = env(root,
+    ['Project (.pi/settings.json)', 'auto — pi chains skills until blocked', 'dark', 'medium'],
+    [true, true]
+  );
+  await handleInit('', e1);
+  // second init — confirm overwrite + new selections
+  const e2 = env(root,
+    ['Project (.pi/settings.json)', 'user-in-the-loop — pi suggests, you confirm each step', 'dark', 'medium'],
+    [true, true, true]  // confirm overwrite, then compaction, retry
+  );
+  const result = await handleInit('', e2);
+  assert.equal(result.ok, true);
+  assert.equal(loadConfig(root).config.mode, 'user-in-the-loop');
+});
+
+test('handleContinue sends next skill prompt when workflow is active', async () => {
+  const root = tmpdir();
+  const e1 = env(root,
+    ['Project (.pi/settings.json)', 'auto — pi chains skills until blocked', 'dark', 'medium'],
+    [true, true]
+  );
+  await handleInit('', e1);
+
+  // Manually set up an active workflow with a pending next skill
+  const { saveConfig, loadConfig } = require('../src/config');
+  const { startWorkflow, updateActiveWorkflow } = require('../src/state');
+  let config = loadConfig(root).config;
+  config = startWorkflow(config, { firstSkill: 'plan', goal: 'Build a notes app', workflowId: 'wf-1' });
+  config = updateActiveWorkflow(config, {
+    workflow_mode: 'auto', current_skill: 'plan', next_skill: 'execute',
+    requires_user: false, stop_reason: null, confidence: 'high', reason: 'done',
+    inputs: { primary_artifact: 'Build a notes app', required_context: [], open_questions: [] },
+  });
+  saveConfig(root, config);
+
   const e = env(root);
-  const result = await handleStart('auto build app', e);
+  const result = await handleContinue('', e);
+  assert.equal(result.ok, true);
+  assert.match(e.sent.at(-1).message, /^\/skill:execute/);
+  assert.match(e.notifications[0].message, /Continuing: execute/);
+});
+
+test('handleContinue notifies when no active workflow', async () => {
+  const root = tmpdir();
+  const e1 = env(root,
+    ['Project (.pi/settings.json)', 'auto — pi chains skills until blocked', 'dark', 'medium'],
+    [true, true]
+  );
+  await handleInit('', e1);
+  const e = env(root);
+  const result = await handleContinue('', e);
   assert.equal(result.ok, false);
+  assert.match(e.notifications[0].message, /No active workflow/);
   assert.equal(e.sent.length, 0);
 });
 
-test('handleOnboard initializes config if needed and sends project-intake prompt', async () => {
+test('handlePause and handleResume update pause state', async () => {
   const root = tmpdir();
+  const e1 = env(root,
+    ['Project (.pi/settings.json)', 'auto — pi chains skills until blocked', 'dark', 'medium'],
+    [true, true]
+  );
+  await handleInit('', e1);
+  const { saveConfig, loadConfig } = require('../src/config');
+  const { startWorkflow } = require('../src/state');
+  let config = loadConfig(root).config;
+  config = startWorkflow(config, { firstSkill: 'plan', workflowId: 'wf-1' });
+  saveConfig(root, config);
+
   const e = env(root);
-  const result = await handleOnboard('user-in-the-loop', e);
-  assert.equal(result.ok, true);
-  assert.match(e.sent.at(-1).message, /^\/skill:project-intake/);
-  assert.match(e.sent.at(-1).message, /Use graphify from the beginning/);
-  const config = loadConfig(root).config;
-  assert.equal(config.active_workflow.next_skill, 'project-intake');
-  assert.equal(config.project_map.graph.enabled, true);
+  await handlePause('waiting for review', e);
+  assert.equal(loadConfig(root).config.active_workflow.paused, true);
+  await handleResume('', e);
+  assert.equal(loadConfig(root).config.active_workflow.paused, false);
 });
 
-test('handleOnboard accepts optional goal for post-onboarding plan handoff', async () => {
+test('projectMapStaleness detects stale guidance', async () => {
   const root = tmpdir();
-  const e = env(root);
-  const result = await handleOnboard('auto build hello world', e);
-  assert.equal(result.ok, true);
-  assert.match(e.sent.at(-1).message, /User goal after onboarding: build hello world/);
-  assert.match(e.sent.at(-1).message, /recommend `plan` next/);
-});
-
-test('handleContext reports missing project map files', async () => {
-  const root = tmpdir();
-  const e = env(root);
-  await handleInit('auto', e);
-  const result = await handleContext('', e);
-  assert.equal(result.ok, true);
-  assert.match(result.summary, /Agent guidance: missing/);
-  assert.match(result.summary, /Graph JSON: missing/);
-  assert.match(result.summary, /Project map stale: no/);
-});
-
-test('handleContext reports stale project map when source changes after guidance', async () => {
-  const root = tmpdir();
-  const e = env(root);
-  await handleInit('auto', e);
   const guidancePath = path.join(root, '.pi', 'project-map', 'agent-guidance.md');
   fs.mkdirSync(path.dirname(guidancePath), { recursive: true });
   fs.writeFileSync(guidancePath, '# guidance\n');
@@ -197,67 +144,14 @@ test('handleContext reports stale project map when source changes after guidance
   fs.mkdirSync(path.join(root, 'skills', 'x'), { recursive: true });
   fs.writeFileSync(path.join(root, 'skills', 'x', 'SKILL.md'), '# changed\n');
 
-  const result = await handleContext('', e);
-  assert.equal(result.ok, true);
-  assert.equal(result.staleness.stale, true);
-  assert.match(result.summary, /Project map stale: yes/);
-  assert.match(result.summary, /Suggested refresh: \/workflow:refresh/);
+  const result = projectMapStaleness(root, guidancePath);
+  assert.equal(result.stale, true);
 });
 
-test('handleRefresh sends project-intake with refresh instructions', async () => {
+test('projectMapStaleness returns not stale when guidance is up to date', () => {
   const root = tmpdir();
-  const e = env(root);
-  await handleInit('auto', e);
-  const result = await handleRefresh('', e);
-  assert.equal(result.ok, true);
-  assert.match(e.sent.at(-1).message, /^\/skill:project-intake/);
-  assert.match(e.sent.at(-1).message, /refresh/i);
-  assert.match(e.sent.at(-1).message, /Use graphify from the beginning/);
-});
-
-test('handleRefresh fails closed when config missing', async () => {
-  const root = tmpdir();
-  const e = env(root);
-  const result = await handleRefresh('', e);
-  assert.equal(result.ok, false);
-  assert.equal(e.sent.length, 0);
-});
-
-test('handleContinue sends active next skill prompt', async () => {
-  const root = tmpdir();
-  const e = env(root);
-  await handleInit('auto', e);
-  await handleStart('auto implement auth', e);
-  const result = await handleContinue('', e);
-  assert.equal(result.ok, true);
-  assert.match(e.sent.at(-1).message, /^\/skill:plan/);
-});
-
-test('handlePause and handleResume update active state', async () => {
-  const root = tmpdir();
-  const e = env(root);
-  await handleInit('auto', e);
-  await handleStart('auto build app', e);
-  await handlePause('waiting', e);
-  assert.equal(loadConfig(root).config.active_workflow.paused, true);
-  await handleResume('', e);
-  assert.equal(loadConfig(root).config.active_workflow.paused, false);
-});
-
-test('handlePiSetup runs interactive setup and writes project settings', async () => {
-  const root = tmpdir();
-  const home = tmpdir();
-  const e = env(root);
-  const selections = ['Project (.pi/settings.json)', 'onyx (bundled custom dark theme)', 'high'];
-  const confirmations = [true, true];
-  e.homeDir = home;
-  e.select = async () => selections.shift();
-  e.confirm = async () => confirmations.shift();
-
-  const result = await handlePiSetup('', e);
-  assert.equal(result.ok, true);
-  assert.equal(fs.existsSync(path.join(root, '.pi', 'settings.json')), true);
-  assert.equal(fs.existsSync(path.join(root, '.pi', 'themes', 'onyx.json')), false);
-  assert.equal(fs.existsSync(path.join(home, '.pi', 'agent', 'themes', 'onyx.json')), true);
-  assert.equal(e.notifications.at(-1).level, 'success');
+  const guidancePath = path.join(root, 'guidance.md');
+  fs.writeFileSync(guidancePath, '# guidance\n');
+  const result = projectMapStaleness(root, guidancePath);
+  assert.equal(result.stale, false);
 });

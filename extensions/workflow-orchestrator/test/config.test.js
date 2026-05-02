@@ -3,45 +3,56 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const { defaultConfig, getConfigPath, getWorkflowsDir, loadConfig, saveConfig, initConfig, upgradeConfig, upgradeProjectConfig } = require('../src/config');
+const { DEFAULT_TRANSITIONS, defaultConfig, getConfigPath, getWorkflowsDir, loadConfig, saveConfig, initConfigV2 } = require('../src/config');
 
 function tmpdir() { return fs.mkdtempSync(path.join(os.tmpdir(), 'wf-config-')); }
 
-test('defaultConfig sets auto_continue based on mode', () => {
-  assert.equal(defaultConfig('user-in-the-loop').auto_continue.enabled, false);
-  assert.equal(defaultConfig('auto').auto_continue.enabled, true);
-  assert.ok(defaultConfig().support_skills['find-docs']);
-  assert.ok(defaultConfig().default_sequence.includes('implementation-research'));
-  assert.ok(defaultConfig().auto_continue.allowed_skills.includes('project-intake'));
-  assert.ok(defaultConfig().auto_continue.allowed_skills.includes('implementation-research'));
-  assert.ok(defaultConfig().transitions['brainstorm-spec'].includes('implementation-research'));
-  assert.ok(defaultConfig().transitions['implementation-research'].includes('acceptance-criteria'));
-  assert.ok(defaultConfig().transitions['project-intake'].includes('none'));
-  assert.ok(defaultConfig().support_skills['find-docs'].allowed_in.includes('implementation-research'));
-  assert.equal(defaultConfig().project_map.graph.enabled, true);
+test('defaultConfig version 2 shape', () => {
+  const c = defaultConfig('auto');
+  assert.equal(c.version, 2);
+  assert.equal(c.mode, 'auto');
+  assert.equal(c.auto_continue.enabled, true);
+  assert.ok(!('default_mode' in c));
+  assert.ok(!('default_sequence' in c));
+  assert.ok(!('support_skills' in c));
+  assert.ok(!('project_map' in c));
+  assert.ok(!('handoff' in c));
+  assert.ok('goal' in c.active_workflow);
+  assert.ok(c.transitions['brainstorm-spec'].includes('implementation-research'));
+  assert.ok(c.transitions['project-intake'].includes('none'));
 });
 
-test('initConfig creates project config and workflows directory', () => {
+test('defaultConfig user-in-the-loop disables auto_continue', () => {
+  const c = defaultConfig('user-in-the-loop');
+  assert.equal(c.mode, 'user-in-the-loop');
+  assert.equal(c.auto_continue.enabled, false);
+});
+
+test('defaultConfig throws on invalid mode', () => {
+  assert.throws(() => defaultConfig('invalid'), /Invalid mode/);
+});
+
+test('initConfigV2 creates v2 config and workflows directory', () => {
   const root = tmpdir();
-  const result = initConfig(root, 'auto');
+  const result = initConfigV2(root, 'auto');
   assert.equal(result.status, 'created');
   assert.equal(fs.existsSync(getConfigPath(root)), true);
   assert.equal(fs.existsSync(getWorkflowsDir(root)), true);
   const loaded = loadConfig(root);
   assert.equal(loaded.ok, true);
-  assert.equal(loaded.config.default_mode, 'auto');
-  assert.equal(loaded.config.auto_continue.enabled, true);
+  assert.equal(loaded.config.version, 2);
+  assert.equal(loaded.config.mode, 'auto');
 });
 
-test('initConfig does not overwrite existing config unless forced', () => {
+test('initConfigV2 does not overwrite existing config unless forced', () => {
   const root = tmpdir();
-  initConfig(root, 'user-in-the-loop');
-  const existing = initConfig(root, 'auto');
+  initConfigV2(root, 'user-in-the-loop');
+  const existing = initConfigV2(root, 'auto');
   assert.equal(existing.status, 'exists');
-  assert.equal(loadConfig(root).config.default_mode, 'user-in-the-loop');
-  const forced = initConfig(root, 'auto', { force: true });
+  assert.equal(loadConfig(root).config.mode, 'user-in-the-loop');
+  const forced = initConfigV2(root, 'auto', { force: true });
   assert.equal(forced.status, 'created');
-  assert.equal(loadConfig(root).config.default_mode, 'auto');
+  assert.equal(loadConfig(root).config.mode, 'auto');
 });
 
 test('saveConfig and loadConfig round-trip', () => {
@@ -59,22 +70,18 @@ test('loadConfig reports missing config', () => {
   assert.equal(loaded.reason, 'missing');
 });
 
-test('upgradeConfig adds current workflow shape while preserving mode and active workflow', () => {
-  const old = defaultConfig('auto');
-  old.default_sequence = ['brainstorm-spec', 'acceptance-criteria', 'plan', 'execute', 'review-against-plan', 'code-review'];
-  delete old.transitions['implementation-research'];
-  old.transitions['brainstorm-spec'] = ['acceptance-criteria', 'plan'];
-  old.active_workflow.id = 'wf-existing';
-  const upgraded = upgradeConfig(old);
-  assert.ok(upgraded.default_sequence.includes('implementation-research'));
-  assert.ok(upgraded.transitions['brainstorm-spec'].includes('implementation-research'));
-  assert.equal(upgraded.active_workflow.id, 'wf-existing');
+test('loadConfig rejects v1 configs as outdated', () => {
+  const root = tmpdir();
+  const v1Config = { version: 1, default_mode: 'auto', auto_continue: { enabled: true } };
+  fs.mkdirSync(path.join(root, '.pi'), { recursive: true });
+  fs.writeFileSync(path.join(root, '.pi', 'workflow-orchestrator.json'), JSON.stringify(v1Config));
+  const loaded = loadConfig(root);
+  assert.equal(loaded.ok, false);
+  assert.match(loaded.reason, /outdated/);
 });
 
-test('upgradeProjectConfig saves upgraded config', () => {
-  const root = tmpdir();
-  initConfig(root, 'auto');
-  const result = upgradeProjectConfig(root);
-  assert.equal(result.ok, true);
-  assert.ok(loadConfig(root).config.default_sequence.includes('implementation-research'));
+test('DEFAULT_TRANSITIONS contains expected skill chain', () => {
+  assert.ok(DEFAULT_TRANSITIONS['brainstorm-spec'].includes('implementation-research'));
+  assert.ok(DEFAULT_TRANSITIONS['plan'].includes('execute'));
+  assert.ok(DEFAULT_TRANSITIONS['code-review'].includes('none'));
 });

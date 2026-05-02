@@ -12,13 +12,13 @@ function artifactLogPath(workflowId) {
   return path.join('.pi', 'workflows', `${workflowId}.jsonl`);
 }
 
-function startWorkflow(config, { mode, firstSkill, workflowId = createWorkflowId(), timestamp = nowIso() }) {
+// Initialise a new active workflow. Mode is always read from config.mode — not stored in active_workflow.
+function startWorkflow(config, { firstSkill, goal = null, workflowId = createWorkflowId(), timestamp = nowIso() }) {
   return {
     ...config,
     active_workflow: {
-      ...(config.active_workflow || {}),
       id: workflowId,
-      mode,
+      goal,
       current_skill: 'workflow-orchestrator',
       next_skill: firstSkill,
       artifact_log: artifactLogPath(workflowId),
@@ -35,7 +35,8 @@ function updateActiveWorkflow(config, handoff, { timestamp = nowIso(), lastProce
     ...config,
     active_workflow: {
       ...(config.active_workflow || {}),
-      mode: handoff.workflow_mode,
+      // Capture goal from first handoff if not yet set
+      goal: config.active_workflow?.goal ?? handoff.inputs?.primary_artifact ?? null,
       current_skill: handoff.current_skill,
       next_skill: handoff.next_skill,
       updated_at: timestamp,
@@ -75,7 +76,7 @@ function clearWorkflow(config, { timestamp = nowIso() } = {}) {
     ...config,
     active_workflow: {
       id: null,
-      mode: null,
+      goal: null,
       current_skill: null,
       next_skill: null,
       artifact_log: null,

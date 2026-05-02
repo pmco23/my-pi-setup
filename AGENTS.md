@@ -85,9 +85,8 @@ npm test                    # Run all extension tests (must pass before committi
 
 - Project config lives at `.pi/workflow-orchestrator.json` (per project, gitignored).
 - Config shape is defined by `defaultConfig()` in `src/config.js`.
-- **Mode is set by `/workflow:start` (or `/workflow:auto` / `/workflow:manual`), not by `/workflow:init`.** `handleStart` calls `syncModeToConfig()` to keep `default_mode` and `auto_continue.enabled` always in sync with the requested mode.
-- Do not add fields without updating tests.
-- Backward compatibility: existing project configs don't auto-migrate; use `/workflow:upgrade-config`.
+- **Mode is set by `/workflow:init` wizard**, not by `/workflow:start`. The wizard calls `initConfigV2()` which sets `mode` and `auto_continue.enabled` together.
+- Backward compatibility: v1 configs are rejected at load time. Users must re-run `/workflow:init`.
 
 ## Testing rules
 

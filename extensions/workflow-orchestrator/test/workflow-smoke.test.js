@@ -3,16 +3,16 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const { initConfig, loadConfig, saveConfig } = require('../src/config');
+const { defaultConfig } = require('../src/config');
 const { startWorkflow } = require('../src/state');
 const { planAutoContinuation } = require('../src/auto');
-const { buildStartPrompt, buildContinuePrompt } = require('../src/prompts');
+const { buildSkillPrompt } = require('../src/prompts');
 
 function tmpdir() { return fs.mkdtempSync(path.join(os.tmpdir(), 'wf-smoke-')); }
 
 function markdownFor(current, next) {
   const complete = next === 'none';
-  return `Done.\n\n## Next Step\nRecommended skill: \`${next}\`\nReason: continue\n\nUser prompt:\n- Continue?\n\nAuto handoff:\n\`\`\`json\n${JSON.stringify({
+  return `Done.\n\n## Next Step\nRecommended skill: \`${next}\`\n\nAuto handoff:\n\`\`\`json\n${JSON.stringify({
     workflow_mode: 'auto',
     current_skill: current,
     next_skill: next,
@@ -24,22 +24,9 @@ function markdownFor(current, next) {
   }, null, 2)}\n\`\`\``;
 }
 
-test('full workflow smoke chain reaches completion', () => {
-  const root = tmpdir();
-  initConfig(root, 'auto');
-  let config = startWorkflow(loadConfig(root).config, { mode: 'auto', firstSkill: 'brainstorm-spec', workflowId: 'wf-smoke' });
-  saveConfig(root, config);
-
-  const startPrompt = buildStartPrompt({
-    mode: 'auto',
-    goal: 'Create a simple hello world program',
-    workflowId: config.active_workflow.id,
-    artifactLog: config.active_workflow.artifact_log,
-    firstSkill: 'brainstorm-spec',
-    allowedNext: config.transitions['brainstorm-spec'],
-  });
-  assert.match(startPrompt, /^\/skill:brainstorm-spec/);
-  assert.match(startPrompt, /Allowed next skills: implementation-research, acceptance-criteria, plan/);
+test('full v2 workflow smoke chain reaches completion', () => {
+  let config = defaultConfig('auto');
+  config = startWorkflow(config, { firstSkill: 'brainstorm-spec', goal: 'Build hello world', workflowId: 'wf-smoke' });
 
   const sequence = [
     ['brainstorm-spec', 'implementation-research'],
@@ -53,20 +40,38 @@ test('full workflow smoke chain reaches completion', () => {
 
   for (let i = 0; i < sequence.length; i++) {
     const [current, next] = sequence[i];
-    const result = planAutoContinuation({ config, markdown: markdownFor(current, next), entryId: `entry-${i}`, isWorkflowSkillResponse: true });
+    const result = planAutoContinuation({ config, markdown: markdownFor(current, next), entryId: `e${i}` });
+
     if (next === 'none') {
       assert.equal(result.action, 'complete');
       assert.equal(result.config.active_workflow.id, null);
       config = result.config;
       continue;
     }
-    assert.equal(result.action, 'continue');
+
+    assert.equal(result.action, 'continue', `${current} -> ${next} should continue`);
     assert.equal(result.nextSkill, next);
     assert.match(result.prompt, new RegExp(`^/skill:${next}`));
     assert.match(result.prompt, /Workflow reminder:/);
     assert.match(result.prompt, /Allowed next skills:/);
+
+    // Goal should persist throughout chain
+    assert.equal(result.config.active_workflow.goal, 'Build hello world');
     config = result.config;
-    const continuePrompt = buildContinuePrompt(config);
-    assert.match(continuePrompt, new RegExp(`^/skill:${next}`));
   }
+});
+
+test('full v2 workflow smoke chain in user-in-the-loop suggests not chains', () => {
+  let config = defaultConfig('user-in-the-loop');
+  config = startWorkflow(config, { firstSkill: 'brainstorm-spec', workflowId: 'wf-manual' });
+
+  const result = planAutoContinuation({
+    config,
+    markdown: markdownFor('brainstorm-spec', 'implementation-research'),
+    entryId: 'e0',
+  });
+
+  assert.equal(result.action, 'suggest');
+  assert.equal(result.nextSkill, 'implementation-research');
+  assert.ok(result.prompt);
 });

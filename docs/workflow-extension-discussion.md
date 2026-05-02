@@ -43,23 +43,18 @@ The extension owns workflow commands, config initialization, handoff evaluation,
 
 ## Commands
 
-Extension-managed commands:
-
 ```text
-/workflow:init                              → create project config (no mode needed)
-/workflow:auto <goal>                       → start in auto mode (pi drives)
-/workflow:manual <goal>                     → start in user-in-the-loop mode (you approve each step)
-/workflow:start [auto|user-in-the-loop] <goal>  → explicit form of the above two
-/workflow:continue [auto|user-in-the-loop]  → resume; explicit mode syncs config
-/workflow:status
-/workflow:pause [reason]
-/workflow:resume
-/workflow:upgrade-config
+/workflow:init       → setup wizard: mode + pi settings + project config
+/workflow:continue   → advance to pending next skill, or resume after a pause
+/workflow:pause      → stop auto-continuation
+/workflow:resume     → clear pause without advancing
 ```
 
-**Mode ownership:** `/workflow:start` (and its aliases `/workflow:auto` and `/workflow:manual`) is the single source of truth for mode. It calls `syncModeToConfig()` which sets both `default_mode` and `auto_continue.enabled` to match the requested mode. `/workflow:init` does not need a mode — its mode argument sets an initial default that start will always override.
+**Mode ownership:** Mode is set once in the `/workflow:init` wizard and stored in config.
+To change mode, re-run `/workflow:init`. There is no per-start mode override.
 
-Old prompt-template commands such as `/workflow-init` and `/workflow-start` are deprecated and not installed. Historical reference prompt files were removed; extension commands are authoritative.
+**Codebase mapping:** Use `/skill:project-intake` directly. There is no `/workflow:onboard`
+or `/workflow:refresh` command in v2.
 
 ## Runtime Decision Model
 

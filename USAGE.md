@@ -2,23 +2,32 @@
 
 This setup gives pi a structured workflow for turning ideas into reviewed implementation work.
 
-## Two modes — the only thing you need to understand
+## Two modes
 
 | Mode | What happens |
 |---|---|
 | **auto** | Pi chains skill → skill automatically. Pauses only when there is genuine uncertainty, open questions, failed validation, or a risky action. |
-| **user-in-the-loop** | Pi stops after every skill and waits for you to say "continue". You stay in the driver's seat at every step. |
+| **user-in-the-loop** | Pi runs each skill and suggests the next one. You confirm each step with `/workflow:continue`. |
 
-**How to choose:**
+---
 
-```text
-/workflow:auto <goal>         → pi drives, you intervene when needed
-/workflow:manual <goal>       → you approve every step
+## Quick start
+
+```bash
+cd my-project
+/workflow:init          # wizard: choose mode, theme, thinking level, compaction, retry
 ```
 
-That is it. The mode you pass to these commands is the single source of truth — it sets everything consistently.
+Then invoke a skill to start working:
 
-`/workflow:init` just creates the config file. It does not need a mode. Start is what matters.
+```text
+/skill:brainstorm-spec build a local-first notes app
+/skill:project-intake                                  # map an existing codebase first
+/skill:plan add dark mode support                      # jump straight to planning
+```
+
+In **auto mode**, pi chains skills automatically from there.
+In **user-in-the-loop mode**, pi suggests the next skill after each one completes — run `/workflow:continue` when ready.
 
 ---
 
@@ -28,148 +37,47 @@ That is it. The mode you pass to these commands is the single source of truth �
 brainstorm-spec
 → implementation-research
 → acceptance-criteria
-→ plan
-→ execute
-→ review-against-plan
-→ code-review
+→ plan → execute → review-against-plan → code-review
+```
+
+`project-intake` is used for onboarding/refresh and hands off to `plan` or `none`.
+
+---
+
+## Commands
+
+```text
+/workflow:init       → full setup wizard (run once per project, or re-run to change settings)
+/workflow:continue   → advance to the suggested next skill, or resume after a pause
+/workflow:pause      → stop auto-continuation with an optional reason
+/workflow:resume     → clear pause state without advancing
 ```
 
 ---
 
-## Quick start
+## Mapping an existing codebase
 
-### New project
-
-```bash
-cd my-project
-/workflow:init
-/workflow:auto build a local-first notes app       # fully automated
-# or
-/workflow:manual build a local-first notes app     # approve every step
-```
-
-### Existing codebase
-
-```bash
-/workflow:init
-/workflow:onboard                                  # map codebase with graphify first
-/workflow:auto add GitHub OAuth login
-```
-
-### One-off setup
+Before starting feature work on an unfamiliar project:
 
 ```text
-/my-pi:setup         → configure theme, thinking level, compaction, retry
+/skill:project-intake
 ```
 
----
+This runs graphify-first analysis and creates `.pi/project-map/` with architecture docs, module map, agent guidance, and graph artifacts.
 
-## When to use each mode
-
-### `/workflow:auto <goal>`
-
-Best for:
-- Small, low-risk, well-scoped tasks
-- Fixes, refactors, adding tests
-- Work where requirements are already clear
-
-Pi will pause automatically if it encounters open questions, low confidence, blockers, failed validation, or risky operations. You only get involved when something needs a decision.
-
-### `/workflow:manual <goal>`
-
-Best for:
-- New features with uncertain requirements
-- Architecture decisions
-- Anything you want to review at each phase
-
-Pi stops after every skill (after brainstorm, after research, after planning, etc.) and asks whether to continue.
-
----
-
-## Changing mode mid-workflow
-
-Override mode for a single continuation:
+To refresh after significant changes:
 
 ```text
-/workflow:continue auto             → continue this step in auto mode
-/workflow:continue user-in-the-loop → continue this step manually
+/skill:project-intake
 ```
 
-When you pass an explicit mode to `/workflow:continue`, it also updates the project config so subsequent steps use the same mode.
-
----
-
-## Starting from a specific skill
-
-Skip phases you don't need by invoking a skill directly:
-
-```text
-/skill:plan implement rate limiting middleware        → jump straight to planning
-/skill:execute                                        → implement from an existing plan
-/skill:code-review                                    → review without a full workflow
-```
-
-Skills work standalone — they don't require an active workflow.
-
----
-
-## Project onboarding and context
-
-### Onboard an existing project
-
-```text
-/workflow:init
-/workflow:onboard
-```
-
-Creates `.pi/project-map/` with architecture docs, module map, and graph. Takes a few minutes. Do this once when entering a new codebase.
-
-Optional: pass a goal to prepare for immediate feature work:
-
-```text
-/workflow:onboard auto add dark mode support
-```
-
-### Refresh project context
-
-After significant changes (new modules, refactors, dependency updates):
-
-```text
-/workflow:refresh
-```
-
-Check whether context is stale:
-
-```text
-/workflow:context
-```
+The skill detects whether it is a first-time onboard or a refresh automatically.
 
 ### Graphify inside pi: AST-only graphs
 
-Graphify's full pipeline requires parallel subagents. Pi does not expose this, so graph refreshes inside pi produce **AST-only graphs** — code structure only, without doc/markdown semantic analysis.
+Graphify's full pipeline requires parallel subagents. Pi does not expose this, so graph refreshes inside pi produce **AST-backed graphs only**.
 
 For a full semantic graph, run graphify from a harness with subagent support (Claude Code, Codex, etc.) and commit the updated `.pi/project-map/graph/` artifacts.
-
----
-
-## Workflow state commands
-
-```text
-/workflow:status          → show mode, active workflow, current/next skill
-/workflow:pause [reason]  → pause the active workflow
-/workflow:resume          → clear pause without continuing
-/workflow:continue [mode] → continue the active workflow
-```
-
----
-
-## Config management
-
-```text
-/workflow:upgrade-config  → migrate existing project config to current defaults
-```
-
-Existing `.pi/workflow-orchestrator.json` files do not auto-migrate when the workflow sequence changes. Run this after upgrading the setup.
 
 ---
 
@@ -190,7 +98,7 @@ These enrich the current workflow phase rather than advancing it:
 Each project keeps its own state:
 
 ```text
-.pi/workflow-orchestrator.json   → mode, sequence, active workflow (gitignored)
+.pi/workflow-orchestrator.json   → mode, stop conditions, active workflow (gitignored)
 .pi/workflows/<id>.jsonl         → JSONL audit log (gitignored)
 .pi/project-map/                 → committed durable project context
 ```
@@ -210,4 +118,11 @@ On another machine:
 
 ```bash
 ./scripts/install.sh
+```
+
+## Keeping graphify up to date
+
+```bash
+uv tool upgrade graphifyy      # or: pip install --upgrade graphifyy
+./scripts/install.sh           # auto-syncs bundled skill then installs everything
 ```

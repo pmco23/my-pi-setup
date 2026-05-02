@@ -21,7 +21,7 @@ function messageText(message) {
 }
 
 function latestAssistantMarkdown(messages = []) {
-  const assistantMessages = messages.filter((message) => message && message.role === 'assistant');
+  const assistantMessages = messages.filter((m) => m && m.role === 'assistant');
   if (assistantMessages.length === 0) return '';
   return messageText(assistantMessages.at(-1));
 }
@@ -30,7 +30,9 @@ function hasActiveWorkflow(config) {
   return Boolean(config?.active_workflow?.id && config?.active_workflow?.next_skill);
 }
 
-function planAutoContinuation({ config, markdown, entryId, modeOverride, isWorkflowSkillResponse }) {
+// In v2 there is no pendingWorkflowSkillResponse flag — always evaluate in auto mode.
+// In user-in-the-loop mode, evaluate to get the decision but return action: 'suggest' instead of continuing.
+function planAutoContinuation({ config, markdown, entryId, modeOverride }) {
   if (!hasActiveWorkflow(config)) {
     return { action: 'none', reason: 'No active workflow' };
   }
@@ -39,14 +41,15 @@ function planAutoContinuation({ config, markdown, entryId, modeOverride, isWorkf
     return { action: 'none', reason: 'Handoff already processed for this entry' };
   }
 
+  const mode = modeOverride || config.mode;
   const artifactLog = config.active_workflow.artifact_log;
   const parsed = extractLatestHandoff(markdown || '');
+
   if (!parsed.ok) {
-    // If this was not a workflow skill response, silently skip — don't pause on side conversations
-    if (!isWorkflowSkillResponse) {
-      return { action: 'none', reason: 'No handoff in response (non-workflow prompt)' };
+    // In auto mode: pause. In human mode: silently skip — user drives manually.
+    if (mode === 'user-in-the-loop') {
+      return { action: 'none', reason: 'No handoff in response (user drives in human mode)' };
     }
-    // If it WAS a workflow skill response and failed to produce a handoff, pause
     const updatedConfig = pauseWorkflow(config, `No valid handoff: ${parsed.reason}`);
     return {
       action: 'pause',
@@ -57,7 +60,6 @@ function planAutoContinuation({ config, markdown, entryId, modeOverride, isWorkf
     };
   }
 
-  // Valid handoff found — always evaluate regardless of flag
   const decision = evaluateHandoff({ config, handoff: parsed.handoff, modeOverride });
   let updatedConfig = updateActiveWorkflow(config, parsed.handoff, { lastProcessedEntryId: entryId });
 
@@ -75,16 +77,33 @@ function planAutoContinuation({ config, markdown, entryId, modeOverride, isWorkf
   }
 
   if (decision.decision === 'continue') {
+    const goal = updatedConfig.active_workflow.goal;
     const prompt = buildSkillPrompt(decision.next_skill, {
       mode: decision.workflow_mode,
       workflowId: updatedConfig.active_workflow.id,
       artifactLog: updatedConfig.active_workflow.artifact_log,
       allowedNext: updatedConfig.transitions?.[decision.next_skill] || [],
       context: [
+        goal ? `Goal: ${goal}` : null,
         `Previous skill: ${decision.current_skill}`,
         `Continuation reason: ${decision.reason}`,
-      ],
+      ].filter(Boolean),
     });
+
+    // Human-in-the-loop: suggest instead of auto-chain
+    if (mode === 'user-in-the-loop') {
+      return {
+        action: 'suggest',
+        reason: decision.reason,
+        nextSkill: decision.next_skill,
+        prompt,
+        config: updatedConfig,
+        decision,
+        artifactLog,
+        audit: { event: 'handoff_evaluated', decision: 'suggest', current_skill: decision.current_skill, next_skill: decision.next_skill, reason: decision.reason, entry_id: entryId || null },
+      };
+    }
+
     return {
       action: 'continue',
       reason: decision.reason,
@@ -98,7 +117,6 @@ function planAutoContinuation({ config, markdown, entryId, modeOverride, isWorkf
   }
 
   updatedConfig = pauseWorkflow(updatedConfig, decision.reason);
-
   return {
     action: 'pause',
     reason: decision.reason,
