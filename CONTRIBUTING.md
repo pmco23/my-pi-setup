@@ -126,6 +126,17 @@ cd extensions/workflow-orchestrator && node --test test/*.test.js
 
 All tests must pass before merging.
 
+## Keeping graphify up to date
+
+The bundled `skills/graphify/` skill version is tracked in `skills/graphify/.graphify_version`. The installer auto-syncs it:
+
+```bash
+uv tool upgrade graphifyy      # or: pip install --upgrade graphifyy
+./scripts/install.sh           # auto-refreshes skill, then installs everything
+```
+
+The installer prints `Updated bundled graphify skill: <old> -> <new>` when a version change is detected. The test suite prints a warning if the repo and installed versions have drifted.
+
 ## What NOT to do
 
 - Do not edit installed files directly (`~/.pi/agent/extensions/`, `~/.agents/skills/`). Edit the repo, then run `./scripts/install.sh`.

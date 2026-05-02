@@ -42,26 +42,35 @@ From this folder:
 ./scripts/install.sh
 ```
 
-The installer copies:
+The installer:
 
-```text
-skills/*     -> ~/.agents/skills/
-extensions/* -> ~/.pi/agent/extensions/
-```
-
-It also ensures global pi settings include:
-
-```json
-{
-  "enableSkillCommands": true
-}
-```
+1. Checks if graphify is installed and auto-syncs the bundled `skills/graphify/` skill if the installed package is newer — so the repo always has the current skill version before copying to global locations.
+2. Copies skills and extension to global pi locations.
+3. Copies the bundled `onyx` theme to `~/.pi/agent/themes/onyx.json`.
+4. Ensures `enableSkillCommands: true` in `~/.pi/agent/settings.json`.
 
 After installing, restart pi or run:
 
 ```text
 /reload
 ```
+
+## Keeping graphify up to date
+
+The bundled `skills/graphify/` skill tracks the installed graphify package version in `.graphify_version`. When you upgrade graphify, running `./scripts/install.sh` is enough — it auto-refreshes the bundled skill before syncing:
+
+```bash
+# Upgrade graphify
+uv tool upgrade graphifyy
+# or: pip install --upgrade graphifyy
+
+# Re-run install — auto-syncs bundled skill then installs everything
+./scripts/install.sh
+```
+
+The installer prints `Updated bundled graphify skill: <old> -> <new>` when it detects and syncs a version change.
+
+The test suite also includes a soft version-drift check — if the repo and installed versions differ, it prints a warning and reminds you to run `./scripts/install.sh`.
 
 ## What gets installed
 
