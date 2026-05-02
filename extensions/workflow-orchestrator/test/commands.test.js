@@ -174,6 +174,8 @@ test('handleStart creates active_workflow and sends skill prompt', async () => {
   assert.equal(config.active_workflow.next_skill, 'plan');
   assert.equal(config.active_workflow.goal, 'Build a notes app');
   assert.match(e.sent.at(-1).message, /^\/skill:plan/);
+  assert.match(e.sent.at(-1).message, /Workflow reminder/);
+  assert.match(e.sent.at(-1).message, /Allowed next skills/);
   assert.match(e.notifications[0].message, /Workflow started: plan/);
 });
 
@@ -281,4 +283,73 @@ test('handleCheckpoint returns ok:false when no config', async () => {
   const e = env(root, ['plan', 'execute'], [], ['goal']);
   const result = await handleCheckpoint('', e);
   assert.equal(result.ok, false);
+});
+
+test('handleCheckpoint returns ok:false when currentSkill select is cancelled', async () => {
+  const root = tmpdir();
+  const e1 = env(root,
+    ['Project (.pi/settings.json)', 'auto — pi chains skills until blocked', 'dark', 'medium'],
+    [true, true]
+  );
+  await handleInit('', e1);
+  // selects: currentSkill=undefined (cancelled); inputs: goal
+  const e = env(root, [undefined], [], ['My goal']);
+  const result = await handleCheckpoint('', e);
+  assert.equal(result.ok, false);
+  assert.equal(result.reason, 'cancelled');
+});
+
+test('handleCheckpoint returns ok:false when nextSkill select is cancelled', async () => {
+  const root = tmpdir();
+  const e1 = env(root,
+    ['Project (.pi/settings.json)', 'auto — pi chains skills until blocked', 'dark', 'medium'],
+    [true, true]
+  );
+  await handleInit('', e1);
+  // selects: currentSkill=plan, nextSkill=undefined (cancelled); inputs: goal
+  const e = env(root, ['plan', undefined], [], ['My goal']);
+  const result = await handleCheckpoint('', e);
+  assert.equal(result.ok, false);
+  assert.equal(result.reason, 'cancelled');
+});
+
+test('handleStart confirms before replacing existing workflow (cancel)', async () => {
+  const root = tmpdir();
+  const e1 = env(root,
+    ['Project (.pi/settings.json)', 'auto — pi chains skills until blocked', 'dark', 'medium'],
+    [true, true]
+  );
+  await handleInit('', e1);
+  const { saveConfig, loadConfig: lc } = require('../src/config');
+  const { startWorkflow } = require('../src/state');
+  saveConfig(root, startWorkflow(lc(root).config, { firstSkill: 'plan', workflowId: 'wf-existing' }));
+
+  const e = env(root, [], [false]); // confirm → cancel
+  const result = await handleStart('', e);
+  assert.equal(result.ok, false);
+  assert.equal(result.reason, 'cancelled');
+  assert.equal(e.sent.length, 0);
+  assert.equal(loadConfig(root).config.active_workflow.id, 'wf-existing');
+});
+
+test('handleStart confirms before replacing existing workflow (accept)', async () => {
+  const root = tmpdir();
+  const e1 = env(root,
+    ['Project (.pi/settings.json)', 'auto — pi chains skills until blocked', 'dark', 'medium'],
+    [true, true]
+  );
+  await handleInit('', e1);
+  const { saveConfig, loadConfig: lc } = require('../src/config');
+  const { startWorkflow } = require('../src/state');
+  saveConfig(root, startWorkflow(lc(root).config, { firstSkill: 'plan', workflowId: 'wf-old' }));
+
+  // confirm → accept, then pick brainstorm-spec, goal = 'New goal'
+  const e = env(root, ['brainstorm-spec'], [true], ['New goal']);
+  const result = await handleStart('', e);
+  assert.equal(result.ok, true);
+  const active = loadConfig(root).config.active_workflow;
+  assert.notEqual(active.id, 'wf-old');
+  assert.equal(active.next_skill, 'brainstorm-spec');
+  assert.equal(active.goal, 'New goal');
+  assert.equal(e.sent.length, 1);
 });

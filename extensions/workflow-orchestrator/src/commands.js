@@ -172,9 +172,15 @@ async function handleStart(_args, env) {
     return { ok: false, reason: loaded.reason, projectRoot };
   }
 
-  if (!env.select || !env.input) {
+  if (!env.select || !env.input || !env.confirm) {
     env.notify('/workflow:start requires interactive UI.', 'error');
     return { ok: false, reason: 'missing interactive ui', projectRoot };
+  }
+
+  const existingActive = loaded.config.active_workflow || {};
+  if (existingActive.id) {
+    const ok = await env.confirm('Active workflow exists', 'Start a new workflow and replace it?');
+    if (!ok) return { ok: false, reason: 'cancelled', projectRoot };
   }
 
   const skillList = Object.keys(loaded.config.transitions || {});
