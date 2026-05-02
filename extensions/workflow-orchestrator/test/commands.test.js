@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const { handleInit, handleContinue, handlePause, handleResume, handleStart, handleCheckpoint, projectMapStaleness } = require('../src/commands');
+const { handleInit, handleContinue, handlePause, handleStart, handleStatus, projectMapStaleness } = require('../src/commands');
 const { loadConfig } = require('../src/config');
 
 function tmpdir() { return fs.mkdtempSync(path.join(os.tmpdir(), 'wf-cmd-')); }
@@ -114,24 +114,33 @@ test('handleContinue notifies when no active workflow', async () => {
   assert.equal(e.sent.length, 0);
 });
 
-test('handlePause and handleResume update pause state', async () => {
+test('handlePause sets pause, handleContinue clears it and advances', async () => {
   const root = tmpdir();
   const e1 = env(root,
     ['Project (.pi/settings.json)', 'auto — pi chains skills until blocked', 'dark', 'medium'],
     [true, true]
   );
   await handleInit('', e1);
-  const { saveConfig, loadConfig } = require('../src/config');
-  const { startWorkflow } = require('../src/state');
-  let config = loadConfig(root).config;
+  const { saveConfig, loadConfig: lc } = require('../src/config');
+  const { startWorkflow, updateActiveWorkflow } = require('../src/state');
+  let config = lc(root).config;
   config = startWorkflow(config, { firstSkill: 'plan', workflowId: 'wf-1' });
+  config = updateActiveWorkflow(config, {
+    workflow_mode: 'auto', current_skill: 'plan', next_skill: 'execute',
+    stop_reason: null, confidence: 'high', open_questions: [],
+  });
   saveConfig(root, config);
 
   const e = env(root);
   await handlePause('waiting for review', e);
   assert.equal(loadConfig(root).config.active_workflow.paused, true);
-  await handleResume('', e);
+  assert.equal(loadConfig(root).config.active_workflow.pause_reason, 'waiting for review');
+
+  // handleContinue should clear the pause and advance
+  const result = await handleContinue('', e);
+  assert.equal(result.ok, true);
   assert.equal(loadConfig(root).config.active_workflow.paused, false);
+  assert.match(e.sent.at(-1).message, /^\/skill:execute/);
 });
 
 test('projectMapStaleness detects stale guidance', async () => {
@@ -214,147 +223,6 @@ test('handleStart returns ok:false when no config', async () => {
   const result = await handleStart('', e);
   assert.equal(result.ok, false);
 });
-
-// ── handleCheckpoint ─────────────────────────────────────────────────────────
-
-test('handleCheckpoint sets active_workflow from wizard inputs', async () => {
-  const root = tmpdir();
-  const e1 = env(root,
-    ['Project (.pi/settings.json)', 'user-in-the-loop — pi suggests, you confirm each step', 'dark', 'medium'],
-    [true, true]
-  );
-  await handleInit('', e1);
-
-  // selects: currentSkill=plan, nextSkill=execute; inputs: goal='My goal'
-  const e = env(root, ['plan', 'execute'], [], ['My goal']);
-  const result = await handleCheckpoint('', e);
-  assert.equal(result.ok, true);
-  const config = loadConfig(root).config;
-  assert.ok(config.active_workflow.id);
-  assert.equal(config.active_workflow.goal, 'My goal');
-  assert.equal(config.active_workflow.current_skill, 'plan');
-  assert.equal(config.active_workflow.next_skill, 'execute');
-  assert.equal(config.active_workflow.paused, false);
-  assert.match(e.notifications.at(-1).message, /Checkpoint saved/);
-  assert.equal(e.notifications.at(-1).level, 'success');
-});
-
-test('handleCheckpoint confirms before overwriting existing workflow', async () => {
-  const root = tmpdir();
-  const e1 = env(root,
-    ['Project (.pi/settings.json)', 'auto — pi chains skills until blocked', 'dark', 'medium'],
-    [true, true]
-  );
-  await handleInit('', e1);
-
-  // Seed an active workflow
-  const { saveConfig, loadConfig: lc } = require('../src/config');
-  const { startWorkflow } = require('../src/state');
-  saveConfig(root, startWorkflow(lc(root).config, { firstSkill: 'plan', workflowId: 'wf-existing' }));
-
-  // User cancels overwrite
-  const e = env(root, [], [false]); // confirm returns false
-  const result = await handleCheckpoint('', e);
-  assert.equal(result.ok, false);
-  assert.equal(result.reason, 'cancelled');
-  // workflow unchanged
-  assert.equal(loadConfig(root).config.active_workflow.id, 'wf-existing');
-});
-
-test('handleCheckpoint creates new id when no active workflow exists', async () => {
-  const root = tmpdir();
-  const e1 = env(root,
-    ['Project (.pi/settings.json)', 'auto — pi chains skills until blocked', 'dark', 'medium'],
-    [true, true]
-  );
-  await handleInit('', e1);
-
-  const e = env(root, ['brainstorm-spec', 'plan'], [], ['Fresh goal']);
-  const result = await handleCheckpoint('', e);
-  assert.equal(result.ok, true);
-  const active = loadConfig(root).config.active_workflow;
-  assert.ok(active.id);
-  assert.ok(active.artifact_log);
-  assert.equal(active.next_skill, 'plan');
-});
-
-test('handleCheckpoint returns ok:false when no config', async () => {
-  const root = tmpdir();
-  const e = env(root, ['plan', 'execute'], [], ['goal']);
-  const result = await handleCheckpoint('', e);
-  assert.equal(result.ok, false);
-});
-
-test('handleCheckpoint returns ok:false when currentSkill select is cancelled', async () => {
-  const root = tmpdir();
-  const e1 = env(root,
-    ['Project (.pi/settings.json)', 'auto — pi chains skills until blocked', 'dark', 'medium'],
-    [true, true]
-  );
-  await handleInit('', e1);
-  // selects: currentSkill=undefined (cancelled); inputs: goal
-  const e = env(root, [undefined], [], ['My goal']);
-  const result = await handleCheckpoint('', e);
-  assert.equal(result.ok, false);
-  assert.equal(result.reason, 'cancelled');
-});
-
-test('handleCheckpoint returns ok:false when nextSkill select is cancelled', async () => {
-  const root = tmpdir();
-  const e1 = env(root,
-    ['Project (.pi/settings.json)', 'auto — pi chains skills until blocked', 'dark', 'medium'],
-    [true, true]
-  );
-  await handleInit('', e1);
-  // selects: currentSkill=plan, nextSkill=undefined (cancelled); inputs: goal
-  const e = env(root, ['plan', undefined], [], ['My goal']);
-  const result = await handleCheckpoint('', e);
-  assert.equal(result.ok, false);
-  assert.equal(result.reason, 'cancelled');
-});
-
-test('handleCheckpoint preserves existing goal when input is empty', async () => {
-  const root = tmpdir();
-  const e1 = env(root,
-    ['Project (.pi/settings.json)', 'auto — pi chains skills until blocked', 'dark', 'medium'],
-    [true, true]
-  );
-  await handleInit('', e1);
-  // Seed a workflow with an existing goal
-  const { saveConfig, loadConfig: lc } = require('../src/config');
-  const { startWorkflow } = require('../src/state');
-  saveConfig(root, startWorkflow(lc(root).config, { firstSkill: 'plan', goal: 'Existing goal', workflowId: 'wf-1' }));
-
-  // User confirms overwrite, picks skills, leaves goal empty
-  const e = env(root, ['plan', 'execute'], [true], ['']);
-  const result = await handleCheckpoint('', e);
-  assert.equal(result.ok, true);
-  assert.equal(loadConfig(root).config.active_workflow.goal, 'Existing goal');
-});
-
-test('handleCheckpoint writes audit entry to artifact log', async () => {
-  const root = tmpdir();
-  const e1 = env(root,
-    ['Project (.pi/settings.json)', 'auto — pi chains skills until blocked', 'dark', 'medium'],
-    [true, true]
-  );
-  await handleInit('', e1);
-
-  const e = env(root, ['plan', 'execute'], [], ['Audit goal']);
-  const result = await handleCheckpoint('', e);
-  assert.equal(result.ok, true);
-
-  const artifactLog = result.config.active_workflow.artifact_log;
-  const logPath = path.join(root, artifactLog);
-  assert.ok(fs.existsSync(logPath), 'artifact log file should exist');
-  const lines = fs.readFileSync(logPath, 'utf8').trim().split('\n').filter(Boolean);
-  const entry = JSON.parse(lines.at(-1));
-  assert.equal(entry.event, 'checkpoint');
-  assert.equal(entry.current_skill, 'plan');
-  assert.equal(entry.next_skill, 'execute');
-  assert.equal(entry.goal, 'Audit goal');
-});
-
 test('handleStart confirms before replacing existing workflow (cancel)', async () => {
   const root = tmpdir();
   const e1 = env(root,
@@ -394,4 +262,56 @@ test('handleStart confirms before replacing existing workflow (accept)', async (
   assert.equal(active.next_skill, 'brainstorm-spec');
   assert.equal(active.goal, 'New goal');
   assert.equal(e.sent.length, 1);
+});
+
+// ── handleStatus ─────────────────────────────────────────────────────────────
+
+test('handleStatus shows no active workflow when none exists', async () => {
+  const root = tmpdir();
+  const e1 = env(root,
+    ['Project (.pi/settings.json)', 'auto — pi chains skills until blocked', 'dark', 'medium'],
+    [true, true]
+  );
+  await handleInit('', e1);
+
+  const e = env(root);
+  const result = await handleStatus('', e);
+  assert.equal(result.ok, true);
+  assert.equal(result.hasActive, false);
+  assert.match(e.notifications[0].message, /No active workflow/);
+});
+
+test('handleStatus shows active workflow details', async () => {
+  const root = tmpdir();
+  const e1 = env(root,
+    ['Project (.pi/settings.json)', 'user-in-the-loop — pi suggests, you confirm each step', 'dark', 'medium'],
+    [true, true]
+  );
+  await handleInit('', e1);
+
+  const { saveConfig, loadConfig: lc } = require('../src/config');
+  const { startWorkflow, updateActiveWorkflow } = require('../src/state');
+  let config = lc(root).config;
+  config = startWorkflow(config, { firstSkill: 'plan', goal: 'Test goal', workflowId: 'wf-status' });
+  config = updateActiveWorkflow(config, {
+    workflow_mode: 'user-in-the-loop', current_skill: 'plan', next_skill: 'execute',
+    stop_reason: null, confidence: 'high', open_questions: [],
+  });
+  saveConfig(root, config);
+
+  const e = env(root);
+  const result = await handleStatus('', e);
+  assert.equal(result.ok, true);
+  assert.equal(result.hasActive, true);
+  assert.match(e.notifications[0].message, /wf-status/);
+  assert.match(e.notifications[0].message, /Test goal/);
+  assert.match(e.notifications[0].message, /execute/);
+});
+
+test('handleStatus reports when no config exists', async () => {
+  const root = tmpdir();
+  const e = env(root);
+  const result = await handleStatus('', e);
+  assert.equal(result.ok, false);
+  assert.match(e.notifications[0].message, /No workflow configured/);
 });

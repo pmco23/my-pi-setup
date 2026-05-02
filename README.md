@@ -9,12 +9,11 @@ This repository contains reusable pi resources:
 ```text
 skills/                   Global skills installed to ~/.agents/skills/
 extensions/               Global extensions installed to ~/.pi/agent/extensions/
-settings/                 Reference global pi settings
 scripts/install.sh        Install this setup on a machine
 scripts/uninstall.sh      Remove this setup from a machine
 scripts/backup-current.sh Refresh this repo from the current machine
-docs/                     Design notes and future extension discussion
 USAGE.md                  How to use the workflow day to day
+CONTRIBUTING.md           Development and contribution guide
 ```
 
 ## Prerequisites
@@ -53,7 +52,6 @@ After installing, restart pi or run:
 /reload
 ```
 
-
 ## What gets installed
 
 ### Global themes
@@ -67,10 +65,11 @@ The installer copies `onyx` to `~/.pi/agent/themes/onyx.json`, so it is availabl
 ### Extension commands
 
 ```text
-/workflow:init
-/workflow:continue
-/workflow:pause
-/workflow:resume
+/workflow:init       → setup wizard (mode, theme, thinking level, compaction, retry)
+/workflow:start      → start a new workflow with a skill and goal
+/workflow:continue   → advance to suggested next skill, or resume after a pause
+/workflow:pause      → stop auto-continuation
+/workflow:status     → show current workflow state
 ```
 
 ### Skill commands
@@ -98,9 +97,10 @@ Support skills:
 The installed resources are global, but each project keeps its own workflow state and project map:
 
 ```text
-.pi/workflow-orchestrator.json
-.pi/workflows/
-.pi/project-map/
+.pi/workflow-orchestrator.json       → mode, stop conditions, active workflow (gitignored)
+.pi/workflows/<wf-id>.jsonl          → audit log per workflow (gitignored)
+.pi/workflows/<wf-id>/              → skill artifacts per workflow (gitignored)
+.pi/project-map/                    → durable project context
 ```
 
 Initialise a project:
@@ -117,9 +117,26 @@ For an existing codebase, map it first:
 /skill:project-intake
 ```
 
-Then invoke a skill to start working. In auto mode, pi chains automatically. In user-in-the-loop mode, run `/workflow:continue` after each skill.
+Then start a workflow:
 
-To refresh project context after significant changes, do not manually edit `.pi/project-map/`. Use `/skill:project-intake` — it detects first-time vs. refresh automatically.
+```text
+/workflow:start
+```
+
+Or invoke a skill directly. In auto mode, pi chains automatically. In user-in-the-loop mode, run `/workflow:continue` after each skill.
+
+## Skill artifacts
+
+Each skill writes its primary output (design spec, plan, review report) to a durable file:
+
+```text
+.pi/workflows/<wf-id>/01-brainstorm-spec.md
+.pi/workflows/<wf-id>/02-plan.md
+.pi/workflows/<wf-id>/03-execute.md
+...
+```
+
+Artifacts survive compaction and session breaks. The next skill in the chain reads the previous artifact for full context.
 
 ## Uninstall
 

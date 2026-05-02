@@ -65,6 +65,8 @@ npm test                    # Run all extension tests (must pass before committi
 - All workflow logic lives in `src/*.js` as pure CommonJS modules.
 - Command handlers use dependency-injected `env` objects for testability.
 - Evaluator, handoff parser, state, audit, config, and prompts are pure functions with no pi runtime dependency.
+- Skills write artifacts to `.pi/workflows/<wf-id>/<NN>-<skill-name>.md`.
+- The extension tracks `step_number` and `last_artifact` in active_workflow state.
 
 ## Skill rules
 
@@ -86,6 +88,7 @@ npm test                    # Run all extension tests (must pass before committi
 - Project config lives at `.pi/workflow-orchestrator.json` (per project, gitignored).
 - Config shape is defined by `defaultConfig()` in `src/config.js`.
 - **Mode is set by `/workflow:init` wizard**, not by `/workflow:start`. The wizard calls `initConfigV2()` which sets `mode` and `auto_continue.enabled` together.
+- `active_workflow` tracks `step_number` and `last_artifact` for the artifact system.
 - Backward compatibility: v1 configs are rejected at load time. Users must re-run `/workflow:init`.
 
 ## Testing rules

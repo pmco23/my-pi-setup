@@ -1,7 +1,7 @@
 const { extractLatestHandoff } = require('./handoff');
 const { evaluateHandoff } = require('./evaluator');
 const { startWorkflow, updateActiveWorkflow, pauseWorkflow, clearWorkflow } = require('./state');
-const { buildSkillPrompt } = require('./prompts');
+const { buildSkillPrompt, artifactDir } = require('./prompts');
 
 function messageText(message) {
   if (!message) return '';
@@ -43,7 +43,7 @@ function planAutoContinuation({ config, markdown, entryId, modeOverride }) {
     }
     config = startWorkflow(config, {
       firstSkill: parsed.handoff.next_skill,
-      goal: parsed.handoff.inputs?.primary_artifact ?? null,
+      goal: parsed.handoff.goal ?? parsed.handoff.inputs?.primary_artifact ?? null,
     });
   }
 
@@ -87,10 +87,14 @@ function planAutoContinuation({ config, markdown, entryId, modeOverride }) {
 
   if (decision.decision === 'continue') {
     const goal = updatedConfig.active_workflow.goal;
+    const wfId = updatedConfig.active_workflow.id;
     const prompt = buildSkillPrompt(decision.next_skill, {
       mode: decision.workflow_mode,
-      workflowId: updatedConfig.active_workflow.id,
+      workflowId: wfId,
       artifactLog: updatedConfig.active_workflow.artifact_log,
+      artifactDir: artifactDir(wfId),
+      step: updatedConfig.active_workflow.step_number + 1,
+      previousArtifact: updatedConfig.active_workflow.last_artifact || null,
       allowedNext: updatedConfig.transitions?.[decision.next_skill] || [],
       context: [
         goal ? `Goal: ${goal}` : null,

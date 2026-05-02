@@ -30,7 +30,7 @@ export default function workflowOrchestratorExtension(pi: ExtensionAPI) {
 		}
 		if (toolName === "bash") {
 			const cmd = input.command || "";
-			return /\.pi\/project-map\/[^\s;&|]*\.md/.test(cmd) && /(^|\s)(printf|echo|cat|tee|python3?|node|touch|rm|mv|cp)\b|>|>>/.test(cmd);
+			return /\.pi\/project-map\/[^\s;&|]*\.md/.test(cmd) && /(^|\s)(printf|echo|tee|python3?|node|touch|rm|mv|cp)\b|>|>>/.test(cmd);
 		}
 		return false;
 	}
@@ -56,13 +56,6 @@ export default function workflowOrchestratorExtension(pi: ExtensionAPI) {
 		},
 	});
 
-	pi.registerCommand("workflow:resume", {
-		description: "Clear a pause without advancing (use /workflow:continue to advance)",
-		handler: async (args, ctx) => {
-			await commands.handleResume(args, createWorkflowEnv(ctx));
-		},
-	});
-
 	pi.registerCommand("workflow:start", {
 		description: "Start a new workflow: pick a skill and set a goal, then launch it",
 		handler: async (args, ctx) => {
@@ -70,10 +63,10 @@ export default function workflowOrchestratorExtension(pi: ExtensionAPI) {
 		},
 	});
 
-	pi.registerCommand("workflow:checkpoint", {
-		description: "Manually record workflow state (current skill, next skill, goal) — useful after a session break",
+	pi.registerCommand("workflow:status", {
+		description: "Show current workflow state",
 		handler: async (args, ctx) => {
-			await commands.handleCheckpoint(args, createWorkflowEnv(ctx));
+			await commands.handleStatus(args, createWorkflowEnv(ctx));
 		},
 	});
 

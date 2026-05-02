@@ -39,16 +39,15 @@ No `npm install` is needed — the extension uses only Node built-ins.
 ## Project structure
 
 ```text
-extensions/workflow-orchestrator/   Pi extension (commands, evaluator, auto-continuation)
-skills/                             Pi skills (project-intake, brainstorm-spec, plan, etc.)
-scripts/                            Install, uninstall, backup scripts
-docs/                               Design notes
-.pi/project-map/                    Durable project context (committed for contributors)
+extensions/workflow-orchestrator/        Extension source (index.ts + src/*.js)
+extensions/workflow-orchestrator/test/   Tests (node:test runner)
+skills/                                 Pi skills (project-intake, brainstorm-spec, plan, etc.)
+scripts/                                Install, uninstall, backup scripts
 ```
 
 ## Development workflow
 
-1. Read `.pi/project-map/agent-guidance.md` before starting.
+1. Read `AGENTS.md` for project rules and constraints.
 2. Make changes in the repo (not in `~/.pi/agent/` or `~/.agents/skills/` directly).
 3. Run tests before and after changes:
 
@@ -76,10 +75,12 @@ npm test
 2. Follow the [Agent Skills standard](https://agentskills.io/specification):
    - Frontmatter: `name` (must match directory), `description` (≤1024 chars, specific).
    - Name: lowercase, hyphens, ≤64 chars, no leading/trailing/consecutive hyphens.
-3. Add the skill name to `transitions` in `extensions/workflow-orchestrator/src/config.js` if it should participate in the workflow.
-4. Update tests in `test/config.test.js` or `test/evaluator.test.js` if transitions change.
-5. Run `npm test`.
-6. Update `README.md`, `USAGE.md`, and `scripts/install.sh` output.
+3. Include an `## Artifact` section if the skill produces a primary deliverable (design spec, plan, review, etc.).
+4. Include a `## Next Skill Guidance` section with the handoff JSON template.
+5. Add the skill name to `transitions` in `extensions/workflow-orchestrator/src/config.js` if it should participate in the workflow.
+6. Update tests in `test/config.test.js` or `test/evaluator.test.js` if transitions change.
+7. Run `npm test`.
+8. Update `README.md`, `USAGE.md`, and `scripts/install.sh` output.
 
 ## Modifying the extension
 
@@ -99,9 +100,43 @@ npm test
 ## Modifying config shape
 
 1. Edit `defaultConfig()` in `src/config.js`.
-2. Update all tests that create configs (especially `test/evaluator.test.js` base fixture).
-3. Consider backward compatibility — existing `.pi/workflow-orchestrator.json` files in projects won't auto-migrate.
-4. Document migration in `docs/workflow-extension-discussion.md` if needed.
+2. Update `startWorkflow()` and `clearWorkflow()` in `src/state.js` for new active_workflow fields.
+3. Update all tests that create configs.
+4. New fields must have safe defaults (null, 0, false) — existing configs won't auto-migrate.
+
+## Handoff format
+
+Skills emit a compact JSON block at the end of their response:
+
+```json
+{
+  "workflow_mode": "<mode>",
+  "current_skill": "<this skill>",
+  "next_skill": "<recommended>",
+  "confidence": "high|medium|low",
+  "stop_reason": null,
+  "open_questions": [],
+  "artifact": "<path or empty string>"
+}
+```
+
+Required fields: `workflow_mode`, `current_skill`, `next_skill`, `confidence`, `stop_reason`.
+Optional fields: `open_questions`, `artifact`.
+
+The extension parses this from fenced JSON blocks in the assistant response.
+
+## Artifact system
+
+Skills write their primary output to numbered files:
+
+```text
+.pi/workflows/<wf-id>/<NN>-<skill-name>.md
+```
+
+The step number comes from the `Step:` line in the skill prompt. The extension:
+- Stores the artifact path from the handoff in `active_workflow.last_artifact`
+- Passes it as `Previous artifact:` to the next skill
+- Increments `step_number` on each skill completion
 
 ## Commit guidelines
 
@@ -125,14 +160,13 @@ cd extensions/workflow-orchestrator && node --test test/*.test.js
 
 All tests must pass before merging.
 
-
 ## What NOT to do
 
 - Do not edit installed files directly (`~/.pi/agent/extensions/`, `~/.agents/skills/`). Edit the repo, then run `./scripts/install.sh`.
-- Do not add npm runtime dependencies unless strictly necessary and tested.
+- Do not add npm runtime dependencies unless strictly necessary.
 - Do not commit `.pi/workflow-orchestrator.json` or `.pi/workflows/` (they are gitignored).
-- Do not hand-edit `.pi/project-map/` files directly — use `/skill:project-intake` to refresh project context.
-- Do not add absolute paths in skills or extension code.
+- Do not hand-edit `.pi/project-map/` files directly — use `/skill:project-intake`.
+- Do not use absolute paths in skills or extension code.
 
 ## Refreshing project context
 
@@ -143,5 +177,3 @@ After significant changes, update the project map:
 # then in pi:
 /skill:project-intake
 ```
-
-Or commit the updated `.pi/project-map/` files so other contributors benefit.

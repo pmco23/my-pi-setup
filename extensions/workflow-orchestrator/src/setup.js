@@ -69,7 +69,24 @@ function selectedSettings(options) {
 }
 
 function mergeSettings(existing, updates) {
-  return { ...existing, ...updates };
+  const result = { ...existing };
+  for (const [key, value] of Object.entries(updates)) {
+    if (value && typeof value === 'object' && !Array.isArray(value) && existing[key] && typeof existing[key] === 'object' && !Array.isArray(existing[key])) {
+      // Deep merge one more level for nested objects (e.g., retry.provider)
+      const merged = { ...existing[key] };
+      for (const [k2, v2] of Object.entries(value)) {
+        if (v2 && typeof v2 === 'object' && !Array.isArray(v2) && merged[k2] && typeof merged[k2] === 'object' && !Array.isArray(merged[k2])) {
+          merged[k2] = { ...merged[k2], ...v2 };
+        } else {
+          merged[k2] = v2;
+        }
+      }
+      result[key] = merged;
+    } else {
+      result[key] = value;
+    }
+  }
+  return result;
 }
 
 function applyPiSetup({ projectRoot, homeDir, scope, theme, thinkingLevel, compactionEnabled, retryEnabled }) {

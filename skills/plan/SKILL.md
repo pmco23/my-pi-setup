@@ -64,8 +64,28 @@ Use any available input:
 
 Keep plans concise. Prefer 3–8 tasks for normal work; split larger initiatives.
 
+## Artifact
+
+When in a workflow (Artifact dir provided in prompt), save your Plan output to:
+`<artifact_dir>/<step padded to 2 digits>-plan.md`
+
+Write the artifact BEFORE the `## Next Step` section. Include the path in the handoff `artifact` field.
+
 ## Next Skill Guidance
 
 Recommend `execute` only when the plan is clear, ordered, and safe to implement. Require user input for unresolved choices, destructive operations, credentials, or production-impacting work.
 
-End with `## Next Step`: recommended skill, reason, user prompt, and compact auto handoff JSON when used in a workflow.
+End with `## Next Step`: recommended skill, reason, user prompt, and compact auto handoff JSON:
+
+Auto handoff:
+```json
+{
+  "workflow_mode": "<mode from prompt>",
+  "current_skill": "plan",
+  "next_skill": "<recommended>",
+  "confidence": "high|medium|low",
+  "stop_reason": null,
+  "open_questions": [],
+  "artifact": ""
+}
+```

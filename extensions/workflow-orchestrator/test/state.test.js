@@ -31,6 +31,16 @@ test('updateActiveWorkflow captures goal from first handoff when not set', () =>
   assert.equal(config.active_workflow.next_skill, 'execute');
 });
 
+test('updateActiveWorkflow captures goal from new-format handoff.goal field', () => {
+  let config = startWorkflow(defaultConfig('auto'), { firstSkill: 'plan', workflowId: 'wf-1', timestamp });
+  config = updateActiveWorkflow(config, {
+    workflow_mode: 'auto', current_skill: 'brainstorm-spec', next_skill: 'plan',
+    confidence: 'high', stop_reason: null, open_questions: [],
+    goal: 'Redesign auth flow',
+  });
+  assert.equal(config.active_workflow.goal, 'Redesign auth flow');
+});
+
 test('updateActiveWorkflow preserves existing goal', () => {
   let config = startWorkflow(defaultConfig('auto'), { firstSkill: 'plan', goal: 'Original goal', workflowId: 'wf-1', timestamp });
   config = updateActiveWorkflow(config, {
@@ -90,4 +100,38 @@ test('checkpointWorkflow preserves existing artifact_log', () => {
   let config = startWorkflow(defaultConfig('auto'), { firstSkill: 'plan', workflowId: 'wf-1', timestamp });
   config = checkpointWorkflow(config, { currentSkill: 'plan', nextSkill: 'execute', timestamp });
   assert.equal(config.active_workflow.artifact_log, '.pi/workflows/wf-1.jsonl');
+});
+
+test('updateActiveWorkflow increments step_number', () => {
+  let config = startWorkflow(defaultConfig('auto'), { firstSkill: 'plan', workflowId: 'wf-1', timestamp });
+  assert.equal(config.active_workflow.step_number, 0);
+  config = updateActiveWorkflow(config, { current_skill: 'brainstorm-spec', next_skill: 'plan', stop_reason: null, confidence: 'high', open_questions: [] });
+  assert.equal(config.active_workflow.step_number, 1);
+  config = updateActiveWorkflow(config, { current_skill: 'plan', next_skill: 'execute', stop_reason: null, confidence: 'high', open_questions: [] });
+  assert.equal(config.active_workflow.step_number, 2);
+});
+
+test('updateActiveWorkflow stores artifact path from handoff', () => {
+  let config = startWorkflow(defaultConfig('auto'), { firstSkill: 'plan', workflowId: 'wf-1', timestamp });
+  config = updateActiveWorkflow(config, {
+    current_skill: 'brainstorm-spec', next_skill: 'plan',
+    stop_reason: null, confidence: 'high', open_questions: [],
+    artifact: '.pi/workflows/wf-1/01-brainstorm-spec.md',
+  });
+  assert.equal(config.active_workflow.last_artifact, '.pi/workflows/wf-1/01-brainstorm-spec.md');
+  assert.equal(config.active_workflow.step_number, 1);
+});
+
+test('updateActiveWorkflow preserves last_artifact when handoff has no artifact', () => {
+  let config = startWorkflow(defaultConfig('auto'), { firstSkill: 'plan', workflowId: 'wf-1', timestamp });
+  config = updateActiveWorkflow(config, {
+    current_skill: 'brainstorm-spec', next_skill: 'plan',
+    stop_reason: null, confidence: 'high', open_questions: [],
+    artifact: '.pi/workflows/wf-1/01-brainstorm-spec.md',
+  });
+  config = updateActiveWorkflow(config, {
+    current_skill: 'plan', next_skill: 'execute',
+    stop_reason: null, confidence: 'high', open_questions: [],
+  });
+  assert.equal(config.active_workflow.last_artifact, '.pi/workflows/wf-1/01-brainstorm-spec.md');
 });

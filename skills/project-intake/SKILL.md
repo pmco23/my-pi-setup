@@ -75,4 +75,17 @@ When `.pi/project-map/` already exists:
 
 Recommend `plan` when the user has a concrete next task. Otherwise recommend `none` after onboarding completes.
 
-End with `## Next Step`: recommended skill, reason, user prompt, and compact auto handoff JSON when used in a workflow.
+End with `## Next Step`: recommended skill, reason, user prompt, and compact auto handoff JSON:
+
+Auto handoff:
+```json
+{
+  "workflow_mode": "<mode from prompt>",
+  "current_skill": "project-intake",
+  "next_skill": "<recommended>",
+  "confidence": "high|medium|low",
+  "stop_reason": null,
+  "open_questions": [],
+  "artifact": ""
+}
+```

@@ -4,6 +4,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { DEFAULT_TRANSITIONS, defaultConfig, getConfigPath, getWorkflowsDir, loadConfig, saveConfig, initConfigV2 } = require('../src/config');
+const { mergeSettings } = require('../src/setup');
 
 function tmpdir() { return fs.mkdtempSync(path.join(os.tmpdir(), 'wf-config-')); }
 
@@ -84,4 +85,49 @@ test('DEFAULT_TRANSITIONS contains expected skill chain', () => {
   assert.ok(DEFAULT_TRANSITIONS['brainstorm-spec'].includes('implementation-research'));
   assert.ok(DEFAULT_TRANSITIONS['plan'].includes('execute'));
   assert.ok(DEFAULT_TRANSITIONS['code-review'].includes('none'));
+});
+
+test('defaultConfig sets stop_before_execute to true', () => {
+  const c = defaultConfig('auto');
+  assert.equal(c.auto_continue.stop_before_execute, true);
+});
+
+test('mergeSettings deep-merges nested objects', () => {
+  const existing = {
+    theme: 'dark',
+    compaction: { enabled: true, reserveTokens: 16384, keepRecentTokens: 20000 },
+    retry: { enabled: true, maxRetries: 3 },
+  };
+  const updates = {
+    compaction: { enabled: false },
+    defaultThinkingLevel: 'high',
+  };
+  const result = mergeSettings(existing, updates);
+  // Deep merge: keepRecentTokens preserved from existing
+  assert.equal(result.compaction.enabled, false);
+  assert.equal(result.compaction.keepRecentTokens, 20000);
+  assert.equal(result.compaction.reserveTokens, 16384);
+  // Top-level fields merged
+  assert.equal(result.theme, 'dark');
+  assert.equal(result.defaultThinkingLevel, 'high');
+  // Untouched nested object preserved
+  assert.equal(result.retry.enabled, true);
+  assert.equal(result.retry.maxRetries, 3);
+});
+
+test('mergeSettings deep-merges two levels (e.g. retry.provider)', () => {
+  const existing = {
+    retry: { enabled: true, maxRetries: 3, provider: { timeoutMs: 3600000, maxRetries: 0, maxRetryDelayMs: 60000 } },
+  };
+  const updates = {
+    retry: { provider: { maxRetryDelayMs: 30000 } },
+  };
+  const result = mergeSettings(existing, updates);
+  // 2-level deep: timeoutMs preserved, maxRetryDelayMs updated
+  assert.equal(result.retry.provider.timeoutMs, 3600000);
+  assert.equal(result.retry.provider.maxRetries, 0);
+  assert.equal(result.retry.provider.maxRetryDelayMs, 30000);
+  // First-level preserved
+  assert.equal(result.retry.enabled, true);
+  assert.equal(result.retry.maxRetries, 3);
 });

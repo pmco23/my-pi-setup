@@ -10,43 +10,55 @@ function baseConfig(overrides = {}) {
 function baseHandoff(overrides = {}) {
   return {
     workflow_mode: 'auto',
-    current_skill: 'plan',
-    next_skill: 'execute',
-    requires_user: false,
+    current_skill: 'brainstorm-spec',
+    next_skill: 'implementation-research',
     stop_reason: null,
     confidence: 'high',
-    reason: 'Ready to implement.',
-    inputs: { primary_artifact: 'Plan', required_context: [], open_questions: [] },
+    open_questions: [],
     ...overrides,
   };
 }
 
-test('valid plan -> execute in auto mode continues', () => {
-  const result = evaluateHandoff({ config: baseConfig(), handoff: baseHandoff() });
-  assert.equal(result.decision, 'continue');
-  assert.equal(result.next_skill, 'execute');
-});
-
 test('valid brainstorm-spec -> implementation-research in auto mode continues', () => {
-  const result = evaluateHandoff({ config: baseConfig(), handoff: baseHandoff({ current_skill: 'brainstorm-spec', next_skill: 'implementation-research', reason: 'Research needed.' }) });
+  const result = evaluateHandoff({ config: baseConfig(), handoff: baseHandoff() });
   assert.equal(result.decision, 'continue');
   assert.equal(result.next_skill, 'implementation-research');
 });
 
+test('plan -> execute pauses by default (stop_before_execute)', () => {
+  const result = evaluateHandoff({ config: baseConfig(), handoff: baseHandoff({ current_skill: 'plan', next_skill: 'execute' }) });
+  assert.equal(result.decision, 'pause');
+  assert.match(result.reason, /stop before execute/);
+});
+
+test('plan -> execute continues when stop_before_execute is disabled', () => {
+  const config = baseConfig();
+  config.auto_continue.stop_before_execute = false;
+  const result = evaluateHandoff({ config, handoff: baseHandoff({ current_skill: 'plan', next_skill: 'execute' }) });
+  assert.equal(result.decision, 'continue');
+  assert.equal(result.next_skill, 'execute');
+});
+
 test('next skill none completes workflow', () => {
-  const result = evaluateHandoff({ config: baseConfig(), handoff: baseHandoff({ current_skill: 'code-review', next_skill: 'none', requires_user: true, stop_reason: 'workflow complete' }) });
+  const result = evaluateHandoff({ config: baseConfig(), handoff: baseHandoff({ current_skill: 'code-review', next_skill: 'none', stop_reason: 'workflow complete' }) });
   assert.equal(result.decision, 'complete');
   assert.equal(result.next_skill, 'none');
 });
 
 test('invalid transition pauses', () => {
-  const result = evaluateHandoff({ config: baseConfig(), handoff: baseHandoff({ next_skill: 'code-review' }) });
+  const result = evaluateHandoff({ config: baseConfig(), handoff: baseHandoff({ current_skill: 'plan', next_skill: 'code-review' }) });
   assert.equal(result.decision, 'pause');
   assert.match(result.reason, /Invalid transition/);
 });
 
 test('open questions pause', () => {
-  const result = evaluateHandoff({ config: baseConfig(), handoff: baseHandoff({ inputs: { primary_artifact: 'Plan', required_context: [], open_questions: ['Choose database'] } }) });
+  const result = evaluateHandoff({ config: baseConfig(), handoff: baseHandoff({ open_questions: ['Choose database'] }) });
+  assert.equal(result.decision, 'pause');
+  assert.match(result.reason, /Open questions/);
+});
+
+test('open questions in old format (inputs.open_questions) also pause', () => {
+  const result = evaluateHandoff({ config: baseConfig(), handoff: baseHandoff({ open_questions: undefined, inputs: { open_questions: ['Pick a DB'] }, requires_user: false }) });
   assert.equal(result.decision, 'pause');
   assert.match(result.reason, /Open questions/);
 });

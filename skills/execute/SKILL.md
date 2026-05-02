@@ -71,8 +71,28 @@ Self-Review:
 ## Next Step
 ```
 
+## Artifact
+
+When in a workflow (Artifact dir provided in prompt), save your Execution Summary output to:
+`<artifact_dir>/<step padded to 2 digits>-execute.md`
+
+Write the artifact BEFORE the `## Next Step` section. Include the path in the handoff `artifact` field.
+
 ## Next Skill Guidance
 
 Recommend `review-against-plan` after implementation. If no plan/criteria exist and the task was tiny, recommend `code-review` or `none` as appropriate.
 
-End with `## Next Step`: recommended skill, reason, user prompt, and compact auto handoff JSON when used in a workflow.
+End with `## Next Step`: recommended skill, reason, user prompt, and compact auto handoff JSON:
+
+Auto handoff:
+```json
+{
+  "workflow_mode": "<mode from prompt>",
+  "current_skill": "execute",
+  "next_skill": "<recommended>",
+  "confidence": "high|medium|low",
+  "stop_reason": null,
+  "open_questions": [],
+  "artifact": ""
+}
+```

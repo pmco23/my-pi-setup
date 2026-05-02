@@ -24,7 +24,7 @@ function defaultConfig(mode = 'user-in-the-loop') {
       stop_on_low_confidence: true,
       stop_on_failed_validation: true,
       stop_on_blockers: true,
-      stop_before_execute: false,
+      stop_before_execute: true,
     },
     transitions: { ...DEFAULT_TRANSITIONS },
     active_workflow: {
@@ -37,6 +37,8 @@ function defaultConfig(mode = 'user-in-the-loop') {
       paused: false,
       pause_reason: null,
       last_processed_entry_id: null,
+      step_number: 0,
+      last_artifact: null,
     },
   };
 }

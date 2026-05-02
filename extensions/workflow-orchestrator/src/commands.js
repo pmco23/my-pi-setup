@@ -2,9 +2,9 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { getProjectRoot, loadConfig, saveConfig, initConfigV2 } = require('./config');
-const { pauseWorkflow, resumeWorkflow, startWorkflow, checkpointWorkflow } = require('./state');
+const { pauseWorkflow, resumeWorkflow, startWorkflow } = require('./state');
 const { appendAuditEntry } = require('./audit');
-const { buildContinuePrompt, buildSkillPrompt } = require('./prompts');
+const { buildContinuePrompt, buildSkillPrompt, artifactDir } = require('./prompts');
 const { applyPiSetup, SCOPE_LABELS, THEME_LABELS, THINKING_LEVELS, labelToKey, targetsForScope } = require('./setup');
 
 function createCommandEnv(ctx, pi) {
@@ -154,14 +154,32 @@ async function handlePause(args, env) {
   return { ok: true, projectRoot, config };
 }
 
-async function handleResume(_args, env) {
+async function handleStatus(_args, env) {
   const projectRoot = getProjectRoot(env.cwd);
   const loaded = loadConfig(projectRoot);
-  if (!loaded.ok) return { ok: false, reason: loaded.reason, projectRoot };
-  const config = resumeWorkflow(loaded.config);
-  saveConfig(projectRoot, config);
-  env.notify('Workflow resumed. Run /workflow:continue when ready.', 'info');
-  return { ok: true, projectRoot, config };
+  if (!loaded.ok) {
+    env.notify('No workflow configured. Run /workflow:init to set up.', 'info');
+    return { ok: false, reason: loaded.reason, projectRoot };
+  }
+
+  const config = loaded.config;
+  const active = config.active_workflow || {};
+
+  if (!active.id) {
+    env.notify(`Mode: ${config.mode} | No active workflow. Use /workflow:start to begin.`, 'info');
+    return { ok: true, projectRoot, config, hasActive: false };
+  }
+
+  const lines = [
+    `Workflow: ${active.id}`,
+    active.goal ? `Goal: ${active.goal}` : null,
+    `Current: ${active.current_skill || '(none)'} → next: ${active.next_skill || '(none)'}`,
+    `Mode: ${config.mode} | Paused: ${active.paused ? `yes (${active.pause_reason})` : 'no'}`,
+    active.last_artifact ? `Last artifact: ${active.last_artifact}` : null,
+  ].filter(Boolean).join('\n');
+
+  env.notify(lines, 'info');
+  return { ok: true, projectRoot, config, hasActive: true };
 }
 
 async function handleStart(_args, env) {
@@ -202,6 +220,8 @@ async function handleStart(_args, env) {
     mode: config.mode,
     workflowId: active.id,
     artifactLog: active.artifact_log,
+    artifactDir: artifactDir(active.id),
+    step: 1,
     allowedNext: config.transitions?.[firstSkill] || [],
     context: goal ? [`Goal: ${goal}`] : [],
   });
@@ -211,51 +231,6 @@ async function handleStart(_args, env) {
   return { ok: true, projectRoot, config, prompt };
 }
 
-async function handleCheckpoint(_args, env) {
-  const projectRoot = getProjectRoot(env.cwd);
-  const loaded = loadConfig(projectRoot);
-  if (!loaded.ok) {
-    env.notify(`Workflow config not available: ${loaded.reason}`, 'warning');
-    return { ok: false, reason: loaded.reason, projectRoot };
-  }
-
-  if (!env.select || !env.input || !env.confirm) {
-    env.notify('/workflow:checkpoint requires interactive UI.', 'error');
-    return { ok: false, reason: 'missing interactive ui', projectRoot };
-  }
-
-  const active = loaded.config.active_workflow || {};
-  if (active.id) {
-    const ok = await env.confirm('Active workflow exists', 'Overwrite current workflow state?');
-    if (!ok) return { ok: false, reason: 'cancelled', projectRoot };
-  }
-
-  const skillList = Object.keys(loaded.config.transitions || {});
-
-  const currentSkill = await env.select('Current skill (just completed):', skillList);
-  if (!currentSkill) return { ok: false, reason: 'cancelled', projectRoot };
-
-  const nextOptions = loaded.config.transitions?.[currentSkill] || skillList;
-  const nextSkill = await env.select('Next skill:', nextOptions);
-  if (!nextSkill) return { ok: false, reason: 'cancelled', projectRoot };
-
-  const currentGoal = active.goal || null;
-  const goalTitle = currentGoal ? `Goal (current: "${currentGoal}"):` : 'Goal (optional):';
-  const goalInput = await env.input(goalTitle, '');
-  const goal = goalInput || currentGoal;
-
-  const config = checkpointWorkflow(loaded.config, { goal, currentSkill, nextSkill });
-  saveConfig(projectRoot, config);
-
-  const artifactLog = config.active_workflow.artifact_log;
-  if (artifactLog) {
-    appendAuditEntry(projectRoot, artifactLog, { event: 'checkpoint', current_skill: currentSkill, next_skill: nextSkill, goal });
-  }
-
-  env.notify(`Checkpoint saved: ${currentSkill} → ${nextSkill}`, 'success');
-  return { ok: true, projectRoot, config };
-}
-
 module.exports = {
   createCommandEnv,
   installPrePushHook,
@@ -263,7 +238,6 @@ module.exports = {
   handleInit,
   handleContinue,
   handlePause,
-  handleResume,
   handleStart,
-  handleCheckpoint,
+  handleStatus,
 };

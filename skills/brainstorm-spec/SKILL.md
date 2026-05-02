@@ -62,6 +62,13 @@ When ready to converge, produce:
 
 Use stable IDs for important decisions, requirements, risks, assumptions, and questions.
 
+## Artifact
+
+When in a workflow (Artifact dir provided in prompt), save your Design Spec output to:
+`<artifact_dir>/<step padded to 2 digits>-brainstorm-spec.md`
+
+Write the artifact BEFORE the `## Next Step` section. Include the path in the handoff `artifact` field.
+
 ## Next Skill Guidance
 
 Recommend:
@@ -70,4 +77,17 @@ Recommend:
 - `acceptance-criteria` when no research is needed but requirements need to become testable.
 - `plan` only when the scope is already precise and testable.
 
-End with `## Next Step`: recommended skill, reason, user prompt, and compact auto handoff JSON when used in a workflow.
+End with `## Next Step`: recommended skill, reason, user prompt, and compact auto handoff JSON:
+
+Auto handoff:
+```json
+{
+  "workflow_mode": "<mode from prompt>",
+  "current_skill": "brainstorm-spec",
+  "next_skill": "<recommended>",
+  "confidence": "high|medium|low",
+  "stop_reason": null,
+  "open_questions": [],
+  "artifact": ""
+}
+```

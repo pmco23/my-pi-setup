@@ -6,19 +6,17 @@ const { latestAssistantMarkdown, messageText, planAutoContinuation } = require('
 
 function activeConfig(mode = 'auto') {
   const c = defaultConfig(mode);
-  return startWorkflow(c, { firstSkill: 'execute', workflowId: 'wf-1', timestamp: '2026-05-01T00:00:00.000Z' });
+  return startWorkflow(c, { firstSkill: 'implementation-research', workflowId: 'wf-1', timestamp: '2026-05-01T00:00:00.000Z' });
 }
 
 function handoff(overrides = {}) {
   return {
     workflow_mode: 'auto',
-    current_skill: 'plan',
-    next_skill: 'execute',
-    requires_user: false,
+    current_skill: 'brainstorm-spec',
+    next_skill: 'implementation-research',
     stop_reason: null,
     confidence: 'high',
-    reason: 'Ready',
-    inputs: { primary_artifact: 'Plan output', required_context: [], open_questions: [] },
+    open_questions: [],
     ...overrides,
   };
 }
@@ -44,16 +42,16 @@ test('latestAssistantMarkdown returns the latest assistant message text', () => 
 test('planAutoContinuation continues on valid auto handoff', () => {
   const result = planAutoContinuation({ config: activeConfig('auto'), markdown: markdownFor(handoff()), entryId: 'e1' });
   assert.equal(result.action, 'continue');
-  assert.equal(result.nextSkill, 'execute');
-  assert.match(result.prompt, /^\/skill:execute/);
+  assert.equal(result.nextSkill, 'implementation-research');
+  assert.match(result.prompt, /^\/skill:implementation-research/);
   assert.equal(result.config.active_workflow.last_processed_entry_id, 'e1');
 });
 
 test('planAutoContinuation suggests (not chains) in user-in-the-loop mode', () => {
   const result = planAutoContinuation({ config: activeConfig('user-in-the-loop'), markdown: markdownFor(handoff()), entryId: 'e1' });
   assert.equal(result.action, 'suggest');
-  assert.equal(result.nextSkill, 'execute');
-  assert.match(result.prompt, /^\/skill:execute/);
+  assert.equal(result.nextSkill, 'implementation-research');
+  assert.match(result.prompt, /^\/skill:implementation-research/);
 });
 
 test('planAutoContinuation skips silently when no handoff in user-in-the-loop mode', () => {
@@ -82,16 +80,15 @@ test('planAutoContinuation no-ops without active workflow and no handoff', () =>
 test('planAutoContinuation bootstraps workflow from first handoff in auto mode', () => {
   const result = planAutoContinuation({ config: defaultConfig('auto'), markdown: markdownFor(handoff()), entryId: 'e1' });
   assert.equal(result.action, 'continue');
-  assert.equal(result.nextSkill, 'execute');
+  assert.equal(result.nextSkill, 'implementation-research');
   assert.ok(result.config.active_workflow.id, 'workflow id should be set after bootstrap');
   assert.ok(result.config.active_workflow.artifact_log, 'artifact_log should be set after bootstrap');
-  assert.equal(result.config.active_workflow.goal, 'Plan output');
 });
 
 test('planAutoContinuation bootstraps and suggests from first handoff in user-in-the-loop mode', () => {
   const result = planAutoContinuation({ config: defaultConfig('user-in-the-loop'), markdown: markdownFor(handoff()), entryId: 'e1' });
   assert.equal(result.action, 'suggest');
-  assert.equal(result.nextSkill, 'execute');
+  assert.equal(result.nextSkill, 'implementation-research');
   assert.ok(result.config.active_workflow.id, 'workflow id should be set after bootstrap');
   assert.ok(result.config.active_workflow.artifact_log, 'artifact_log should be set after bootstrap');
 });
@@ -112,7 +109,7 @@ test('planAutoContinuation captures goal from first handoff', () => {
   config.active_workflow.goal = null;
   const result = planAutoContinuation({
     config,
-    markdown: markdownFor(handoff({ inputs: { primary_artifact: 'Build a notes app', required_context: [], open_questions: [] } })),
+    markdown: markdownFor(handoff({ inputs: { primary_artifact: 'Build a notes app', required_context: [], open_questions: [] }, requires_user: false })),
     entryId: 'e1',
   });
   assert.equal(result.action, 'continue');

@@ -31,16 +31,32 @@ test('buildSkillPrompt does not inject reminder without workflowId', () => {
   assert.equal(prompt.includes('Workflow reminder:'), false);
 });
 
-test('buildContinuePrompt resumes from active workflow next skill', () => {
+test('buildSkillPrompt includes artifact dir, step, and previous artifact', () => {
+  const prompt = buildSkillPrompt('plan', {
+    mode: 'auto',
+    workflowId: 'wf-1',
+    artifactLog: '.pi/workflows/wf-1.jsonl',
+    artifactDir: '.pi/workflows/wf-1/',
+    step: 2,
+    previousArtifact: '.pi/workflows/wf-1/01-brainstorm-spec.md',
+  });
+  assert.match(prompt, /Artifact dir: \.pi\/workflows\/wf-1\//);
+  assert.match(prompt, /Step: 2/);
+  assert.match(prompt, /Previous artifact: \.pi\/workflows\/wf-1\/01-brainstorm-spec\.md/);
+});
+
+test('buildContinuePrompt resumes from active workflow next skill with artifact fields', () => {
   let config = defaultConfig('auto');
   config = startWorkflow(config, { firstSkill: 'plan', workflowId: 'wf-1' });
   config = updateActiveWorkflow(config, {
     workflow_mode: 'auto', current_skill: 'plan', next_skill: 'execute',
-    requires_user: false, stop_reason: null, confidence: 'high', reason: 'done',
-    inputs: { primary_artifact: 'Build notes app', required_context: [], open_questions: [] },
+    stop_reason: null, confidence: 'high', open_questions: [],
+    artifact: '.pi/workflows/wf-1/01-plan.md',
   });
   const prompt = buildContinuePrompt(config);
   assert.match(prompt, /^\/skill:execute/);
   assert.match(prompt, /Workflow reminder:/);
-  assert.match(prompt, /Goal: Build notes app/);
+  assert.match(prompt, /Artifact dir: \.pi\/workflows\/wf-1\//);
+  assert.match(prompt, /Step: 2/);
+  assert.match(prompt, /Previous artifact: \.pi\/workflows\/wf-1\/01-plan\.md/);
 });

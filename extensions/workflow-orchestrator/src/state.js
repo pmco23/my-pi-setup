@@ -26,23 +26,28 @@ function startWorkflow(config, { firstSkill, goal = null, workflowId = createWor
       paused: false,
       pause_reason: null,
       last_processed_entry_id: null,
+      step_number: 0,
+      last_artifact: null,
     },
   };
 }
 
 function updateActiveWorkflow(config, handoff, { timestamp = nowIso(), lastProcessedEntryId } = {}) {
+  const prev = config.active_workflow || {};
   return {
     ...config,
     active_workflow: {
-      ...(config.active_workflow || {}),
+      ...prev,
       // Capture goal from first handoff if not yet set
-      goal: config.active_workflow?.goal ?? handoff.inputs?.primary_artifact ?? null,
+      goal: prev.goal ?? handoff.goal ?? handoff.inputs?.primary_artifact ?? null,
       current_skill: handoff.current_skill,
       next_skill: handoff.next_skill,
       updated_at: timestamp,
       paused: false,
       pause_reason: null,
-      last_processed_entry_id: lastProcessedEntryId ?? config.active_workflow?.last_processed_entry_id ?? null,
+      last_processed_entry_id: lastProcessedEntryId ?? prev.last_processed_entry_id ?? null,
+      step_number: (prev.step_number || 0) + 1,
+      last_artifact: handoff.artifact || prev.last_artifact || null,
     },
   };
 }
@@ -84,6 +89,8 @@ function clearWorkflow(config, { timestamp = nowIso() } = {}) {
       paused: false,
       pause_reason: null,
       last_processed_entry_id: null,
+      step_number: 0,
+      last_artifact: null,
     },
   };
 }

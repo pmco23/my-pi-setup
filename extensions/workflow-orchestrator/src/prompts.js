@@ -17,6 +17,9 @@ function buildSkillPrompt(skillName, payload = {}) {
   if (payload.mode) lines.push(`Workflow mode: ${payload.mode}`);
   if (payload.workflowId) lines.push(`Workflow ID: ${payload.workflowId}`);
   if (payload.artifactLog) lines.push(`Artifact log: ${payload.artifactLog}`);
+  if (payload.artifactDir) lines.push(`Artifact dir: ${payload.artifactDir}`);
+  if (payload.step != null) lines.push(`Step: ${payload.step}`);
+  if (payload.previousArtifact) lines.push(`Previous artifact: ${payload.previousArtifact}`);
   if (payload.context && payload.context.length) {
     lines.push('', 'Context:');
     for (const item of payload.context) lines.push(`- ${item}`);
@@ -27,6 +30,11 @@ function buildSkillPrompt(skillName, payload = {}) {
   return lines.join('\n');
 }
 
+function artifactDir(workflowId) {
+  if (!workflowId) return null;
+  return `.pi/workflows/${workflowId}/`;
+}
+
 function buildContinuePrompt(config) {
   const active = config.active_workflow || {};
   if (!active.next_skill) throw new Error('No active workflow next_skill to continue');
@@ -34,6 +42,9 @@ function buildContinuePrompt(config) {
     mode: config.mode,
     workflowId: active.id,
     artifactLog: active.artifact_log,
+    artifactDir: artifactDir(active.id),
+    step: (active.step_number || 0) + 1,
+    previousArtifact: active.last_artifact || null,
     allowedNext: config.transitions?.[active.next_skill] || [],
     context: [
       active.goal ? `Goal: ${active.goal}` : null,
@@ -42,4 +53,4 @@ function buildContinuePrompt(config) {
   });
 }
 
-module.exports = { workflowReminder, buildSkillPrompt, buildContinuePrompt };
+module.exports = { workflowReminder, buildSkillPrompt, buildContinuePrompt, artifactDir };

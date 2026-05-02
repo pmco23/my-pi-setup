@@ -16,16 +16,16 @@ function markdownFor(current, next) {
     workflow_mode: 'auto',
     current_skill: current,
     next_skill: next,
-    requires_user: complete,
     stop_reason: complete ? 'workflow complete' : null,
     confidence: 'high',
-    reason: `${current} complete`,
-    inputs: { primary_artifact: `${current} result`, required_context: [], open_questions: [] },
+    open_questions: [],
   }, null, 2)}\n\`\`\``;
 }
 
 test('full v2 workflow smoke chain reaches completion', () => {
   let config = defaultConfig('auto');
+  // Disable stop_before_execute to test the full chain
+  config.auto_continue.stop_before_execute = false;
   config = startWorkflow(config, { firstSkill: 'brainstorm-spec', goal: 'Build hello world', workflowId: 'wf-smoke' });
 
   const sequence = [

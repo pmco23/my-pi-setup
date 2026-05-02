@@ -67,8 +67,28 @@ Each criterion should be:
 ## Next Step
 ```
 
+## Artifact
+
+When in a workflow (Artifact dir provided in prompt), save your Acceptance Criteria output to:
+`<artifact_dir>/<step padded to 2 digits>-acceptance-criteria.md`
+
+Write the artifact BEFORE the `## Next Step` section. Include the path in the handoff `artifact` field.
+
 ## Next Skill Guidance
 
 Recommend `plan` when criteria are testable enough to decompose into tasks. If critical questions remain, require user input before continuing.
 
-End with `## Next Step`: recommended skill, reason, user prompt, and compact auto handoff JSON when used in a workflow.
+End with `## Next Step`: recommended skill, reason, user prompt, and compact auto handoff JSON:
+
+Auto handoff:
+```json
+{
+  "workflow_mode": "<mode from prompt>",
+  "current_skill": "acceptance-criteria",
+  "next_skill": "<recommended>",
+  "confidence": "high|medium|low",
+  "stop_reason": null,
+  "open_questions": [],
+  "artifact": ""
+}
+```

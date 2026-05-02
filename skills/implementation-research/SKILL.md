@@ -60,11 +60,29 @@ When used standalone, complete this skill normally without assuming workflow sta
 ## Next Step
 ```
 
-## Next Skill Guidance
+## Artifact
 
-Recommend:
+When in a workflow (Artifact dir provided in prompt), save your Research Brief output to:
+`<artifact_dir>/<step padded to 2 digits>-implementation-research.md`
+
+Write the artifact BEFORE the `## Next Step` section. Include the path in the handoff `artifact` field.
+
+## Next Skill Guidance
 
 - `acceptance-criteria` when behavior and success criteria still need to become measurable.
 - `plan` when requirements are already precise and testable.
 
-End with `## Next Step`: recommended skill, reason, user prompt, and compact auto handoff JSON when used in a workflow.
+End with `## Next Step`: recommended skill, reason, user prompt, and compact auto handoff JSON:
+
+Auto handoff:
+```json
+{
+  "workflow_mode": "<mode from prompt>",
+  "current_skill": "implementation-research",
+  "next_skill": "<recommended>",
+  "confidence": "high|medium|low",
+  "stop_reason": null,
+  "open_questions": [],
+  "artifact": ""
+}
+```

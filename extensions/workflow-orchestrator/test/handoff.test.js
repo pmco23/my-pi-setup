@@ -21,6 +21,29 @@ test('looksLikeHandoff recognizes required handoff shape', () => {
   assert.equal(looksLikeHandoff({ workflow_mode: 'auto' }), false);
 });
 
+test('looksLikeHandoff recognizes new simplified format', () => {
+  const simplified = {
+    workflow_mode: 'auto',
+    current_skill: 'plan',
+    next_skill: 'execute',
+    confidence: 'high',
+    stop_reason: null,
+    open_questions: [],
+  };
+  assert.equal(looksLikeHandoff(simplified), true);
+});
+
+test('looksLikeHandoff accepts minimal 5-field handoff (no open_questions)', () => {
+  const minimal = {
+    workflow_mode: 'auto',
+    current_skill: 'plan',
+    next_skill: 'execute',
+    confidence: 'high',
+    stop_reason: null,
+  };
+  assert.equal(looksLikeHandoff(minimal), true);
+});
+
 test('extracts latest valid workflow handoff JSON block', () => {
   const markdown = `
 First:

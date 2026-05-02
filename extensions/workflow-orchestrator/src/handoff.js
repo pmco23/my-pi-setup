@@ -14,18 +14,15 @@ function extractJsonBlocks(markdown) {
 }
 
 function looksLikeHandoff(value) {
-  return Boolean(
-    value &&
-      typeof value === 'object' &&
-      typeof value.workflow_mode === 'string' &&
-      typeof value.current_skill === 'string' &&
-      typeof value.next_skill === 'string' &&
-      typeof value.requires_user === 'boolean' &&
-      Object.prototype.hasOwnProperty.call(value, 'stop_reason') &&
-      typeof value.confidence === 'string' &&
-      value.inputs &&
-      typeof value.inputs === 'object'
-  );
+  if (!value || typeof value !== 'object') return false;
+  // Required fields for all formats
+  if (typeof value.workflow_mode !== 'string') return false;
+  if (typeof value.current_skill !== 'string') return false;
+  if (typeof value.next_skill !== 'string') return false;
+  if (typeof value.confidence !== 'string') return false;
+  if (!Object.prototype.hasOwnProperty.call(value, 'stop_reason')) return false;
+  // 5 core fields present — accept (open_questions treated as [] if missing)
+  return true;
 }
 
 function parseJsonBlock(block) {

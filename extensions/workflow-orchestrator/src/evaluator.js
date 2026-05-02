@@ -18,14 +18,11 @@ function validateHandoff(handoff) {
   if (!VALID_MODES.has(handoff?.workflow_mode)) errors.push('workflow_mode must be auto or user-in-the-loop');
   if (typeof handoff?.current_skill !== 'string' || !handoff.current_skill) errors.push('current_skill is required');
   if (typeof handoff?.next_skill !== 'string' || !handoff.next_skill) errors.push('next_skill is required');
-  if (typeof handoff?.requires_user !== 'boolean') errors.push('requires_user must be boolean');
   if (!(handoff?.stop_reason === null || typeof handoff?.stop_reason === 'string')) errors.push('stop_reason must be null or string');
   if (!VALID_CONFIDENCE.has(handoff?.confidence)) errors.push('confidence must be high, medium, or low');
-  if (!handoff?.inputs || typeof handoff.inputs !== 'object') errors.push('inputs is required');
-  if (handoff?.inputs) {
-    if (!Array.isArray(handoff.inputs.open_questions)) errors.push('inputs.open_questions must be an array');
-    if (!Array.isArray(handoff.inputs.required_context)) errors.push('inputs.required_context must be an array');
-  }
+  // Accept new format (top-level open_questions) or old format (inputs object)
+  const openQuestions = handoff?.open_questions ?? handoff?.inputs?.open_questions;
+  if (!Array.isArray(openQuestions) && openQuestions !== undefined) errors.push('open_questions must be an array');
   return errors;
 }
 
@@ -75,10 +72,13 @@ function evaluateHandoff({ config, handoff, modeOverride }) {
   const reasons = [];
   const signals = handoff.signals || {};
   const auto = config.auto_continue;
+  // Normalize: support both new (top-level) and old (inputs.open_questions) format
+  const openQuestions = handoff.open_questions ?? handoff.inputs?.open_questions ?? [];
+  const requiresUser = handoff.requires_user ?? (handoff.stop_reason !== null || openQuestions.length > 0);
 
-  if (handoff.requires_user) reasons.push('Handoff requires user input');
+  if (requiresUser) reasons.push('Handoff requires user input');
   if (handoff.stop_reason !== null) reasons.push(`Handoff stop_reason: ${handoff.stop_reason}`);
-  if (auto.stop_on_open_questions && handoff.inputs.open_questions.length > 0) reasons.push('Open questions present');
+  if (auto.stop_on_open_questions && openQuestions.length > 0) reasons.push('Open questions present');
   if (auto.stop_on_low_confidence && handoff.confidence === 'low') reasons.push('Low confidence');
   if (auto.stop_before_execute && handoff.next_skill === 'execute') reasons.push('Configured to stop before execute');
   if (auto.stop_on_failed_validation && signals.failed_validation) reasons.push('Failed validation signal present');

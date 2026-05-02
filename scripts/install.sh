@@ -44,11 +44,10 @@ Installed global theme:
 
 Extension commands:
 - /workflow:init       → setup wizard (mode, theme, thinking level, compaction, retry)
+- /workflow:start      → start a new workflow with a skill and goal
 - /workflow:continue   → advance or resume
 - /workflow:pause      → pause
-- /workflow:resume     → clear pause
-- /workflow:start      → start a new workflow with a skill and goal
-- /workflow:checkpoint → manually record workflow state after a session break
+- /workflow:status     → show current workflow state
 
 Skill commands:
 - /skill:project-intake
