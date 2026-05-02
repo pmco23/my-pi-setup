@@ -86,14 +86,15 @@ test('planAutoContinuation no-ops without active workflow', () => {
   assert.equal(result.action, 'none');
 });
 
-test('planAutoContinuation clears workflow when next skill is none', () => {
+test('planAutoContinuation completes and clears workflow when next skill is none', () => {
   const result = planAutoContinuation({
     config: activeConfig('auto'),
     markdown: markdownFor(handoff({ current_skill: 'review-against-plan', next_skill: 'none' })),
     entryId: 'entry-1',
     isWorkflowSkillResponse: true,
   });
-  assert.equal(result.action, 'pause');
+  assert.equal(result.action, 'complete');
   assert.equal(result.artifactLog, '.pi/workflows/wf-1.jsonl');
   assert.equal(result.config.active_workflow.id, null);
+  assert.equal(result.audit.decision, 'complete');
 });

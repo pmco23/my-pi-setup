@@ -12,6 +12,7 @@ Main workflow:
 
 ```text
 brainstorm-spec
+→ implementation-research
 → acceptance-criteria
 → plan
 → execute
@@ -55,11 +56,7 @@ Extension-managed commands:
 /workflow:resume
 ```
 
-Old prompt-template commands such as `/workflow-init` and `/workflow-start` are deprecated and not installed. Reference copies are kept under:
-
-```text
-Projects/my-pi-setup/deprecated/prompts/
-```
+Old prompt-template commands such as `/workflow-init` and `/workflow-start` are deprecated and not installed. Historical reference prompt files were removed; extension commands are authoritative.
 
 ## Runtime Decision Model
 
@@ -98,7 +95,11 @@ extensions/workflow-orchestrator/
 │   ├── evaluator.js
 │   ├── handoff.js
 │   ├── prompts.js
+│   ├── setup.js
 │   └── state.js
+├── assets/
+│   ├── onyx-theme.json
+│   └── pre-push-hook.sh
 ├── test/
 │   ├── audit.test.js
 │   ├── auto.test.js
@@ -107,7 +108,10 @@ extensions/workflow-orchestrator/
 │   ├── evaluator.test.js
 │   ├── handoff.test.js
 │   ├── prompts.test.js
-│   └── state.test.js
+│   ├── setup.test.js
+│   ├── skills.test.js
+│   ├── state.test.js
+│   └── workflow-smoke.test.js
 ├── package.json
 └── README.md
 ```
@@ -155,17 +159,15 @@ On `agent_end`:
 - **Implementation form:** pi extension.
 - **Post-agent hook:** `agent_end` for MVP.
 - **Artifact log format:** JSONL only.
-- **Prompt templates:** deprecated; extension commands are authoritative.
+- **Prompt templates:** removed; extension commands are authoritative.
 - **Evaluator location:** extension module at `src/evaluator.js`.
 - **Support skills:** `find-docs`, `ast-grep`, and `graphify` are support skills, not main workflow transitions.
 
 ## Remaining Improvements
 
 - Add `/workflow:debug` to print the last parsed handoff and evaluator decision.
-- Add config migration support if `version` changes.
 - Consider reading `ctx.sessionManager.getBranch()` as fallback if `agent_end` event messages do not include the expected assistant handoff.
 - Add integration tests around installed pi RPC command discovery if feasible.
-- Consider removing deprecated prompt files entirely once no longer useful as references.
 
 ## Validation Checklist
 

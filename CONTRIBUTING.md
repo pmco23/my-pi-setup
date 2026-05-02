@@ -45,7 +45,6 @@ skills/                             Pi skills (project-intake, brainstorm-spec, 
 scripts/                            Install, uninstall, backup scripts
 docs/                               Design notes
 .pi/project-map/                    Durable project context (committed for contributors)
-deprecated/                         Historical reference (not installed)
 ```
 
 ## Development workflow

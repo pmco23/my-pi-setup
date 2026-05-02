@@ -23,14 +23,20 @@ Implemented test-first modules for:
 npm test
 ```
 
+## Bundled theme
+
+`onyx` is bundled under `assets/onyx-theme.json`. The repository installer copies it to `~/.pi/agent/themes/onyx.json` so it is available across projects.
+
 ## Planned runtime commands
 
 ```text
+/my-pi:setup
 /workflow:init
 /workflow:start
 /workflow:auto
 /workflow:manual
 /workflow:continue
+/workflow:upgrade-config
 /workflow:status
 /workflow:pause
 /workflow:resume

@@ -2,7 +2,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const childProcess = require('node:child_process');
 
-const DEFAULT_SEQUENCE = ['brainstorm-spec', 'acceptance-criteria', 'plan', 'execute', 'review-against-plan', 'code-review'];
+const DEFAULT_SEQUENCE = ['brainstorm-spec', 'implementation-research', 'acceptance-criteria', 'plan', 'execute', 'review-against-plan', 'code-review'];
 const DEFAULT_ALLOWED_SKILLS = ['project-intake', ...DEFAULT_SEQUENCE];
 
 function defaultConfig(mode = 'user-in-the-loop') {
@@ -22,7 +22,8 @@ function defaultConfig(mode = 'user-in-the-loop') {
     },
     handoff: { require_json: true, require_user_prompt: true, persist_artifacts: true },
     transitions: {
-      'brainstorm-spec': ['acceptance-criteria', 'plan'],
+      'brainstorm-spec': ['implementation-research', 'acceptance-criteria', 'plan'],
+      'implementation-research': ['acceptance-criteria', 'plan'],
       'acceptance-criteria': ['plan'],
       plan: ['execute'],
       execute: ['review-against-plan'],
@@ -33,15 +34,15 @@ function defaultConfig(mode = 'user-in-the-loop') {
     support_skills: {
       'find-docs': {
         use_when: 'External library, framework, SDK, CLI, or cloud-service behavior needs current documentation verification.',
-        allowed_in: ['project-intake', 'brainstorm-spec', 'acceptance-criteria', 'plan', 'execute', 'review-against-plan', 'code-review'],
+        allowed_in: ['project-intake', 'brainstorm-spec', 'implementation-research', 'acceptance-criteria', 'plan', 'execute', 'review-against-plan', 'code-review'],
       },
       'ast-grep': {
         use_when: 'Structural code search, call-site analysis, pattern verification, refactor discovery, or anti-pattern detection is needed.',
-        allowed_in: ['project-intake', 'acceptance-criteria', 'plan', 'execute', 'review-against-plan', 'code-review'],
+        allowed_in: ['project-intake', 'implementation-research', 'acceptance-criteria', 'plan', 'execute', 'review-against-plan', 'code-review'],
       },
       graphify: {
         use_when: 'Complex relationships, architecture, domain modeling, documentation mapping, or large-codebase impact analysis is needed.',
-        allowed_in: ['project-intake', 'brainstorm-spec', 'plan', 'review-against-plan', 'code-review'],
+        allowed_in: ['project-intake', 'brainstorm-spec', 'implementation-research', 'plan', 'review-against-plan', 'code-review'],
       },
     },
     project_map: {
@@ -106,4 +107,32 @@ function initConfig(projectRoot, mode = 'user-in-the-loop', options = {}) {
   return { status: 'created', configPath, workflowsDir: getWorkflowsDir(projectRoot), config };
 }
 
-module.exports = { DEFAULT_SEQUENCE, DEFAULT_ALLOWED_SKILLS, defaultConfig, getProjectRoot, getConfigPath, getWorkflowsDir, loadConfig, saveConfig, initConfig };
+function upgradeConfig(existing = {}) {
+  const mode = existing.default_mode || 'user-in-the-loop';
+  const base = defaultConfig(mode);
+  return {
+    ...existing,
+    version: base.version,
+    default_sequence: base.default_sequence,
+    auto_continue: {
+      ...base.auto_continue,
+      ...(existing.auto_continue || {}),
+      allowed_skills: base.auto_continue.allowed_skills,
+    },
+    handoff: { ...base.handoff, ...(existing.handoff || {}) },
+    transitions: base.transitions,
+    support_skills: base.support_skills,
+    project_map: { ...base.project_map, ...(existing.project_map || {}), graph: { ...base.project_map.graph, ...(existing.project_map?.graph || {}) } },
+    active_workflow: { ...base.active_workflow, ...(existing.active_workflow || {}) },
+  };
+}
+
+function upgradeProjectConfig(projectRoot) {
+  const loaded = loadConfig(projectRoot);
+  if (!loaded.ok) return { ok: false, reason: loaded.reason, configPath: loaded.configPath };
+  const config = upgradeConfig(loaded.config);
+  saveConfig(projectRoot, config);
+  return { ok: true, status: 'upgraded', configPath: getConfigPath(projectRoot), config };
+}
+
+module.exports = { DEFAULT_SEQUENCE, DEFAULT_ALLOWED_SKILLS, defaultConfig, getProjectRoot, getConfigPath, getWorkflowsDir, loadConfig, saveConfig, initConfig, upgradeConfig, upgradeProjectConfig };

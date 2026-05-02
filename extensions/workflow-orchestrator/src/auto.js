@@ -61,11 +61,25 @@ function planAutoContinuation({ config, markdown, entryId, modeOverride, isWorkf
   const decision = evaluateHandoff({ config, handoff: parsed.handoff, modeOverride });
   let updatedConfig = updateActiveWorkflow(config, parsed.handoff, { lastProcessedEntryId: entryId });
 
+  if (decision.decision === 'complete') {
+    updatedConfig = clearWorkflow(updatedConfig);
+    return {
+      action: 'complete',
+      reason: decision.reason,
+      nextSkill: decision.next_skill,
+      config: updatedConfig,
+      decision,
+      artifactLog,
+      audit: { event: 'handoff_evaluated', decision: 'complete', current_skill: decision.current_skill, next_skill: decision.next_skill, reason: decision.reason, entry_id: entryId || null },
+    };
+  }
+
   if (decision.decision === 'continue') {
     const prompt = buildSkillPrompt(decision.next_skill, {
       mode: decision.workflow_mode,
       workflowId: updatedConfig.active_workflow.id,
       artifactLog: updatedConfig.active_workflow.artifact_log,
+      allowedNext: updatedConfig.transitions?.[decision.next_skill] || [],
       context: [
         `Previous skill: ${decision.current_skill}`,
         `Continuation reason: ${decision.reason}`,
@@ -83,11 +97,7 @@ function planAutoContinuation({ config, markdown, entryId, modeOverride, isWorkf
     };
   }
 
-  if (decision.next_skill === 'none') {
-    updatedConfig = clearWorkflow(updatedConfig);
-  } else {
-    updatedConfig = pauseWorkflow(updatedConfig, decision.reason);
-  }
+  updatedConfig = pauseWorkflow(updatedConfig, decision.reason);
 
   return {
     action: 'pause',

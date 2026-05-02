@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const { defaultConfig, getConfigPath, getWorkflowsDir, loadConfig, saveConfig, initConfig } = require('../src/config');
+const { defaultConfig, getConfigPath, getWorkflowsDir, loadConfig, saveConfig, initConfig, upgradeConfig, upgradeProjectConfig } = require('../src/config');
 
 function tmpdir() { return fs.mkdtempSync(path.join(os.tmpdir(), 'wf-config-')); }
 
@@ -11,8 +11,13 @@ test('defaultConfig sets auto_continue based on mode', () => {
   assert.equal(defaultConfig('user-in-the-loop').auto_continue.enabled, false);
   assert.equal(defaultConfig('auto').auto_continue.enabled, true);
   assert.ok(defaultConfig().support_skills['find-docs']);
+  assert.ok(defaultConfig().default_sequence.includes('implementation-research'));
   assert.ok(defaultConfig().auto_continue.allowed_skills.includes('project-intake'));
+  assert.ok(defaultConfig().auto_continue.allowed_skills.includes('implementation-research'));
+  assert.ok(defaultConfig().transitions['brainstorm-spec'].includes('implementation-research'));
+  assert.ok(defaultConfig().transitions['implementation-research'].includes('acceptance-criteria'));
   assert.ok(defaultConfig().transitions['project-intake'].includes('none'));
+  assert.ok(defaultConfig().support_skills['find-docs'].allowed_in.includes('implementation-research'));
   assert.equal(defaultConfig().project_map.graph.enabled, true);
 });
 
@@ -52,4 +57,24 @@ test('loadConfig reports missing config', () => {
   const loaded = loadConfig(root);
   assert.equal(loaded.ok, false);
   assert.equal(loaded.reason, 'missing');
+});
+
+test('upgradeConfig adds current workflow shape while preserving mode and active workflow', () => {
+  const old = defaultConfig('auto');
+  old.default_sequence = ['brainstorm-spec', 'acceptance-criteria', 'plan', 'execute', 'review-against-plan', 'code-review'];
+  delete old.transitions['implementation-research'];
+  old.transitions['brainstorm-spec'] = ['acceptance-criteria', 'plan'];
+  old.active_workflow.id = 'wf-existing';
+  const upgraded = upgradeConfig(old);
+  assert.ok(upgraded.default_sequence.includes('implementation-research'));
+  assert.ok(upgraded.transitions['brainstorm-spec'].includes('implementation-research'));
+  assert.equal(upgraded.active_workflow.id, 'wf-existing');
+});
+
+test('upgradeProjectConfig saves upgraded config', () => {
+  const root = tmpdir();
+  initConfig(root, 'auto');
+  const result = upgradeProjectConfig(root);
+  assert.equal(result.ok, true);
+  assert.ok(loadConfig(root).config.default_sequence.includes('implementation-research'));
 });

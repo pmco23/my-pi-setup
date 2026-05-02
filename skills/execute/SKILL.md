@@ -5,199 +5,74 @@ description: Executes an agreed plan or well-defined implementation task. Use wh
 
 # Execute
 
-Use this skill to carry out a concrete task safely and verify the result.
+Carry out a concrete implementation task safely and verify the result.
 
 ## Operating Mode
 
-- Work from the user's request or an existing plan.
+- Work from a plan, task IDs, acceptance criteria, or a clear user request.
 - Inspect before editing.
-- If `.pi/project-map/agent-guidance.md` exists, read it for project validation commands, conventions, risky areas, and "do not touch" items before implementing.
+- If `.pi/project-map/agent-guidance.md` exists, read it for validation commands, conventions, risks, and do-not-touch items.
 - Make the smallest correct change.
-- Prefer precise edits over broad rewrites.
-- Track plan task IDs when provided: `P1`, `P2`, `P3`, ...
-- Respect task dependencies from the plan. Complete prerequisite tasks before dependent ones.
+- Preserve existing style and architecture.
+- Track plan task IDs (`P1`, `P2`, ...) when provided.
 - Run relevant validation when feasible.
-- Stop and ask before destructive, irreversible, credential-related, or high-risk actions.
+- Stop before destructive, credential-related, production, or high-risk operations.
 
-## Inputs
-
-Use any available inputs:
-
-- Plan from `plan`
-- Design spec from `brainstorm-spec`
-- Acceptance criteria from `acceptance-criteria`
-- Existing code, tests, docs, logs, or user constraints
+When used standalone, complete this skill normally without assuming workflow state; treat `## Next Step` as a manual recommendation for the user.
 
 ## Workflow
 
-1. Confirm the target task from the request or plan.
-2. Inspect relevant files and current behavior.
-3. Respect task dependencies: complete prerequisite tasks before dependent ones. If a dependency cannot be completed, pause and report.
-4. Implement changes in small, coherent steps.
-5. Run formatting, linting, tests, builds, or focused checks when available.
-6. Fix issues discovered during validation when in scope.
-7. If an implementation attempt makes things worse, stop, revert, and report.
-8. Perform a self-review against the task IDs, acceptance criteria, and validation expectations.
-9. Summarize changed files, completed task IDs, validation results, deviations, and reviewer focus.
-
-## Progress and Checkpoints
-
-- If the plan has many tasks, report progress after completing each logical group rather than waiting until the end.
-- If a task fails validation, report immediately rather than continuing to the next task.
-- Suggest a commit checkpoint after completing a coherent group of changes that pass validation.
-
-## Editing Guidelines
-
-- Preserve existing style and architecture.
-- Avoid unrelated changes.
-- Do not silently change public APIs, schemas, migrations, or generated files unless required.
-- If multiple files need changes, keep them logically grouped.
-- If validation cannot be run, explain why and provide suggested commands.
-
-## Self-Review Checklist
-
-Before reporting completion, check:
-
-- Which plan task IDs are complete, partial, deferred, or not applicable?
-- Which acceptance criteria are satisfied?
-- Were any unplanned files or behaviors changed?
-- Were all expected validation checks run?
-- Are there known risks, TODOs, or follow-ups?
-- What should `review-against-plan` focus on?
+1. Confirm the target task and constraints.
+2. Inspect relevant files/current behavior.
+3. Implement changes in small, coherent steps.
+4. Run formatting, linting, tests, builds, or focused checks.
+5. Fix validation issues that are in scope.
+6. Self-review against the request/plan/criteria.
+7. Summarize changed files, task status, validation, deviations, and risks.
 
 ## Support Skills
 
-Use support skills during implementation when useful:
-
-- Use `find-docs` before writing library/API-specific code when behavior, syntax, configuration, or migration details are uncertain.
-- Use `ast-grep` to find and update structurally similar call sites, imports, patterns, or anti-patterns.
-
-Support skill findings should be reflected in implementation notes, deviations, validation results, and the final handoff.
-
-## Handoff Protocol
-
-Every final response must end with a handoff that supports both modes:
-
-- **User-in-the-loop mode**: ask the user to confirm the next logical skill before continuing.
-- **Auto mode**: provide the exact next skill name and compact input payload so an orchestrator can continue automatically.
-
-Use this handoff shape in final outputs:
-
-````md
-## Next Step
-Recommended skill: `<skill-name | none>`
-Reason: <why this is the next logical step>
-
-User prompt:
-- Shall I continue with `<skill-name>`?
-
-Auto handoff:
-```json
-{
-  "workflow_mode": "user-in-the-loop",
-  "current_skill": "<current skill name>",
-  "next_skill": "<skill-name | none>",
-  "requires_user": false,
-  "stop_reason": null,
-  "confidence": "high",
-  "reason": "<short reason>",
-  "inputs": {
-    "primary_artifact": "<summary or reference>",
-    "required_context": ["<item>"],
-    "open_questions": ["<question>"]
-  }
-}
-```
-````
-
-If no next skill is needed, set `next_skill` to `none`, set `requires_user` to `true`, set `stop_reason` to `workflow complete`, and ask whether the user wants anything else. In user-in-the-loop mode, always set `requires_user` to `true` because the user must approve the next step. In auto mode, set `requires_user` to `false` only when it is safe to continue automatically.
-
-## Output Format
-
-Use this structure unless the user requests otherwise:
-
-````md
-Implemented.
-
-Changed:
-- `<path>`: <summary>
-
-Task Status:
-- P1: <complete | partial | deferred | n/a> — <evidence>
-- P2: <complete | partial | deferred | n/a> — <evidence>
-
-Validation:
-- V1 / `<command>`: <passed | failed | not run> — <result or reason>
-
-Deviations:
-- <intentional or accidental deviation from plan, or "None">
-
-Self-Review:
-- Acceptance criteria: <satisfied/partial/unknown>
-- Scope control: <no unrelated changes / note concerns>
-- Known risks: <risk or "None known">
-
-## Next Step
-Recommended skill: `review-against-plan`
-Reason: The implementation should be checked against the plan, acceptance criteria, and validation expectations.
-
-User prompt:
-- Shall I continue with `review-against-plan` to verify this implementation against the plan?
-
-Auto handoff:
-```json
-{
-  "workflow_mode": "auto",
-  "current_skill": "execute",
-  "next_skill": "review-against-plan",
-  "requires_user": false,
-  "stop_reason": null,
-  "confidence": "high",
-  "reason": "Verify implementation coverage against the plan and acceptance criteria.",
-  "inputs": {
-    "primary_artifact": "Implementation summary from this response",
-    "required_context": ["plan reference", "changed files", "completed P task IDs", "validation results", "known deviations"],
-    "open_questions": []
-  }
-}
-```
-````
+- Use `find-docs` before writing uncertain library/API-specific code.
+- Use `ast-grep` to find structurally similar call sites, imports, patterns, or anti-patterns.
 
 ## Stop Conditions
 
-Pause and ask the user if:
+Pause and ask if:
 
-- The plan is ambiguous in a way that could cause rework.
-- The change requires secrets, credentials, or external account access.
-- A command may delete data, rewrite history, or perform a production operation.
-- Tests reveal a broader unrelated failure.
-- An implementation attempt makes things worse (tests that passed before now fail).
-- A dependency task cannot be completed (blocked, deferred, or unclear).
+- The task is ambiguous enough to cause rework.
+- Secrets, credentials, or external account access are required.
+- A command may delete data, rewrite history, or affect production.
+- Tests reveal broader unrelated failures.
+- A dependency task is blocked.
+- An implementation attempt makes things worse.
 
-When stopping due to a mistake:
+## Output Format
 
-- Revert the problematic change if possible.
-- Report what went wrong and what was reverted.
-- Ask the user how to proceed.
+```md
+Implemented.
 
-## Handoff Confidence and Signals
+Changed:
+- <path>: <summary>
 
-Set handoff confidence based on validation results:
+Task Status:
+- P1: <complete | partial | deferred | n/a> — <evidence>
 
-- `"high"`: all expected validation passed, no deviations.
-- `"medium"`: some validation not run, minor deviations, or partial completion.
-- `"low"`: validation failed, significant deviations, or blockers found.
+Validation:
+- <command>: <passed | failed | not run> — <result or reason>
 
-When producing the auto handoff JSON, include a `signals` field if relevant:
+Deviations:
+- <none or details>
 
-```json
-"signals": {
-  "failed_validation": true,
-  "blockers": true,
-  "destructive_or_risky": true
-}
+Self-Review:
+- Acceptance criteria: <satisfied/partial/unknown>
+- Scope control: <summary>
+- Known risks: <none/details>
+
+## Next Step
 ```
 
-- `failed_validation`: any validation command failed.
-- `blockers`: implementation revealed blockers not in the original plan.
-- `destructive_or_risky`: the next step involves risky operations.
+## Next Skill Guidance
+
+Recommend `review-against-plan` after implementation. If no plan/criteria exist and the task was tiny, recommend `code-review` or `none` as appropriate.
+
+End with `## Next Step`: recommended skill, reason, user prompt, and compact auto handoff JSON when used in a workflow.

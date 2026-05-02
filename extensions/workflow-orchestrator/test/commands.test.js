@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const { handleInit, handleStart, handleOnboard, handleRefresh, handleContext, handleContinue, handleStatus, handlePause, handleResume, parseModeAndRest } = require('../src/commands');
+const { handleInit, handleUpgradeConfig, handleStart, handleOnboard, handleRefresh, handleContext, handleContinue, handleStatus, handlePause, handleResume, handlePiSetup, parseModeAndRest } = require('../src/commands');
 const { loadConfig } = require('../src/config');
 
 function tmpdir() { return fs.mkdtempSync(path.join(os.tmpdir(), 'wf-cmd-')); }
@@ -31,6 +31,15 @@ test('handleInit creates config', async () => {
   assert.equal(result.status, 'created');
   assert.equal(loadConfig(root).config.default_mode, 'auto');
   assert.equal(e.notifications[0].level, 'success');
+});
+
+test('handleUpgradeConfig upgrades existing config', async () => {
+  const root = tmpdir();
+  const e = env(root);
+  await handleInit('auto', e);
+  const result = await handleUpgradeConfig('', e);
+  assert.equal(result.ok, true);
+  assert.ok(loadConfig(root).config.default_sequence.includes('implementation-research'));
 });
 
 test('handleStatus summarizes config without sending messages', async () => {
@@ -102,6 +111,15 @@ test('handleOnboard initializes config if needed and sends project-intake prompt
   assert.equal(config.project_map.graph.enabled, true);
 });
 
+test('handleOnboard accepts optional goal for post-onboarding plan handoff', async () => {
+  const root = tmpdir();
+  const e = env(root);
+  const result = await handleOnboard('auto build hello world', e);
+  assert.equal(result.ok, true);
+  assert.match(e.sent.at(-1).message, /User goal after onboarding: build hello world/);
+  assert.match(e.sent.at(-1).message, /recommend `plan` next/);
+});
+
 test('handleContext reports missing project map files', async () => {
   const root = tmpdir();
   const e = env(root);
@@ -150,4 +168,22 @@ test('handlePause and handleResume update active state', async () => {
   assert.equal(loadConfig(root).config.active_workflow.paused, true);
   await handleResume('', e);
   assert.equal(loadConfig(root).config.active_workflow.paused, false);
+});
+
+test('handlePiSetup runs interactive setup and writes project settings', async () => {
+  const root = tmpdir();
+  const home = tmpdir();
+  const e = env(root);
+  const selections = ['Project (.pi/settings.json)', 'onyx (bundled custom dark theme)', 'high'];
+  const confirmations = [true, true];
+  e.homeDir = home;
+  e.select = async () => selections.shift();
+  e.confirm = async () => confirmations.shift();
+
+  const result = await handlePiSetup('', e);
+  assert.equal(result.ok, true);
+  assert.equal(fs.existsSync(path.join(root, '.pi', 'settings.json')), true);
+  assert.equal(fs.existsSync(path.join(root, '.pi', 'themes', 'onyx.json')), false);
+  assert.equal(fs.existsSync(path.join(home, '.pi', 'agent', 'themes', 'onyx.json')), true);
+  assert.equal(e.notifications.at(-1).level, 'success');
 });

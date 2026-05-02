@@ -9,7 +9,6 @@ This repository contains reusable pi resources:
 ```text
 skills/                   Global skills installed to ~/.agents/skills/
 extensions/               Global extensions installed to ~/.pi/agent/extensions/
-deprecated/prompts/       Old workflow prompt templates kept for reference, not installed
 settings/                 Reference global pi settings
 scripts/install.sh        Install this setup on a machine
 scripts/uninstall.sh      Remove this setup from a machine
@@ -66,14 +65,24 @@ After installing, restart pi or run:
 
 ## What gets installed
 
+### Global themes
+
+```text
+onyx
+```
+
+The installer copies `onyx` to `~/.pi/agent/themes/onyx.json`, so it is available in every project.
+
 ### Extension commands
 
 ```text
+/my-pi:setup
 /workflow:init
 /workflow:start
 /workflow:auto
 /workflow:manual
 /workflow:continue
+/workflow:upgrade-config
 /workflow:status
 /workflow:onboard
 /workflow:refresh
@@ -87,6 +96,7 @@ After installing, restart pi or run:
 ```text
 /skill:project-intake
 /skill:brainstorm-spec
+/skill:implementation-research
 /skill:acceptance-criteria
 /skill:plan
 /skill:execute
@@ -110,6 +120,12 @@ The installed resources are global, but each project keeps its own workflow stat
 .pi/workflow-orchestrator.json
 .pi/workflows/
 .pi/project-map/
+```
+
+Optionally configure pi theme/settings with:
+
+```text
+/my-pi:setup
 ```
 
 Initialize a project with:

@@ -6,10 +6,10 @@ function baseConfig(overrides = {}) {
   return {
     version: 1,
     default_mode: 'auto',
-    default_sequence: ['brainstorm-spec', 'acceptance-criteria', 'plan', 'execute', 'review-against-plan', 'code-review'],
+    default_sequence: ['brainstorm-spec', 'implementation-research', 'acceptance-criteria', 'plan', 'execute', 'review-against-plan', 'code-review'],
     auto_continue: {
       enabled: true,
-      allowed_skills: ['brainstorm-spec', 'acceptance-criteria', 'plan', 'execute', 'review-against-plan', 'code-review'],
+      allowed_skills: ['brainstorm-spec', 'implementation-research', 'acceptance-criteria', 'plan', 'execute', 'review-against-plan', 'code-review'],
       stop_on_open_questions: true,
       stop_on_low_confidence: true,
       stop_on_failed_validation: true,
@@ -18,7 +18,8 @@ function baseConfig(overrides = {}) {
     },
     handoff: { require_json: true, require_user_prompt: true, persist_artifacts: true },
     transitions: {
-      'brainstorm-spec': ['acceptance-criteria', 'plan'],
+      'brainstorm-spec': ['implementation-research', 'acceptance-criteria', 'plan'],
+      'implementation-research': ['acceptance-criteria', 'plan'],
       'acceptance-criteria': ['plan'],
       plan: ['execute'],
       execute: ['review-against-plan'],
@@ -50,12 +51,27 @@ test('valid plan -> execute in auto mode continues', () => {
   assert.equal(result.next_skill, 'execute');
 });
 
+test('valid brainstorm-spec -> implementation-research in auto mode continues', () => {
+  const result = evaluateHandoff({
+    config: baseConfig(),
+    handoff: baseHandoff({ current_skill: 'brainstorm-spec', next_skill: 'implementation-research', reason: 'Research implementation options.' }),
+  });
+  assert.equal(result.decision, 'continue');
+  assert.equal(result.next_skill, 'implementation-research');
+});
+
 test('user-in-the-loop mode pauses', () => {
   const config = baseConfig({ default_mode: 'user-in-the-loop', auto_continue: { ...baseConfig().auto_continue, enabled: false } });
   const result = evaluateHandoff({ config, handoff: baseHandoff({ workflow_mode: 'auto' }) });
   assert.equal(result.decision, 'pause');
   assert.equal(result.workflow_mode, 'user-in-the-loop');
   assert.match(result.reason, /User-in-the-loop/);
+});
+
+test('next skill none completes workflow', () => {
+  const result = evaluateHandoff({ config: baseConfig(), handoff: baseHandoff({ current_skill: 'code-review', next_skill: 'none', requires_user: true, stop_reason: 'workflow complete' }) });
+  assert.equal(result.decision, 'complete');
+  assert.equal(result.next_skill, 'none');
 });
 
 test('invalid transition pauses', () => {

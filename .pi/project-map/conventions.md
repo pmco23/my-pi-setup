@@ -2,47 +2,50 @@
 
 ## Code Style
 
-- Extension modules: plain CommonJS JavaScript (`.js`).
-- Extension entrypoint: TypeScript (`.ts`), loaded by pi via jiti.
-- No build step. No bundler. No transpiler.
-- Tests: plain JS using `node:test` and `node:assert/strict`.
+- Extension business logic: CommonJS JavaScript (`src/*.js`).
+- Extension entrypoint: TypeScript (`index.ts`), loaded by pi via jiti.
+- Tests: plain JavaScript using `node:test` and `node:assert/strict`.
+- No build step, bundler, transpiler, linter, or formatter configured.
+- Avoid adding runtime npm dependencies unless strongly justified.
 
 ## Architecture Patterns
 
-- **Thin entrypoint**: `index.ts` only registers commands, manages the workflow-skill flag, and wires `agent_end`. No business logic.
-- **Dependency injection**: command handlers receive an `env` object for filesystem, UI, and message sending. Enables testing without pi runtime.
-- **Pure functions**: evaluator, handoff parser, state transitions, and prompt builders are pure modules with no pi dependencies.
-- **Fail-closed**: any invalid, missing, or ambiguous state results in a pause decision, never auto-continuation.
-- **Hybrid flag**: `pendingWorkflowSkillResponse` distinguishes workflow skill responses from side conversations. Missing handoff only pauses if the flag is set.
+- **Thin entrypoint**: `index.ts` registers commands and runtime hooks only.
+- **Pure modules**: config, evaluator, handoff, state, audit, prompts, setup, and auto planning stay pi-runtime independent where possible.
+- **Dependency injection**: command handlers receive an `env` object for UI/message/filesystem concerns.
+- **Fail-closed workflow**: invalid/missing handoffs from workflow skill responses pause; side conversations without handoffs are ignored.
+- **Runtime reminder injection**: detailed workflow mechanics are injected by prompt builders instead of duplicated in every skill.
+- **Module cache busting**: `index.ts` clears local CommonJS `require.cache` entries so `/reload` picks up `src/*.js` changes.
 
 ## Naming
 
-- Skills: lowercase hyphenated directories with `SKILL.md`.
-- Extension modules: lowercase `.js` files matching their domain.
-- Tests: `<module>.test.js` mirroring source module names.
-- Commands: `workflow:<verb>` pattern.
+- Skills: lowercase hyphenated directory names with `SKILL.md`.
+- Extension modules: lowercase domain names (`config.js`, `auto.js`, `setup.js`).
+- Tests: `<module>.test.js`, plus integration-like tests such as `workflow-smoke.test.js`.
+- Commands: `workflow:<verb>` for orchestrator commands; `my-pi:setup` for setup wizard.
 
 ## Project Config
 
-- Stored at `.pi/workflow-orchestrator.json` per project (gitignored).
+- Project config path: `.pi/workflow-orchestrator.json` (gitignored).
 - Config shape is defined by `defaultConfig()` in `src/config.js`.
-- Do not add fields without updating tests.
-- Backward compatibility: existing project configs don't auto-migrate.
+- Existing configs do not auto-migrate; use `/workflow:upgrade-config`.
+- Changes to sequence/transitions/support skills require config tests and skill/config validation tests.
 
 ## Workflow Logs
 
 - JSONL only: `.pi/workflows/<workflow-id>.jsonl`.
-- One JSON object per line. Append-only.
-- Secrets are redacted by `audit.js` before writing.
+- One JSON object per line.
+- `audit.js` redacts obvious secret patterns before writing.
 
-## Generated Files
+## Generated / Local Files
 
-- `.pi/` directory: workflow state and project-map artifacts.
-- `.pi/project-map/graph/graphify-out/`: graphify cache (gitignored).
-- `.pi/project-map/graph/.graphify_*`: graphify temp files (gitignored).
+- `.pi/workflow-orchestrator.json` and `.pi/workflows/` are personal/session state and gitignored.
+- `.pi/project-map/` is committed durable context.
+- `.pi/project-map/graph/graphify-out/` and `.pi/project-map/graph/.graphify_*` are graphify cache/temp and gitignored.
+- `.pi/settings.json` may be local project pi settings; do not commit unless intentionally sharing project defaults.
 
-## Do Not Modify
+## Do Not Modify Unless Asked
 
-- `skills/find-docs/`, `skills/ast-grep/`, `skills/graphify/`: third-party skills, bundled for portability.
-- `deprecated/prompts/`: kept for historical reference only.
+- `skills/find-docs/`, `skills/ast-grep/`, `skills/graphify/`: bundled third-party support skills.
 - `settings/global-settings.json`: reference copy, not directly used by pi.
+- `.pi/project-map/graph/graph.json`: regenerate via `/workflow:refresh`; do not hand-edit.

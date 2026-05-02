@@ -64,7 +64,18 @@ function evaluateHandoff({ config, handoff, modeOverride }) {
   const signals = handoff.signals || {};
   const auto = config.auto_continue;
 
-  if (handoff.next_skill === 'none') reasons.push('Workflow complete or no next skill');
+  if (handoff.next_skill === 'none') {
+    return {
+      decision: 'complete',
+      workflow_mode: mode,
+      current_skill: handoff.current_skill,
+      next_skill: handoff.next_skill,
+      reason: handoff.stop_reason || 'Workflow complete or no next skill',
+      errors: [],
+      handoff,
+    };
+  }
+
   if (mode === 'user-in-the-loop') reasons.push('User-in-the-loop mode requires confirmation');
   if (!auto.enabled && mode === 'auto') reasons.push('Project config has auto_continue.enabled=false');
   if (handoff.requires_user) reasons.push('Handoff requires user input');

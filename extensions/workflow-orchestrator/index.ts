@@ -1,9 +1,23 @@
 import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
 
-const commands = require("./src/commands");
-const { getProjectRoot, loadConfig, saveConfig } = require("./src/config");
-const { appendAuditEntry } = require("./src/audit");
-const { latestAssistantMarkdown, planAutoContinuation } = require("./src/auto");
+function freshRequire(modulePath: string) {
+	const resolved = require.resolve(modulePath);
+	delete require.cache[resolved];
+	return require(modulePath);
+}
+
+// Pi hot-reloads index.ts, but CommonJS src modules can remain in Node's require cache.
+// Bust local module cache so /reload picks up command and handler changes.
+for (const modulePath of ["./src/setup", "./src/commands", "./src/config", "./src/audit", "./src/auto"]) {
+	try {
+		delete require.cache[require.resolve(modulePath)];
+	} catch {}
+}
+
+const commands = freshRequire("./src/commands");
+const { getProjectRoot, loadConfig, saveConfig } = freshRequire("./src/config");
+const { appendAuditEntry } = freshRequire("./src/audit");
+const { latestAssistantMarkdown, planAutoContinuation } = freshRequire("./src/auto");
 
 export default function workflowOrchestratorExtension(pi: ExtensionAPI) {
 	// Flag: tracks whether the current agent turn was triggered by a workflow skill invocation
@@ -26,10 +40,24 @@ export default function workflowOrchestratorExtension(pi: ExtensionAPI) {
 		};
 	}
 
+	pi.registerCommand("my-pi:setup", {
+		description: "Configure my-pi theme and pi settings",
+		handler: async (args, ctx) => {
+			await commands.handlePiSetup(args, commands.createCommandEnv(ctx, pi));
+		},
+	});
+
 	pi.registerCommand("workflow:init", {
 		description: "Initialize workflow orchestrator config for this project",
 		handler: async (args, ctx) => {
 			await commands.handleInit(args, commands.createCommandEnv(ctx, pi));
+		},
+	});
+
+	pi.registerCommand("workflow:upgrade-config", {
+		description: "Upgrade this project's workflow config to the current default shape",
+		handler: async (args, ctx) => {
+			await commands.handleUpgradeConfig(args, commands.createCommandEnv(ctx, pi));
 		},
 	});
 
@@ -163,6 +191,11 @@ export default function workflowOrchestratorExtension(pi: ExtensionAPI) {
 		if (result.action === "continue" && result.prompt) {
 			ctx.ui.notify(`Workflow auto-continuing with ${result.nextSkill}`, "info");
 			sendWorkflowSkillPrompt(result.prompt);
+			return;
+		}
+
+		if (result.action === "complete") {
+			ctx.ui.notify(`Workflow complete: ${result.reason}`, "success");
 			return;
 		}
 

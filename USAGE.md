@@ -8,6 +8,7 @@ The default flow is:
 
 ```text
 brainstorm-spec
+→ implementation-research
 → acceptance-criteria
 → plan
 → execute
@@ -16,6 +17,14 @@ brainstorm-spec
 ```
 
 Use `workflow-orchestrator` to coordinate the flow and persist project state.
+
+Optionally configure pi theme/settings first:
+
+```text
+/my-pi:setup
+```
+
+The bundled `onyx` theme is installed globally by `./scripts/install.sh`, so it is available from any project.
 
 For existing projects, run onboarding first:
 
@@ -133,6 +142,14 @@ Project state is read from:
 .pi/workflow-orchestrator.json
 ```
 
+## Upgrading project workflow config
+
+Existing projects do not auto-migrate when the default workflow changes. To update `.pi/workflow-orchestrator.json` to the current default sequence/transitions while preserving active workflow state:
+
+```text
+/workflow:upgrade-config
+```
+
 ## Checking status
 
 ```text
@@ -155,8 +172,8 @@ You can also invoke skills directly:
 
 ```text
 /skill:project-intake
-/skill:project-intake
 /skill:brainstorm-spec
+/skill:implementation-research
 /skill:acceptance-criteria
 /skill:plan
 /skill:execute
@@ -178,6 +195,7 @@ These are helper skills used inside workflow stages:
 
 Typical use:
 
+- `implementation-research`: main workflow phase for current implementation examples, prior art, Context7-backed docs/research, and approach tradeoffs
 - `find-docs`: current library/framework/API documentation
 - `ast-grep`: structural code search and pattern verification
 - `graphify`: architecture, relationship, and domain mapping
@@ -206,7 +224,7 @@ These are project-specific and should be committed only if you want to share wor
 Then approve each step:
 
 ```text
-brainstorm-spec → acceptance-criteria → plan → execute → review-against-plan → code-review
+brainstorm-spec → implementation-research → acceptance-criteria → plan → execute → review-against-plan → code-review
 ```
 
 ## Typical existing project flow

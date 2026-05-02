@@ -3,12 +3,16 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
-mkdir -p "$HOME/.agents/skills" "$HOME/.pi/agent/extensions" "$HOME/.pi/agent"
+mkdir -p "$HOME/.agents/skills" "$HOME/.pi/agent/extensions" "$HOME/.pi/agent" "$HOME/.pi/agent/themes"
 
 rsync -a --delete "$ROOT/skills/" "$HOME/.agents/skills/"
 rm -f "$HOME/.pi/agent/prompts"/workflow-*.md
 if [[ -d "$ROOT/extensions" ]]; then
   rsync -a --delete "$ROOT/extensions/" "$HOME/.pi/agent/extensions/"
+fi
+
+if [[ -f "$ROOT/extensions/workflow-orchestrator/assets/onyx-theme.json" ]]; then
+  cp "$ROOT/extensions/workflow-orchestrator/assets/onyx-theme.json" "$HOME/.pi/agent/themes/onyx.json"
 fi
 
 SETTINGS="$HOME/.pi/agent/settings.json"
@@ -35,12 +39,17 @@ Installed pi workflow setup.
 
 Reload pi resources with /reload or restart pi.
 
+Installed global theme:
+- onyx
+
 Available extension commands:
+- /my-pi:setup
 - /workflow:init
 - /workflow:start
 - /workflow:auto
 - /workflow:manual
 - /workflow:continue
+- /workflow:upgrade-config
 - /workflow:status
 - /workflow:onboard
 - /workflow:refresh
@@ -51,6 +60,7 @@ Available extension commands:
 Available skill commands:
 - /skill:project-intake
 - /skill:brainstorm-spec
+- /skill:implementation-research
 - /skill:acceptance-criteria
 - /skill:plan
 - /skill:execute

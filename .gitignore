@@ -1,4 +1,5 @@
-# Workflow state (personal/session-specific)
+# Workflow/local pi state (personal/session-specific)
+.pi/settings.json
 .pi/workflow-orchestrator.json
 .pi/workflows/
 

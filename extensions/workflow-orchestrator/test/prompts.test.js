@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { buildSkillPrompt, buildStartPrompt, buildOnboardPrompt, buildRefreshPrompt, buildContinuePrompt, firstSkillForGoal } = require('../src/prompts');
+const { workflowReminder, buildSkillPrompt, buildStartPrompt, buildOnboardPrompt, buildRefreshPrompt, buildContinuePrompt, firstSkillForGoal } = require('../src/prompts');
 const { defaultConfig } = require('../src/config');
 
 test('buildSkillPrompt builds slash skill command with context', () => {
@@ -8,7 +8,15 @@ test('buildSkillPrompt builds slash skill command with context', () => {
   assert.match(prompt, /^\/skill:plan/);
   assert.match(prompt, /Goal: build x/);
   assert.match(prompt, /Workflow mode: auto/);
+  assert.match(prompt, /Workflow reminder:/);
+  assert.match(prompt, /End the final response with `## Next Step`/);
   assert.match(prompt, /- A/);
+});
+
+test('workflowReminder includes allowed next skills', () => {
+  const reminder = workflowReminder({ mode: 'auto', currentSkill: 'plan', allowedNext: ['execute'] });
+  assert.match(reminder, /Current skill: plan/);
+  assert.match(reminder, /Allowed next skills: execute/);
 });
 
 test('firstSkillForGoal chooses sensible starting skill', () => {
@@ -19,9 +27,10 @@ test('firstSkillForGoal chooses sensible starting skill', () => {
 });
 
 test('buildStartPrompt uses selected first skill', () => {
-  const prompt = buildStartPrompt({ mode: 'user-in-the-loop', goal: 'new app', workflowId: 'wf-1', artifactLog: '.pi/workflows/wf-1.jsonl', firstSkill: 'brainstorm-spec' });
+  const prompt = buildStartPrompt({ mode: 'user-in-the-loop', goal: 'new app', workflowId: 'wf-1', artifactLog: '.pi/workflows/wf-1.jsonl', firstSkill: 'brainstorm-spec', allowedNext: ['implementation-research'] });
   assert.match(prompt, /^\/skill:brainstorm-spec/);
   assert.match(prompt, /Workflow ID: wf-1/);
+  assert.match(prompt, /Allowed next skills: implementation-research/);
 });
 
 test('buildOnboardPrompt uses project-intake and graphify-first instructions', () => {
@@ -29,6 +38,12 @@ test('buildOnboardPrompt uses project-intake and graphify-first instructions', (
   assert.match(prompt, /^\/skill:project-intake/);
   assert.match(prompt, /Use graphify from the beginning/);
   assert.match(prompt, /.pi\/project-map\/graph/);
+});
+
+test('buildOnboardPrompt includes optional post-onboarding goal', () => {
+  const prompt = buildOnboardPrompt({ mode: 'auto', workflowId: 'wf-1', artifactLog: '.pi/workflows/wf-1.jsonl', projectMap: defaultConfig().project_map, goal: 'build hello world' });
+  assert.match(prompt, /prepare to plan this goal: build hello world/);
+  assert.match(prompt, /User goal after onboarding: build hello world/);
 });
 
 test('buildRefreshPrompt includes refresh instructions and last_updated', () => {

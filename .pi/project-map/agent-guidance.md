@@ -2,15 +2,24 @@
 
 ## Before Editing
 
-- Run `cd extensions/workflow-orchestrator && npm test` before and after changes.
-- Read `.pi/project-map/architecture.md` and `.pi/project-map/modules.md` for module layout.
 - Read `AGENTS.md` for project rules.
-- Check `.pi/project-map/risks.md` for known hotspots.
-- If `.pi/project-map/agent-guidance.md` is stale, run `/workflow:refresh` to update.
+- Read `.pi/project-map/architecture.md`, `.pi/project-map/modules.md`, and `.pi/project-map/risks.md` for current context.
+- Run validation before and after changes:
+
+```bash
+cd extensions/workflow-orchestrator && npm test
+```
+
+or from repo root:
+
+```bash
+npm test
+```
 
 ## Project Map
 
 - Intake: `.pi/project-map/intake.md`
+- Commands: `.pi/project-map/commands.md`
 - Architecture: `.pi/project-map/architecture.md`
 - Modules: `.pi/project-map/modules.md`
 - Testing: `.pi/project-map/testing.md`
@@ -21,40 +30,55 @@
 
 ## Common Tasks
 
-- **Add a new extension command**: add handler in `src/commands.js`, register in `index.ts`, add test in `test/commands.test.js`.
-- **Change evaluator logic**: edit `src/evaluator.js`, update `test/evaluator.test.js`.
-- **Change config shape**: edit `defaultConfig()` in `src/config.js`, update all tests that create configs.
-- **Add a new skill**: create `skills/<name>/SKILL.md`, add to `transitions` and `allowed_skills` in `src/config.js`, update `support_skills.allowed_in` if it's a support skill.
-- **Reinstall after changes**: run `./scripts/install.sh` then `/reload` in pi.
+- **Add extension command**: implement handler in `src/commands.js`, register in `index.ts`, add/adjust `test/commands.test.js`, update docs/install output.
+- **Change workflow config shape/sequence**: edit `defaultConfig()` and upgrade helpers in `src/config.js`, update config/evaluator/smoke tests.
+- **Change auto-continuation**: edit `src/auto.js` and/or `src/evaluator.js`, update `auto.test.js`, `evaluator.test.js`, and `workflow-smoke.test.js`.
+- **Change prompt behavior**: edit `src/prompts.js`, update `prompts.test.js`.
+- **Add or rename skill**: create/update `skills/<name>/SKILL.md`, update config transitions/allowed skills/support mappings, update docs and `skills.test.js` expectations if needed.
+- **Change setup wizard/theme**: edit `src/setup.js`, `assets/onyx-theme.json`, `scripts/install.sh`, and `test/setup.test.js`.
+- **Reinstall after changes**: run `./scripts/install.sh`, then `/reload` in pi.
 
-## Validation
+## Validation Expectations
 
-```bash
-cd extensions/workflow-orchestrator && npm test
+Current expected test count: 75 tests, 0 failures.
+
+Important coverage includes:
+
+- config init/load/save/upgrade
+- evaluator continue/pause/complete decisions
+- handoff parsing/fail-closed behavior
+- prompt workflow reminders
+- command handlers
+- setup wizard/theme writes
+- skill/config integrity
+- full workflow smoke chain
+
+## Current Workflow
+
+```text
+brainstorm-spec
+→ implementation-research
+→ acceptance-criteria
+→ plan
+→ execute
+→ review-against-plan
+→ code-review
+→ none
 ```
 
-Expected: 56 tests, 0 failures.
-
-## Graph Insights (refreshed)
-
-- `commands.js` is the central hub (11 edges). All command handlers depend on `config.js`.
-- `getProjectRoot` and `loadConfig` (10 edges each): called from every command and auto-continuation.
-- `handleStart` and `handleOnboard` (9 edges each): structurally similar flows.
-- `planAutoContinuation` (8 edges): core auto-mode safety logic. Now uses hybrid flag for side-question protection.
-- `evaluator.js` and `handoff.js` (5 edges each): well-isolated pure modules. Safe to modify independently.
-- `audit.js` + `prompts.js` now share a community (both leaf-like, low coupling).
-- 14 communities total, down from 17 after removing the legacy CLI skill scripts.
+`project-intake` is separate onboarding/refresh and can hand off to `plan` or `none`.
 
 ## Risky Areas
 
-- `config.js`: used by every command and auto-continuation. Shape changes are high-impact.
-- `planAutoContinuation` in `auto.js`: core safety logic. The hybrid flag (`isWorkflowSkillResponse`) determines whether missing handoffs pause or skip.
-- `index.ts` `agent_end` hook: manages the `pendingWorkflowSkillResponse` flag. Not directly unit-tested (only the pure `planAutoContinuation` is tested).
-- `install.sh` uses `--delete`: removing a skill from the repo removes it from the install target. This is intentional but be aware.
+- `config.js`: high-impact default config and upgrade behavior.
+- `commands.js`: central command-handler hub.
+- `auto.js` + `evaluator.js`: auto-mode safety and complete/pause semantics.
+- `index.ts`: pi runtime wiring, module cache busting, and `agent_end` flag lifecycle.
+- `scripts/install.sh`: uses `rsync --delete`; repo removals propagate globally.
 
 ## Do Not Touch Unless Asked
 
-- `deprecated/prompts/`: historical reference only.
-- `settings/global-settings.json`: reference copy, not used by pi directly.
-- `skills/find-docs/`, `skills/ast-grep/`, `skills/graphify/`: third-party support skills, bundled for portability.
-- `.pi/project-map/graph/graph.json`: regenerate via `/workflow:refresh`, do not hand-edit.
+- `skills/find-docs/`, `skills/ast-grep/`, `skills/graphify/`: bundled third-party support skills.
+- `settings/global-settings.json`: reference copy, not directly used by pi.
+- `.pi/project-map/graph/graph.json`: regenerate via `/workflow:refresh`; do not hand-edit.
+- `.pi/settings.json`: local project pi settings; do not commit unless explicitly intended.

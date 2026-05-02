@@ -1,7 +1,11 @@
-const { getProjectRoot, loadConfig, saveConfig, initConfig } = require('./config');
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
+const { getProjectRoot, loadConfig, saveConfig, initConfig, upgradeProjectConfig } = require('./config');
 const { startWorkflow, pauseWorkflow, resumeWorkflow } = require('./state');
 const { appendAuditEntry } = require('./audit');
 const { buildStartPrompt, buildOnboardPrompt, buildRefreshPrompt, buildContinuePrompt, firstSkillForGoal } = require('./prompts');
+const { SCOPE_LABELS, THEME_LABELS, THINKING_LEVELS, labelToKey, targetsForScope, applyPiSetup } = require('./setup');
 
 function parseModeAndRest(args, fallbackMode) {
   const parts = String(args || '').trim().split(/\s+/).filter(Boolean);
@@ -15,8 +19,12 @@ function parseModeAndRest(args, fallbackMode) {
 function createCommandEnv(ctx, pi) {
   return {
     cwd: ctx.cwd,
+    homeDir: os.homedir(),
     notify: (message, level = 'info') => ctx.ui.notify(message, level),
     sendUserMessage: (message, options) => pi.sendUserMessage(message, options),
+    select: (title, options) => ctx.ui.select(title, options),
+    confirm: (title, message, options) => ctx.ui.confirm(title, message, options),
+    input: (title, placeholder, options) => ctx.ui.input(title, placeholder, options),
   };
 }
 
@@ -43,6 +51,17 @@ function installPrePushHook(projectRoot, env) {
   fs.copyFileSync(hookSource, hookPath);
   fs.chmodSync(hookPath, '755');
   env.notify('Installed pre-push hook for stale context warnings.', 'info');
+}
+
+async function handleUpgradeConfig(_args, env) {
+  const projectRoot = getProjectRoot(env.cwd);
+  const result = upgradeProjectConfig(projectRoot);
+  if (!result.ok) {
+    env.notify(`Workflow config not available: ${result.reason}. Run /workflow:init first.`, 'warning');
+    return { ok: false, reason: result.reason, projectRoot };
+  }
+  env.notify(`Workflow config upgraded: ${result.configPath}`, 'success');
+  return { ...result, projectRoot };
 }
 
 async function handleStatus(_args, env) {
@@ -96,6 +115,7 @@ async function handleStart(args, env, forcedMode) {
     workflowId: config.active_workflow.id,
     artifactLog: config.active_workflow.artifact_log,
     firstSkill,
+    allowedNext: config.transitions?.[firstSkill] || [],
   });
   env.sendUserMessage(prompt);
   return { ok: true, projectRoot, config, prompt };
@@ -111,11 +131,13 @@ async function handleOnboard(args, env) {
   }
   const parsed = parseModeAndRest(args, loaded.config.default_mode);
   const mode = parsed.mode;
+  const goal = parsed.rest;
   let config = startWorkflow(loaded.config, { mode, firstSkill: 'project-intake' });
   saveConfig(projectRoot, config);
   appendAuditEntry(projectRoot, config.active_workflow.artifact_log, {
     event: 'workflow_onboard_start',
     mode,
+    goal: goal || null,
     next_skill: 'project-intake',
     project_map: config.project_map,
   });
@@ -124,6 +146,8 @@ async function handleOnboard(args, env) {
     workflowId: config.active_workflow.id,
     artifactLog: config.active_workflow.artifact_log,
     projectMap: config.project_map,
+    goal,
+    allowedNext: config.transitions?.['project-intake'] || [],
   });
   env.sendUserMessage(prompt);
   return { ok: true, projectRoot, config, prompt };
@@ -137,7 +161,7 @@ async function handleRefresh(args, env) {
     return { ok: false, reason: loaded.reason, projectRoot };
   }
   const parsed = parseModeAndRest(args, loaded.config.default_mode);
-  const prompt = buildRefreshPrompt({ mode: parsed.mode, projectMap: loaded.config.project_map });
+  const prompt = buildRefreshPrompt({ mode: parsed.mode, projectMap: loaded.config.project_map, allowedNext: loaded.config.transitions?.['project-intake'] || [] });
   env.sendUserMessage(prompt);
   return { ok: true, projectRoot, config: loaded.config, prompt };
 }
@@ -212,10 +236,55 @@ async function handleResume(_args, env) {
   return { ok: true, projectRoot, config };
 }
 
+async function handlePiSetup(_args, env) {
+  const projectRoot = getProjectRoot(env.cwd);
+  const homeDir = env.homeDir || os.homedir();
+  if (!env.select || !env.confirm) {
+    env.notify('Interactive UI is required for /my-pi:setup.', 'error');
+    return { ok: false, reason: 'missing interactive ui', projectRoot };
+  }
+
+  const scopeLabel = await env.select('Apply pi setup to:', Object.values(SCOPE_LABELS));
+  if (!scopeLabel) return { ok: false, reason: 'cancelled', projectRoot };
+  const scope = labelToKey(SCOPE_LABELS, scopeLabel);
+
+  const themeLabel = await env.select('Choose theme:', Object.values(THEME_LABELS));
+  if (!themeLabel) return { ok: false, reason: 'cancelled', projectRoot };
+  const theme = labelToKey(THEME_LABELS, themeLabel);
+
+  const thinkingLabel = await env.select('Default thinking level:', THINKING_LEVELS);
+  if (!thinkingLabel) return { ok: false, reason: 'cancelled', projectRoot };
+  const thinkingLevel = thinkingLabel;
+
+  const compactionEnabled = await env.confirm(
+    'Enable compaction?',
+    'Recommended for longer sessions. Uses a 16K response reserve and keeps the latest 20K tokens.'
+  );
+  const retryEnabled = await env.confirm(
+    'Enable retries?',
+    'Recommended for transient provider/network failures. Uses 3 retries with exponential backoff.'
+  );
+
+  const targets = targetsForScope(scope, projectRoot, homeDir);
+  const existing = targets.filter((target) => fs.existsSync(target.settingsPath));
+  if (existing.length) {
+    const ok = await env.confirm(
+      'Update existing settings?',
+      `Existing unknown settings will be preserved. Files: ${existing.map((target) => target.settingsPath).join(', ')}`
+    );
+    if (!ok) return { ok: false, reason: 'cancelled existing settings update', projectRoot };
+  }
+
+  const result = applyPiSetup({ projectRoot, homeDir, scope, theme, thinkingLevel, compactionEnabled, retryEnabled });
+  env.notify(`pi setup updated ${result.written.length} file(s). Run /reload to apply changes.`, 'success');
+  return { ...result, projectRoot };
+}
+
 module.exports = {
   parseModeAndRest,
   createCommandEnv,
   handleInit,
+  handleUpgradeConfig,
   handleStatus,
   handleStart,
   handleOnboard,
@@ -224,4 +293,5 @@ module.exports = {
   handleContinue,
   handlePause,
   handleResume,
+  handlePiSetup,
 };
