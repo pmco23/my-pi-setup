@@ -4,3 +4,7 @@
 .pi/workflows/
 
 # Graphify cache and temp files
+
+# Graphify artifacts (no longer used)
+.pi/project-map/graph/
+extensions/workflow-orchestrator/graphify-out/
