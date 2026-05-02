@@ -3,12 +3,12 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const { handleInit, handleContinue, handlePause, handleResume, projectMapStaleness } = require('../src/commands');
+const { handleInit, handleContinue, handlePause, handleResume, handleStart, handleCheckpoint, projectMapStaleness } = require('../src/commands');
 const { loadConfig } = require('../src/config');
 
 function tmpdir() { return fs.mkdtempSync(path.join(os.tmpdir(), 'wf-cmd-')); }
 
-function env(cwd, selects = [], confirms = []) {
+function env(cwd, selects = [], confirms = [], inputs = []) {
   const sent = [];
   const notifications = [];
   return {
@@ -20,7 +20,7 @@ function env(cwd, selects = [], confirms = []) {
     sendUserMessage: (message, options) => sent.push({ message, options }),
     select: async () => selects.shift(),
     confirm: async () => { const v = confirms.shift(); return v !== undefined ? v : true; },
-    input: async (title, placeholder) => placeholder || '',
+    input: async () => { const v = inputs.shift(); return v !== undefined ? v : ''; },
   };
 }
 
@@ -154,4 +154,131 @@ test('projectMapStaleness returns not stale when guidance is up to date', () => 
   fs.writeFileSync(guidancePath, '# guidance\n');
   const result = projectMapStaleness(root, guidancePath);
   assert.equal(result.stale, false);
+});
+
+// ── handleStart ──────────────────────────────────────────────────────────────
+
+test('handleStart creates active_workflow and sends skill prompt', async () => {
+  const root = tmpdir();
+  const e1 = env(root,
+    ['Project (.pi/settings.json)', 'auto — pi chains skills until blocked', 'dark', 'medium'],
+    [true, true]
+  );
+  await handleInit('', e1);
+
+  const e = env(root, ['plan'], [], ['Build a notes app']);
+  const result = await handleStart('', e);
+  assert.equal(result.ok, true);
+  const config = loadConfig(root).config;
+  assert.ok(config.active_workflow.id);
+  assert.equal(config.active_workflow.next_skill, 'plan');
+  assert.equal(config.active_workflow.goal, 'Build a notes app');
+  assert.match(e.sent.at(-1).message, /^\/skill:plan/);
+  assert.match(e.notifications[0].message, /Workflow started: plan/);
+});
+
+test('handleStart stores null goal when no goal entered', async () => {
+  const root = tmpdir();
+  const e1 = env(root,
+    ['Project (.pi/settings.json)', 'auto — pi chains skills until blocked', 'dark', 'medium'],
+    [true, true]
+  );
+  await handleInit('', e1);
+
+  const e = env(root, ['plan'], [], ['']); // empty goal input
+  const result = await handleStart('', e);
+  assert.equal(result.ok, true);
+  assert.equal(loadConfig(root).config.active_workflow.goal, null);
+});
+
+test('handleStart returns ok:false when skill select is cancelled', async () => {
+  const root = tmpdir();
+  const e1 = env(root,
+    ['Project (.pi/settings.json)', 'auto — pi chains skills until blocked', 'dark', 'medium'],
+    [true, true]
+  );
+  await handleInit('', e1);
+
+  const e = env(root, [undefined]); // select returns undefined → cancelled
+  const result = await handleStart('', e);
+  assert.equal(result.ok, false);
+  assert.equal(result.reason, 'cancelled');
+  assert.equal(e.sent.length, 0);
+});
+
+test('handleStart returns ok:false when no config', async () => {
+  const root = tmpdir();
+  const e = env(root, ['plan']);
+  const result = await handleStart('', e);
+  assert.equal(result.ok, false);
+});
+
+// ── handleCheckpoint ─────────────────────────────────────────────────────────
+
+test('handleCheckpoint sets active_workflow from wizard inputs', async () => {
+  const root = tmpdir();
+  const e1 = env(root,
+    ['Project (.pi/settings.json)', 'user-in-the-loop — pi suggests, you confirm each step', 'dark', 'medium'],
+    [true, true]
+  );
+  await handleInit('', e1);
+
+  // selects: currentSkill=plan, nextSkill=execute; inputs: goal='My goal'
+  const e = env(root, ['plan', 'execute'], [], ['My goal']);
+  const result = await handleCheckpoint('', e);
+  assert.equal(result.ok, true);
+  const config = loadConfig(root).config;
+  assert.ok(config.active_workflow.id);
+  assert.equal(config.active_workflow.goal, 'My goal');
+  assert.equal(config.active_workflow.current_skill, 'plan');
+  assert.equal(config.active_workflow.next_skill, 'execute');
+  assert.equal(config.active_workflow.paused, false);
+  assert.match(e.notifications.at(-1).message, /Checkpoint saved/);
+  assert.equal(e.notifications.at(-1).level, 'success');
+});
+
+test('handleCheckpoint confirms before overwriting existing workflow', async () => {
+  const root = tmpdir();
+  const e1 = env(root,
+    ['Project (.pi/settings.json)', 'auto — pi chains skills until blocked', 'dark', 'medium'],
+    [true, true]
+  );
+  await handleInit('', e1);
+
+  // Seed an active workflow
+  const { saveConfig, loadConfig: lc } = require('../src/config');
+  const { startWorkflow } = require('../src/state');
+  saveConfig(root, startWorkflow(lc(root).config, { firstSkill: 'plan', workflowId: 'wf-existing' }));
+
+  // User cancels overwrite
+  const e = env(root, [], [false]); // confirm returns false
+  const result = await handleCheckpoint('', e);
+  assert.equal(result.ok, false);
+  assert.equal(result.reason, 'cancelled');
+  // workflow unchanged
+  assert.equal(loadConfig(root).config.active_workflow.id, 'wf-existing');
+});
+
+test('handleCheckpoint creates new id when no active workflow exists', async () => {
+  const root = tmpdir();
+  const e1 = env(root,
+    ['Project (.pi/settings.json)', 'auto — pi chains skills until blocked', 'dark', 'medium'],
+    [true, true]
+  );
+  await handleInit('', e1);
+
+  const e = env(root, ['brainstorm-spec', 'plan'], [], ['Fresh goal']);
+  const result = await handleCheckpoint('', e);
+  assert.equal(result.ok, true);
+  const active = loadConfig(root).config.active_workflow;
+  assert.ok(active.id);
+  assert.ok(active.artifact_log);
+  assert.equal(active.next_skill, 'plan');
+});
+
+test('handleCheckpoint returns ok:false when no config', async () => {
+  const root = tmpdir();
+  const e = env(root, ['plan', 'execute'], [], ['goal']);
+  const result = await handleCheckpoint('', e);
+  assert.equal(result.ok, false);
 });

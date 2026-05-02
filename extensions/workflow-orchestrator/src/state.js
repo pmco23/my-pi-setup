@@ -88,4 +88,23 @@ function clearWorkflow(config, { timestamp = nowIso() } = {}) {
   };
 }
 
-module.exports = { nowIso, createWorkflowId, artifactLogPath, startWorkflow, updateActiveWorkflow, pauseWorkflow, resumeWorkflow, clearWorkflow };
+function checkpointWorkflow(config, { goal, currentSkill, nextSkill, timestamp = nowIso() }) {
+  const existing = config.active_workflow || {};
+  const id = existing.id || createWorkflowId();
+  return {
+    ...config,
+    active_workflow: {
+      ...existing,
+      id,
+      goal: goal !== undefined ? goal : (existing.goal ?? null),
+      current_skill: currentSkill,
+      next_skill: nextSkill,
+      artifact_log: existing.artifact_log || artifactLogPath(id),
+      updated_at: timestamp,
+      paused: false,
+      pause_reason: null,
+    },
+  };
+}
+
+module.exports = { nowIso, createWorkflowId, artifactLogPath, startWorkflow, updateActiveWorkflow, pauseWorkflow, resumeWorkflow, clearWorkflow, checkpointWorkflow };

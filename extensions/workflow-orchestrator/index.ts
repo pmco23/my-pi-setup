@@ -63,6 +63,20 @@ export default function workflowOrchestratorExtension(pi: ExtensionAPI) {
 		},
 	});
 
+	pi.registerCommand("workflow:start", {
+		description: "Start a new workflow: pick a skill and set a goal, then launch it",
+		handler: async (args, ctx) => {
+			await commands.handleStart(args, createWorkflowEnv(ctx));
+		},
+	});
+
+	pi.registerCommand("workflow:checkpoint", {
+		description: "Manually record workflow state (current skill, next skill, goal) — useful after a session break",
+		handler: async (args, ctx) => {
+			await commands.handleCheckpoint(args, createWorkflowEnv(ctx));
+		},
+	});
+
 	// Stale-context and project-map edit guard
 	pi.on("tool_call", async (event, ctx) => {
 		const path = require("node:path");

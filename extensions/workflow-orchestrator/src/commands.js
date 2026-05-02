@@ -2,9 +2,9 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { getProjectRoot, loadConfig, saveConfig, initConfigV2 } = require('./config');
-const { pauseWorkflow, resumeWorkflow } = require('./state');
+const { pauseWorkflow, resumeWorkflow, startWorkflow, checkpointWorkflow } = require('./state');
 const { appendAuditEntry } = require('./audit');
-const { buildContinuePrompt } = require('./prompts');
+const { buildContinuePrompt, buildSkillPrompt } = require('./prompts');
 const { applyPiSetup, SCOPE_LABELS, THEME_LABELS, THINKING_LEVELS, labelToKey, targetsForScope } = require('./setup');
 
 function createCommandEnv(ctx, pi) {
@@ -164,6 +164,82 @@ async function handleResume(_args, env) {
   return { ok: true, projectRoot, config };
 }
 
+async function handleStart(_args, env) {
+  const projectRoot = getProjectRoot(env.cwd);
+  const loaded = loadConfig(projectRoot);
+  if (!loaded.ok) {
+    env.notify(`Workflow config not available: ${loaded.reason}`, 'warning');
+    return { ok: false, reason: loaded.reason, projectRoot };
+  }
+
+  if (!env.select || !env.input) {
+    env.notify('/workflow:start requires interactive UI.', 'error');
+    return { ok: false, reason: 'missing interactive ui', projectRoot };
+  }
+
+  const skillList = Object.keys(loaded.config.transitions || {});
+  if (skillList.length === 0) {
+    env.notify('No skills configured in transitions.', 'warning');
+    return { ok: false, reason: 'no skills configured', projectRoot };
+  }
+
+  const firstSkill = await env.select('Start with skill:', skillList);
+  if (!firstSkill) return { ok: false, reason: 'cancelled', projectRoot };
+
+  const goal = await env.input('Goal (optional):', '');
+
+  const config = startWorkflow(loaded.config, { firstSkill, goal: goal || null });
+  saveConfig(projectRoot, config);
+
+  const active = config.active_workflow;
+  const prompt = buildSkillPrompt(firstSkill, {
+    mode: config.mode,
+    workflowId: active.id,
+    artifactLog: active.artifact_log,
+    allowedNext: config.transitions?.[firstSkill] || [],
+    context: goal ? [`Goal: ${goal}`] : [],
+  });
+
+  env.notify(`Workflow started: ${firstSkill}`, 'info');
+  env.sendUserMessage(prompt);
+  return { ok: true, projectRoot, config, prompt };
+}
+
+async function handleCheckpoint(_args, env) {
+  const projectRoot = getProjectRoot(env.cwd);
+  const loaded = loadConfig(projectRoot);
+  if (!loaded.ok) {
+    env.notify(`Workflow config not available: ${loaded.reason}`, 'warning');
+    return { ok: false, reason: loaded.reason, projectRoot };
+  }
+
+  if (!env.select || !env.input || !env.confirm) {
+    env.notify('/workflow:checkpoint requires interactive UI.', 'error');
+    return { ok: false, reason: 'missing interactive ui', projectRoot };
+  }
+
+  const active = loaded.config.active_workflow || {};
+  if (active.id) {
+    const ok = await env.confirm('Active workflow exists', 'Overwrite current workflow state?');
+    if (!ok) return { ok: false, reason: 'cancelled', projectRoot };
+  }
+
+  const skillList = Object.keys(loaded.config.transitions || {});
+  const goal = await env.input('Goal:', active.goal || '');
+
+  const currentSkill = await env.select('Current skill (just completed):', skillList);
+  if (!currentSkill) return { ok: false, reason: 'cancelled', projectRoot };
+
+  const nextOptions = loaded.config.transitions?.[currentSkill] || skillList;
+  const nextSkill = await env.select('Next skill:', nextOptions);
+  if (!nextSkill) return { ok: false, reason: 'cancelled', projectRoot };
+
+  const config = checkpointWorkflow(loaded.config, { goal: goal || null, currentSkill, nextSkill });
+  saveConfig(projectRoot, config);
+  env.notify(`Checkpoint saved: ${currentSkill} → ${nextSkill}`, 'success');
+  return { ok: true, projectRoot, config };
+}
+
 module.exports = {
   createCommandEnv,
   installPrePushHook,
@@ -172,4 +248,6 @@ module.exports = {
   handleContinue,
   handlePause,
   handleResume,
+  handleStart,
+  handleCheckpoint,
 };
