@@ -68,3 +68,24 @@ test('applyPiSetup writes both project and global settings', () => {
   assert.equal(fs.existsSync(path.join(home, '.pi', 'agent', 'settings.json')), true);
   assert.equal(fs.existsSync(path.join(root, '.pi', 'themes', 'onyx.json')), false);
 });
+
+test('applyPiSetup gracefully handles malformed existing settings file', () => {
+  const root = tmpdir();
+  const home = tmpdir();
+  const settingsPath = path.join(root, '.pi', 'settings.json');
+  fs.mkdirSync(path.dirname(settingsPath), { recursive: true });
+  fs.writeFileSync(settingsPath, '{broken json');
+
+  assert.doesNotThrow(() => applyPiSetup({
+    projectRoot: root,
+    homeDir: home,
+    scope: 'project',
+    theme: 'dark',
+    thinkingLevel: 'medium',
+    compactionEnabled: true,
+    retryEnabled: true,
+  }));
+
+  const written = JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
+  assert.equal(written.theme, 'dark');
+});

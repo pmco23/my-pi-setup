@@ -3,11 +3,11 @@ const path = require('node:path');
 
 function sanitize(value) {
   if (typeof value === 'string') {
-    return value.replace(/(api[_-]?key|token|secret|password)\s*[:=]\s*\S+/gi, '$1=<redacted>');
+    return value.replace(/(api[_-]?key|token(?!s)|secret|password)\s*[:=]\s*\S+/gi, '$1=<redacted>');
   }
   if (Array.isArray(value)) return value.map(sanitize);
   if (value && typeof value === 'object') {
-    return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, /api[_-]?key|token|secret|password/i.test(k) ? '<redacted>' : sanitize(v)]));
+    return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, /api[_-]?key|token(?!s)|secret|password/i.test(k) ? '<redacted>' : sanitize(v)]));
   }
   return value;
 }

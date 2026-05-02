@@ -32,3 +32,18 @@ test('sanitize redacts obvious secret fields and strings', () => {
   assert.equal(value.nested.password, '<redacted>');
   assert.equal(value.nested.text, 'api_key=<redacted>');
 });
+
+test('sanitize does not redact input_tokens or output_tokens', () => {
+  const value = sanitize({ input_tokens: 1234, output_tokens: 567, access_token: 'abc', refresh_token: 'xyz' });
+  assert.equal(value.input_tokens, 1234);
+  assert.equal(value.output_tokens, 567);
+  assert.equal(value.access_token, '<redacted>');
+  assert.equal(value.refresh_token, '<redacted>');
+});
+
+test('sanitize does not redact token count strings', () => {
+  const value = sanitize('input_tokens: 1234 output_tokens: 567 token=abc123');
+  assert.match(value, /input_tokens: 1234/);
+  assert.match(value, /output_tokens: 567/);
+  assert.match(value, /token=<redacted>/);
+});

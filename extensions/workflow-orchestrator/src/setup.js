@@ -43,7 +43,12 @@ function targetsForScope(scope, projectRoot, homeDir) {
 
 function readJsonIfPresent(filePath) {
   if (!fs.existsSync(filePath)) return {};
-  return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+  try {
+    return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+  } catch {
+    console.warn(`[my-pi:setup] Could not parse existing settings file: ${filePath}. Treating as empty.`);
+    return {};
+  }
 }
 
 function selectedSettings(options) {
