@@ -29,9 +29,9 @@ function buildSkillPrompt(skillName, payload = {}) {
 
 function firstSkillForGoal(goal = '') {
   const text = goal.toLowerCase();
-  if (/code review|engineering review/.test(text)) return 'code-review';
-  if (/review|verify|against plan/.test(text)) return 'review-against-plan';
-  if (/implement|fix|execute|add|refactor/.test(text)) return 'plan';
+  if (/\bcode[\s-]?review\b|\bengineering[\s-]?review\b/.test(text)) return 'code-review';
+  if (/\breview[\s-]against[\s-]plan\b|\bverify[\s-]against\b|\bagainst[\s-]plan\b/.test(text)) return 'review-against-plan';
+  if (/\b(implement|fix|execute|add|refactor|build|create|write|update|migrate|deploy)\b/.test(text)) return 'plan';
   return 'brainstorm-spec';
 }
 

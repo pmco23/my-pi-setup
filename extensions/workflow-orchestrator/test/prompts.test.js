@@ -20,10 +20,33 @@ test('workflowReminder includes allowed next skills', () => {
 });
 
 test('firstSkillForGoal chooses sensible starting skill', () => {
+  // defaults to brainstorm-spec for open-ended goals
   assert.equal(firstSkillForGoal('new product idea'), 'brainstorm-spec');
+  assert.equal(firstSkillForGoal('review and improve the workflow extension'), 'brainstorm-spec');
+  assert.equal(firstSkillForGoal('improve the API design'), 'brainstorm-spec');
+  assert.equal(firstSkillForGoal(''), 'brainstorm-spec');
+
+  // routes to plan for concrete implementation tasks
   assert.equal(firstSkillForGoal('implement auth'), 'plan');
+  assert.equal(firstSkillForGoal('fix the failing test'), 'plan');
+  assert.equal(firstSkillForGoal('add dark mode support'), 'plan');
+  assert.equal(firstSkillForGoal('refactor the config module'), 'plan');
+  assert.equal(firstSkillForGoal('build a notes app'), 'plan');
+  assert.equal(firstSkillForGoal('create a REST endpoint'), 'plan');
+  assert.equal(firstSkillForGoal('update the README'), 'plan');
+
+  // routes to review-against-plan only on specific phrases
   assert.equal(firstSkillForGoal('review against plan'), 'review-against-plan');
+  assert.equal(firstSkillForGoal('verify against the plan'), 'review-against-plan');
+  assert.equal(firstSkillForGoal('check implementation against plan'), 'review-against-plan');
+
+  // routes to code-review on specific phrases
   assert.equal(firstSkillForGoal('code review this'), 'code-review');
+  assert.equal(firstSkillForGoal('engineering review of the PR'), 'code-review');
+
+  // bare "review" should NOT route to review-against-plan
+  assert.equal(firstSkillForGoal('review the codebase'), 'brainstorm-spec');
+  assert.equal(firstSkillForGoal('review my changes'), 'brainstorm-spec');
 });
 
 test('buildStartPrompt uses selected first skill', () => {

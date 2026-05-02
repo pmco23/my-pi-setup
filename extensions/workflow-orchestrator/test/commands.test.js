@@ -138,10 +138,10 @@ test('handleStart initializes active workflow and sends first skill prompt', asy
   await handleInit('auto', e);
   const result = await handleStart('auto build a notes app', e);
   assert.equal(result.ok, true);
-  assert.match(e.sent.at(-1).message, /^\/skill:brainstorm-spec/);
+  assert.match(e.sent.at(-1).message, /^\/skill:plan/);
   const config = loadConfig(root).config;
   assert.equal(config.active_workflow.mode, 'auto');
-  assert.equal(config.active_workflow.next_skill, 'brainstorm-spec');
+  assert.equal(config.active_workflow.next_skill, 'plan');
   assert.equal(fs.existsSync(path.join(root, config.active_workflow.artifact_log)), true);
 });
 
