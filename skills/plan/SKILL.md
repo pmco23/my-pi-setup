@@ -41,8 +41,7 @@ Use any available input:
 ## Support Skills
 
 - Use `find-docs` when planning depends on current library/API behavior.
-- Use `ast-grep` for structural discovery or impact analysis.
-- Use `ast-grep` for structural discovery or impact analysis.
+- Use `ast-grep` for structural impact analysis before planning any rename, refactor, or interface change — e.g. find all callers of a function being changed, all components using a prop being renamed, all classes implementing an interface being modified. Prefer it over grep whenever the query depends on where or how code appears, not just what text it contains.
 
 ## Output Format
 

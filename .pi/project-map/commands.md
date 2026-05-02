@@ -1,44 +1,54 @@
 # Commands
 
-## Install
-
-- `./scripts/install.sh` — installs skills + extension globally, copies `onyx` theme.
-
-## Uninstall
-
-- `./scripts/uninstall.sh` — removes workflow extension and owned workflow skills (including `implementation-research`) from global pi locations.
-
-## Backup
-
-- `./scripts/backup-current.sh` — refreshes repo from currently installed global pi state.
-
-## Test
+## Install & Setup
 
 ```bash
-npm test                                          # from repo root (80 tests)
-cd extensions/workflow-orchestrator && npm test  # direct
+npm test                     # Run all extension tests (must pass before committing)
+./scripts/install.sh         # Install skills + extension to global pi locations
+./scripts/uninstall.sh       # Remove workflow extension and skills
+./scripts/backup-current.sh  # Sync installed state back into repo
 ```
 
-## Pi Runtime Commands
+No `npm install` needed — extension uses only Node built-ins.
 
-After install and `/reload`:
+## Tests
 
-- `/my-pi:setup` — interactive wizard: configure scope, theme, thinking level, compaction, retry.
-- `/workflow:init` — create project workflow config. Mode is optional; start is what sets mode.
-- `/workflow:auto <goal>` — start workflow in auto mode (pi drives).
-- `/workflow:manual <goal>` — start workflow in user-in-the-loop mode (you approve every step).
-- `/workflow:start [auto|user-in-the-loop] <goal>` — explicit form of the above two; always syncs config mode.
-- `/workflow:upgrade-config` — upgrade existing project config to current default sequence/transitions.
-- `/workflow:status` — summarise workflow state.
-- `/workflow:continue [mode]` — resume; explicit mode also syncs config.
-- `/workflow:pause [reason]` — pause active workflow.
-- `/workflow:resume` — clear pause without continuing.
-- `/workflow:onboard [auto|user-in-the-loop] [optional goal]` — project intake/refresh.
+```bash
+# From repo root:
+npm test
 
-- `/workflow:context` — show project-map status and staleness.
+# Directly (same result):
+cd extensions/workflow-orchestrator && node --test test/*.test.js
+```
+
+- 66 tests, 0 failures as of intake date
+- Test files: `test/*.test.js` (audit, auto, commands, config, evaluator, handoff, prompts, skills, state, workflow-smoke)
+
+## Pi Commands (after install + `/reload`)
+
+```text
+/workflow:init       → setup wizard (mode, theme, thinking level, compaction, retry)
+/workflow:continue   → advance to suggested next skill, or resume after pause
+/workflow:pause      → stop auto-continuation with optional reason
+/workflow:resume     → clear pause state without advancing
+/skill:project-intake
+/skill:brainstorm-spec
+/skill:implementation-research
+/skill:acceptance-criteria
+/skill:plan
+/skill:execute
+/skill:review-against-plan
+/skill:code-review
+/skill:find-docs
+/skill:ast-grep
+```
+
+## Lint / Format
+
+No linter or formatter configured. Follow existing code style manually.
 
 ## Notes
 
-- No build step. Pi loads TypeScript entrypoint via jiti.
-- No `npm install` required — extension uses Node built-ins only.
-- `rsync --delete` in installer: removing files from repo removes them from global install target.
+- After editing any source file: `npm test` → `./scripts/install.sh` → `/reload` in pi
+- `.pi/workflow-orchestrator.json` and `.pi/workflows/` are gitignored (per-project state)
+- `.pi/project-map/` is committed (durable agent context)

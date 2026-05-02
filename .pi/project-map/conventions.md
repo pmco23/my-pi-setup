@@ -1,52 +1,59 @@
 # Conventions
 
-## Code Style
+## Module Style
 
-- Extension business logic: CommonJS JavaScript (`src/*.js`).
-- Extension entrypoint: TypeScript (`index.ts`), loaded by pi via jiti.
-- Tests: plain JavaScript using `node:test` and `node:assert/strict`.
-- No build step, bundler, transpiler, linter, or formatter configured.
-- Avoid adding runtime npm dependencies unless strongly justified.
-
-## Architecture Patterns
-
-- **Thin entrypoint**: `index.ts` registers commands and runtime hooks only.
-- **Pure modules**: config, evaluator, handoff, state, audit, prompts, setup, and auto planning stay pi-runtime independent.
-- **Dependency injection**: command handlers receive `env` objects for UI/message/filesystem concerns.
-- **Fail-closed workflow**: invalid/missing handoffs from workflow skill responses pause; side conversations without handoffs are ignored.
-- **Runtime reminder injection**: `workflowReminder()` in `prompts.js` carries handoff mechanics so skill files stay concise.
-- **Module cache busting**: `index.ts` clears local CommonJS `require.cache` entries so `/reload` picks up `src/*.js` changes.
-- **Completion semantics**: `next_skill: "none"` → `action: "complete"`, not `"pause"`. Runtime code must handle both.
+- All extension source is **CommonJS** (`require`/`module.exports`), `"type": "commonjs"` in `package.json`
+- `index.ts` is TypeScript — thin wiring only; no business logic
+- No npm runtime dependencies — Node built-ins only (`fs`, `path`, `os`, `child_process`)
 
 ## Naming
 
-- Skills: lowercase hyphenated directory names with `SKILL.md`.
-- Extension modules: lowercase domain names.
-- Tests: `<module>.test.js`, plus integration-style tests (`workflow-smoke.test.js`).
-- Commands: `workflow:<verb>` for orchestrator; `my-pi:setup` for setup wizard.
+- Skills: lowercase, hyphens only, ≤64 chars, must match directory name
+- Workflow IDs: `wf-<ISO timestamp with colons/dots replaced by hyphens>`
+- Config key style: `snake_case` throughout JSON config and handoff payloads
+- Source files: `camelCase.js` in `src/`; `camelCase.test.js` in `test/`
 
-## Project Config
+## Architecture Rules
 
-- Path: `.pi/workflow-orchestrator.json` (gitignored).
-- Shape defined by `defaultConfig()` in `src/config.js`.
-- No auto-migration; use `/workflow:upgrade-config`.
-- Changing sequence/transitions/support skills requires updating config, evaluator, and smoke tests.
+- `index.ts` — registration and event wiring only
+- Business logic → `src/*.js` pure CommonJS modules
+- Command handlers take a dependency-injected `env` object (no direct pi context access inside handlers)
+- Pure functions preferred: state mutations in `state.js` return new objects, never mutate in place
 
-## Audit and Sanitize
+## Config
 
-- JSONL format: `.pi/workflows/<workflow-id>.jsonl`.
-- `sanitize()` uses `token(?!s)` to redact auth tokens while preserving `input_tokens`/`output_tokens` metric fields.
-- Do not widen the regex without understanding impact on metric fields in audit logs.
+- Config version: **2** (v1 rejected at load time)
+- Mode and `auto_continue.enabled` must be set together via `initConfigV2()` — never set independently
+- Per-project config: `.pi/workflow-orchestrator.json` (gitignored)
 
-## Generated / Local Files
+## Handoff JSON
 
-- `.pi/workflow-orchestrator.json` and `.pi/workflows/` — personal/session state, gitignored.
-- `.pi/project-map/` — committed durable context.
-- `.pi/project-map/graph/graphify-out/` and `.pi/project-map/graph/.graphify_*` — graphify cache/temp, gitignored.
-- `.pi/settings.json` — local project pi settings; do not commit unless intentionally sharing project defaults.
+- Skills must end with `## Next Step` and a compact "Auto handoff:" JSON block
+- Required fields: `workflow_mode`, `current_skill`, `next_skill`, `requires_user`, `stop_reason`, `confidence`, `inputs` (with `open_questions[]`, `required_context[]`)
 
-## Do Not Modify Unless Asked
+## Error Handling
 
-- `skills/find-docs/`, `skills/ast-grep/`: bundled third-party support skills.
-- `settings/global-settings.json`: reference copy, not directly used by pi.
-- `.pi/project-map/graph/graph.json`: regenerate via `/workflow:refresh`; do not hand-edit.
+- Config load errors return `{ ok: false, reason }` — never throw
+- Handoff parse errors return `{ ok: false, reason }` — auto mode pauses, user-in-the-loop mode silently skips
+- Evaluator returns structured `{ decision, reason, errors[] }` — no exceptions for validation failures
+
+## File I/O
+
+- All paths constructed with `path.join()` — no string concatenation
+- No absolute paths in skills, extension source, or project-map docs
+- `saveConfig` always creates parent directories with `{ recursive: true }`
+
+## Secret Handling
+
+- `audit.js sanitize()` scrubs `api_key`, `token`, `secret`, `password` patterns before writing to JSONL logs
+
+## Skill Registration
+
+- New skills must be added to `DEFAULT_TRANSITIONS` in `src/config.js` to participate in the workflow
+- `skills.test.js` validates all SKILL.md frontmatter and checks that transition targets reference real skills
+
+## Commit / Dev Loop
+
+- Edit repo → `npm test` → `./scripts/install.sh` → `/reload` in pi
+- Never edit installed files directly (`~/.pi/agent/`, `~/.agents/skills/`)
+- No absolute paths in any committed file

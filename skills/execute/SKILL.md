@@ -33,7 +33,7 @@ When used standalone, complete this skill normally without assuming workflow sta
 ## Support Skills
 
 - Use `find-docs` before writing uncertain library/API-specific code.
-- Use `ast-grep` to find structurally similar call sites, imports, patterns, or anti-patterns.
+- Use `ast-grep` to find all structurally similar sites before making changes — e.g. all call sites of a function being renamed, all imports of a module being replaced, all usages of a pattern being refactored. Do not rely on text search alone when the pattern has structural variations (destructuring, spread, defaults, optional chaining).
 
 ## Stop Conditions
 

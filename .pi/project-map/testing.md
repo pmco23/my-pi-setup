@@ -2,50 +2,44 @@
 
 ## Framework
 
-Node built-in test runner (`node:test`) with `node:assert/strict`.
+Node.js built-in test runner (`node:test`). No external test libraries.
 
-## Commands
+## Location
 
-```bash
-npm test                                          # from repo root
-cd extensions/workflow-orchestrator && npm test  # direct
+```text
+extensions/workflow-orchestrator/test/
 ```
 
 ## Test Files
 
-All under `extensions/workflow-orchestrator/test/`:
-
 | File | Covers |
-|------|--------|
-| `audit.test.js` | JSONL append, multi-line, secret redaction, token(?!s) precision |
-| `auto.test.js` | Auto-continuation, duplicate guard, complete/pause/none, side-question safety |
-| `commands.test.js` | Init, upgrade-config, status, start, onboard (with optional goal), refresh, context (staleness), continue, pause/resume, setup handlers |
-| `config.test.js` | Defaults, init/load/save, force overwrite, upgradeConfig/upgradeProjectConfig |
-| `evaluator.test.js` | Continue/pause/complete decisions, transition validation, stop conditions, mode precedence |
-| `handoff.test.js` | JSON extraction, malformed handling, fail-closed behavior |
-| `prompts.test.js` | Skill prompt builders, runtime workflow reminders, onboard/refresh/continue prompts |
-| `setup.test.js` | Settings/theme writes, onyx install, scope handling, malformed settings fallback |
-| `skills.test.js` | Skill frontmatter, configured skill existence, transition/support-skill integrity |
-| `state.test.js` | Workflow start/update/pause/resume/clear state transitions |
-| `workflow-smoke.test.js` | Full default chain smoke test through completion |
+|---|---|
+| `audit.test.js` | `appendAuditEntry`, `readAuditEntries`, `sanitize` |
+| `auto.test.js` | `latestAssistantMarkdown`, `planAutoContinuation` (auto + loop modes) |
+| `commands.test.js` | `handleInit`, `handleContinue`, `handlePause`, `handleResume`, `projectMapStaleness` (DI env mocks) |
+| `config.test.js` | `defaultConfig`, `loadConfig`, `saveConfig`, `initConfigV2`, `getProjectRoot` |
+| `evaluator.test.js` | `validateConfig`, `validateHandoff`, `evaluateHandoff` (all stop conditions) |
+| `handoff.test.js` | `extractJsonBlocks`, `extractLatestHandoff`, `looksLikeHandoff` |
+| `prompts.test.js` | `buildSkillPrompt`, `buildContinuePrompt`, `workflowReminder` |
+| `skills.test.js` | SKILL.md frontmatter validity; transition references; `## Next Step` presence |
+| `state.test.js` | `startWorkflow`, `updateActiveWorkflow`, `pauseWorkflow`, `resumeWorkflow`, `clearWorkflow` |
+| `workflow-smoke.test.js` | End-to-end chain through `planAutoContinuation` in auto + user-in-the-loop modes |
 
-## Current Coverage
+## Run Command
 
-85 tests, 0 failures.
-
-## Smoke Chain
-
-`workflow-smoke.test.js` verifies:
-
-```text
-brainstorm-spec → implementation-research → acceptance-criteria → plan
-→ execute → review-against-plan → code-review → none
+```bash
+npm test
+# or
+cd extensions/workflow-orchestrator && node --test test/*.test.js
 ```
 
-Asserts continuation prompts include workflow reminders, allowed next skills, and that `next_skill: none` returns `action: "complete"` and clears the active workflow.
+## Status (intake date)
+
+- 66 tests, 0 failures, 0 skipped
 
 ## Gaps
 
-- No integration test with a real interactive pi/RPC session.
-- `index.ts` event wiring and `pendingWorkflowSkillResponse` lifecycle only indirectly covered.
-- No automated test for installer effects in a sandboxed fake home directory.
+- No integration test that exercises the actual pi ExtensionAPI — `index.ts` is untested at the wiring level
+- No test for `applyPiSetup` / `setup.js` filesystem writes (except indirectly via `handleInit`)
+- No test for `installPrePushHook`
+- Skills `find-docs` and `ast-grep` are bundled but not tested for content quality — only frontmatter is validated

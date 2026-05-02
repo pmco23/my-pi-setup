@@ -131,7 +131,7 @@ All tests must pass before merging.
 - Do not edit installed files directly (`~/.pi/agent/extensions/`, `~/.agents/skills/`). Edit the repo, then run `./scripts/install.sh`.
 - Do not add npm runtime dependencies unless strictly necessary and tested.
 - Do not commit `.pi/workflow-orchestrator.json` or `.pi/workflows/` (they are gitignored).
-- Do not hand-edit `.pi/project-map/graph/graph.json` — regenerate with `/skill:project-intake`.
+- Do not hand-edit `.pi/project-map/` files directly — use `/skill:project-intake` to refresh project context.
 - Do not add absolute paths in skills or extension code.
 
 ## Refreshing project context

@@ -2,74 +2,58 @@
 
 ## Overview
 
-```text
-extensions/workflow-orchestrator/   Pi extension (commands, evaluator, auto-continuation, setup)
-skills/                             Workflow and support skills installed to ~/.agents/skills/
-scripts/                            Bash installer/uninstaller/backup
-settings/                           Reference global settings (not used by pi directly)
-.pi/project-map/                    Durable project context (committed)
-docs/                               Design notes
-```
+A pi coding-agent extension that implements a structured, multi-skill workflow orchestrator. Skills are discrete phases (brainstorm → research → criteria → plan → execute → review); the extension chains them automatically (auto mode) or suggests the next step (user-in-the-loop mode) by parsing a JSON handoff block that each skill emits at the end of its response.
 
 ## Runtime Flow
 
-1. `./scripts/install.sh` — copies skills + extension globally, copies `onyx` theme.
-2. Pi loads extension on startup or `/reload` — module cache is busted so `src/*.js` changes take effect.
-3. Extension registers `/my-pi:setup` and 12 `/workflow:*` commands.
-4. `createWorkflowEnv` wraps command env, sets `pendingWorkflowSkillResponse` before sending skill prompts.
-5. On `agent_end`: extract latest handoff JSON → evaluate → continue / complete / pause → notify / queue follow-up.
-6. On `tool_call`: detect `git push` (stale warning) and direct `.pi/project-map/*.md` edits without refresh marker (edit guard warning).
-
-## Workflow Sequence
-
-```text
-brainstorm-spec
-→ implementation-research
-→ acceptance-criteria
-→ plan → execute → review-against-plan → code-review → none
+```
+User invokes /skill:<name>
+         │
+         ▼
+[pi agent runs skill]
+         │
+         ▼  (skill emits "## Next Step" + compact auto handoff JSON block)
+pi fires `agent_end` event
+         │
+         ▼
+index.ts → planAutoContinuation()
+         │
+         ├── extractLatestHandoff()   parse JSON from assistant markdown
+         ├── evaluateHandoff()        validate schema + decide continue/pause/complete
+         ├── updateActiveWorkflow()   mutate config state
+         └── (auto) → pi.sendUserMessage(buildSkillPrompt())
+             (loop) → ctx.ui.notify(suggestion)
+             (done) → clearWorkflow()
 ```
 
-`project-intake` is separate (onboarding/refresh), hands off to `plan` or `none`.
+## Two Modes
 
-## Key Design Decisions
-
-- **Thin entrypoint**: `index.ts` only wires commands and events; no business logic.
-- **Pure modules**: `config`, `evaluator`, `handoff`, `state`, `audit`, `prompts`, `setup`, `auto` have no pi-runtime dependency.
-- **Dependency injection**: command handlers receive `env` objects — enables full testing without pi.
-- **Fail-closed**: missing/invalid handoffs from workflow skill responses always pause, never silently continue.
-- **Runtime reminder injection**: `workflowReminder()` in `prompts.js` injects current skill, allowed next skills, and handoff requirements into every workflow-dispatched skill prompt.
-- **Completion semantics**: `next_skill: "none"` → `decision: "complete"` → `action: "complete"` → `clearWorkflow()`. Distinct from pause.
-- **Config upgrade**: explicit via `/workflow:upgrade-config`; existing project configs never auto-migrate.
-- **Mode ownership**: `/workflow:start` (and `/workflow:auto` / `/workflow:manual`) calls `syncModeToConfig()`, which sets both `default_mode` and `auto_continue.enabled` to match the requested mode. `/workflow:init` mode arg is just an initial fallback that start always overrides.
-
-## Graph Insights (AST-backed, refreshed)
-
-98 nodes · 162 edges · 8 communities.
-
-**God nodes** (highest coupling):
-- `getProjectRoot()` — 12 edges
-- `loadConfig()` — 11 edges
-- `handleStart()` / `handleOnboard()` — 9 edges each
-- `saveConfig()` — 9 edges
-- `planAutoContinuation()` — 8 edges, cross-community bridge connecting auto/state (C0), prompts (C3), evaluator (C5), and handoff (C6)
-- `buildSkillPrompt()` — 7 edges
-
-**Community map**:
-
-| Community | Key nodes |
+| Mode | Behaviour |
 |---|---|
-| C0 | `planAutoContinuation`, `startWorkflow`, `pauseWorkflow`, `clearWorkflow` |
-| C1 | `handleContext`, `handleRefresh`, `handleUpgradeConfig`, `projectMapStaleness` |
-| C2 | `handleOnboard`, `loadConfig`, `saveConfig`, `defaultConfig` |
-| C3 | `buildSkillPrompt`, `workflowReminder`, `buildStartPrompt` |
-| C4 | `handlePiSetup`, `applyPiSetup`, `readJsonIfPresent` |
-| C5 | `evaluateHandoff`, `validateConfig`, `validateHandoff` |
-| C6 | `extractLatestHandoff`, `extractJsonBlocks` |
-| C7 | `appendAuditEntry`, `sanitize` |
+| **auto** | Extension calls next skill automatically; pauses on open questions, low confidence, failed validation, blockers, or destructive signals |
+| **user-in-the-loop** | Extension surfaces suggestion via `notify`; user runs `/workflow:continue` to advance |
 
-## Dependencies
+Mode is set once by `/workflow:init` wizard, stored in `config.mode`, propagated to `auto_continue.enabled`.
 
-- No npm runtime dependencies.
-- Pi extension types from `@mariozechner/pi-coding-agent` at runtime.
-- `ctx7` CLI used by the `find-docs` skill.
-- `ast-grep` CLI used by the `ast-grep` skill.
+## Config Version
+
+Only **v2** is accepted. V1 configs are rejected at load time — user must re-run `/workflow:init`.
+
+## Skill Transition Graph (default)
+
+```
+brainstorm-spec → implementation-research, acceptance-criteria, plan
+implementation-research → acceptance-criteria, plan
+acceptance-criteria → plan
+plan → execute
+execute → review-against-plan
+review-against-plan → execute, code-review, none
+code-review → execute, review-against-plan, none
+project-intake → plan, none
+```
+
+## Key Integrations
+
+- **pi ExtensionAPI**: `registerCommand`, `on("tool_call")`, `on("agent_end")`, `sendUserMessage`, `ctx.ui.notify/select/confirm/input`
+- **git**: `getProjectRoot` uses `git rev-parse --show-toplevel`; pre-push hook warns on stale context
+- **Node built-ins only**: `fs`, `path`, `child_process`, `os` — no npm runtime deps

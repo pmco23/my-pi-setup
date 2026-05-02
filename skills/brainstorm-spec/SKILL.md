@@ -31,7 +31,7 @@ When used standalone, complete this skill normally without assuming workflow sta
 
 - Prefer `implementation-research` as the next phase when the idea needs current examples, prior art, external docs, or approach comparison.
 - Use `find-docs` only when a design decision depends on current API/framework behavior.
-- Use `ast-grep` when the idea has complex structural relationships across the codebase.
+- Use `ast-grep` when understanding how a pattern is currently used across the codebase would inform the design — e.g. how many components use a given abstraction, where an error-handling pattern is applied, how widely a deprecated API is still in use.
 
 ## Output Format
 

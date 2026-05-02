@@ -44,8 +44,8 @@ From this folder:
 The installer:
 
 1. Copies skills and extension to global pi locations.
-3. Copies the bundled `onyx` theme to `~/.pi/agent/themes/onyx.json`.
-4. Ensures `enableSkillCommands: true` in `~/.pi/agent/settings.json`.
+2. Copies the bundled `onyx` theme to `~/.pi/agent/themes/onyx.json`.
+3. Ensures `enableSkillCommands: true` in `~/.pi/agent/settings.json`.
 
 After installing, restart pi or run:
 
@@ -86,7 +86,7 @@ The installer copies `onyx` to `~/.pi/agent/themes/onyx.json`, so it is availabl
 /skill:code-review
 ```
 
-Support skills (third-party, bundled for portability):
+Support skills:
 
 ```text
 /skill:find-docs
@@ -101,11 +101,6 @@ The installed resources are global, but each project keeps its own workflow stat
 .pi/workflow-orchestrator.json
 .pi/workflows/
 .pi/project-map/
-```
-
-Optionally configure pi theme/settings with:
-
-```text
 ```
 
 Initialise a project:
@@ -124,13 +119,7 @@ For an existing codebase, map it first:
 
 Then invoke a skill to start working. In auto mode, pi chains automatically. In user-in-the-loop mode, run `/workflow:continue` after each skill.
 
-For an existing codebase, onboard/map it before feature work:
-
-```text
-/workflow:onboard
-```
-
-To refresh project context or graph insights later, do not manually edit `.pi/project-map/` first. Use `/skill:project-intake` to refresh.
+To refresh project context after significant changes, do not manually edit `.pi/project-map/`. Use `/skill:project-intake` — it detects first-time vs. refresh automatically.
 
 ## Uninstall
 

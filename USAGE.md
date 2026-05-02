@@ -82,7 +82,7 @@ These enrich the current workflow phase rather than advancing it:
 
 ```text
 /skill:find-docs     → fetch current library/API docs via Context7
-/skill:ast-grep      → structural code search
+/skill:ast-grep      → structural code search (prefer over grep/rg when the query depends on code structure, not just text)
 ```
 
 ---

@@ -1,67 +1,93 @@
 # Modules
 
-## Extension Modules
+## `extensions/workflow-orchestrator/`
 
-All under `extensions/workflow-orchestrator/src/`:
+### `index.ts` — Extension Entry Point
+- Thin wiring layer only. No business logic.
+- Busts CommonJS require-cache on load so `/reload` picks up `src/*.js` changes.
+- Registers: `workflow:init`, `workflow:continue`, `workflow:pause`, `workflow:resume`
+- Listens: `tool_call` (project-map guard + git-push staleness check), `agent_end` (auto-continuation)
 
-| Module | Purpose | Key Exports |
-|--------|---------|-------------|
-| `config.js` | Project config defaults, init/load/save, upgrade, project root detection | `defaultConfig`, `initConfig`, `upgradeConfig`, `upgradeProjectConfig`, `loadConfig`, `saveConfig`, `getProjectRoot` |
-| `evaluator.js` | Deterministic handoff decision: continue / pause / complete | `evaluateHandoff`, `resolveMode`, `validateConfig`, `validateHandoff` |
-| `handoff.js` | Extract and parse handoff JSON from assistant markdown | `extractLatestHandoff`, `looksLikeHandoff`, `extractJsonBlocks` |
-| `state.js` | Active workflow state transitions | `startWorkflow`, `updateActiveWorkflow`, `pauseWorkflow`, `resumeWorkflow`, `clearWorkflow` |
-| `audit.js` | JSONL audit logging with secret redaction (`token(?!s)` pattern) | `appendAuditEntry`, `readAuditEntries`, `sanitize` |
-| `prompts.js` | Build `/skill:<name>` prompts and inject runtime workflow reminders | `workflowReminder`, `buildSkillPrompt`, `buildStartPrompt`, `buildOnboardPrompt`, `buildRefreshPrompt`, `buildContinuePrompt` |
-| `commands.js` | Dependency-injected command handlers + `projectMapStaleness` + `syncModeToConfig` | `handleInit`, `handleUpgradeConfig`, `handleStart`, `handleOnboard`, `handleRefresh`, `handleContext`, `handleContinue`, `handleStatus`, `handlePause`, `handleResume`, `handlePiSetup`, `projectMapStaleness`, `syncModeToConfig` |
-| `auto.js` | Post-agent handoff evaluation and continuation planning | `planAutoContinuation`, `latestAssistantMarkdown`, `messageText`, `hasActiveWorkflow` |
-| `setup.js` | Deterministic pi settings/theme setup; `readJsonIfPresent` is try/catch safe | `applyPiSetup`, `selectedSettings`, `mergeSettings`, theme/option constants |
+### `src/commands.js` — Command Handlers
+- `createCommandEnv(ctx, pi)` — builds DI env object (notify, select, confirm, input, sendUserMessage)
+- `handleInit` — full setup wizard: scope, mode, theme, thinking level, compaction, retry
+- `handleContinue` — resumes pause if needed, calls `buildContinuePrompt`, sends message
+- `handlePause` / `handleResume` — delegate to `state.js`
+- `installPrePushHook` — copies pre-push hook from assets to `.git/hooks/`
+- `projectMapStaleness` — checks if source dirs changed after `agent-guidance.md` mtime
 
-## Extension Entrypoint
+### `src/config.js` — Configuration
+- `defaultConfig(mode)` — canonical v2 config shape
+- `DEFAULT_TRANSITIONS` — skill transition adjacency map
+- `getProjectRoot(cwd)` — git root or fallback to cwd
+- `loadConfig` / `saveConfig` / `initConfigV2` — JSON file I/O with version check
 
-`extensions/workflow-orchestrator/index.ts`:
+### `src/auto.js` — Auto-Continuation Engine
+- `latestAssistantMarkdown(messages)` — extracts text from last assistant message
+- `planAutoContinuation({ config, markdown, entryId })` — parses handoff, evaluates, returns action: `none | continue | suggest | pause | complete`
 
-- Busts local CommonJS require-cache on `/reload`.
-- Registers `/my-pi:setup` and 12 `/workflow:*` commands.
-- Tracks `pendingWorkflowSkillResponse` flag for auto-continuation.
-- Tracks `projectMapRefreshMarkers` per project root.
-- Warns when `.pi/project-map/*.md` edited without refresh marker.
-- Uses `projectMapStaleness()` on `git push` to detect stale context.
-- Handles `agent_end` → continue / complete / pause.
+### `src/evaluator.js` — Decision Engine
+- `validateConfig` / `validateHandoff` — schema validation returning error arrays
+- `evaluateHandoff({ config, handoff })` — applies stop-condition logic; returns `{ decision, reason, next_skill, … }`
+- Stop conditions: `requires_user`, `stop_reason`, open questions, low confidence, stop-before-execute, failed validation, blockers, destructive signals
 
-## Assets
+### `src/handoff.js` — Handoff Parser
+- `extractJsonBlocks(markdown)` — finds all fenced `json` code blocks
+- `looksLikeHandoff(value)` — duck-type check for handoff shape
+- `extractLatestHandoff(markdown)` — returns the latest valid handoff; prefers blocks preceded by "Auto handoff:"
 
-- `assets/onyx-theme.json`: canonical `onyx` theme; installer copies globally to `~/.pi/agent/themes/onyx.json`.
-- `assets/pre-push-hook.sh`: stale-context pre-push hook, installed by `/workflow:init` when no existing hook present.
+### `src/state.js` — Workflow State Mutations
+- Pure functions: `startWorkflow`, `updateActiveWorkflow`, `pauseWorkflow`, `resumeWorkflow`, `clearWorkflow`
+- `createWorkflowId()` — timestamp-based ID (`wf-<iso>`)
+- `artifactLogPath(id)` — `.pi/workflows/<id>.jsonl`
 
-## Owned Workflow Skills
+### `src/prompts.js` — Prompt Builders
+- `buildSkillPrompt(skillName, payload)` — constructs `/skill:<name>` message with workflow context and reminder
+- `buildContinuePrompt(config)` — builds from active workflow state
+- `workflowReminder(payload)` — appended to skill prompts to remind agent about next-step format
+
+### `src/audit.js` — Audit Log
+- `appendAuditEntry(projectRoot, artifactLog, entry)` — appends JSONL line to `.pi/workflows/<id>.jsonl`
+- `readAuditEntries` — reads all lines
+- `sanitize` — redacts api keys, tokens, secrets, passwords from logged values
+
+### `src/setup.js` — Pi Settings Writer
+- `applyPiSetup({ projectRoot, homeDir, scope, theme, thinkingLevel, … })` — merges and writes `settings.json`
+- Supports scopes: `project`, `global`, `both`
+- Installs `onyx` theme JSON to `~/.pi/agent/themes/` when selected
+- Constants: `SCOPE_LABELS`, `THEME_LABELS`, `THINKING_LEVELS`
+
+---
+
+## `skills/` — Agent Skill Definitions
+
+Each subdirectory is a skill with a `SKILL.md` conforming to the Agent Skills standard.
 
 | Skill | Purpose |
-|-------|---------|
-| `project-intake` | Graphify-first codebase onboarding/refresh |
-| `brainstorm-spec` | Idea exploration → design spec |
-| `implementation-research` | Current implementation research, examples, Context7/web-backed tradeoffs |
-| `acceptance-criteria` | Design/research → testable criteria |
-| `plan` | Criteria/request → ordered implementation tasks |
-| `execute` | Plan/task → implementation with validation and self-review |
-| `review-against-plan` | Implementation → plan/criteria coverage review |
-| `code-review` | Implementation → engineering quality review |
+|---|---|
+| `project-intake` | Map/refresh codebase into `.pi/project-map/` |
+| `brainstorm-spec` | Collaborative design spec from an idea |
+| `implementation-research` | Research prior art, docs, approaches |
+| `acceptance-criteria` | Testable criteria + definition of done |
+| `plan` | Actionable task breakdown |
+| `execute` | Implement the plan |
+| `review-against-plan` | Verify implementation matches plan |
+| `code-review` | Engineering review (quality, security, tests) |
+| `find-docs` | Fetch current library/API docs via Context7 |
+| `ast-grep` | Structural AST code search — action skill with decision table (when to use over grep/rg), 5-step workflow, structured findings output format, CLI reference |
 
-## Support Skills (bundled)
+---
 
-| Skill | Purpose | Sync |
-|-------|---------|------|
-| `find-docs` | Current docs/API verification via Context7 CLI | Manual |
-| `ast-grep` | Structural code search via ast-grep CLI | Manual |
+## `scripts/`
 
-## Graph Communities (AST-backed)
+| Script | Action |
+|---|---|
+| `install.sh` | rsync skills + extension to global locations; install onyx theme; ensure `enableSkillCommands: true` |
+| `uninstall.sh` | Remove extension + workflow skills; leave support skills and project `.pi/` dirs |
+| `backup-current.sh` | Sync currently installed state back into repo |
 
-| Community | Area |
-|-----------|------|
-| C0 | Auto-continuation and workflow state (`auto.js`, `state.js`) |
-| C1 | Context/status/refresh/upgrade command handlers |
-| C2 | Start/onboard/config persistence handlers |
-| C3 | Prompt builders and workflow reminders (`prompts.js`) |
-| C4 | Setup wizard and settings/theme helpers (`setup.js`) |
-| C5 | Evaluator validation and decision logic (`evaluator.js`) |
-| C6 | Handoff parsing (`handoff.js`) |
-| C7 | Audit logging and redaction (`audit.js`) |
+---
+
+## `settings/`
+
+- `global-settings.json` — reference snapshot of `~/.pi/agent/settings.json` (not auto-applied)
