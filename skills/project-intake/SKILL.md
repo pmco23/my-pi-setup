@@ -66,11 +66,36 @@ When `.pi/project-map/` already exists:
 - `risks.md`: hotspots, coupling, missing tests, security/privacy concerns.
 - `agent-guidance.md`: before-editing checklist, project map links, common tasks, validation, graph insights, risky areas, do-not-touch list.
 
+## Graphify Execution Modes
+
+Graphify semantic extraction requires dispatching parallel subagents (via an `Agent` tool or `spawn_agent`). Not all harnesses provide this.
+
+| Harness capability | Graphify mode | Graph quality |
+|---|---|---|
+| Agent tool / spawn_agent available | Full semantic + AST | Rich: code structure + doc/paper/image meaning |
+| No subagent tool (e.g. pi) | AST-only | Structural: code nodes/edges, no doc semantics |
+
+**When running inside pi:**
+
+- Use graphify's Python modules or `graphify update <path>` directly for AST extraction.
+- Semantic extraction of docs and markdown is not available inside pi — the graph will be code-structure only.
+- Note this clearly in `risks.md` and `agent-guidance.md`.
+- For full semantic graph generation, the user should run graphify manually from a terminal:
+
+```bash
+cd <project-root>
+graphify install   # ensure skill is up to date
+# then invoke the full /graphify pipeline from a harness with subagent support
+```
+
+- Do not fabricate semantic insights if graphify only ran in AST mode.
+
 ## Rules
 
 - Do not claim graphify insights unless graphify ran or graph artifacts already existed.
 - If graphify cannot run, still create project-map files and explain the gap in `risks.md` and the final response.
 - Do not put absolute paths in generated project-map files.
+- If graphify ran in AST-only mode, label graph insights accordingly in `architecture.md`, `agent-guidance.md`, and `risks.md`.
 - If the user included a feature goal, recommend `plan` next; otherwise recommend `none` and ask what they want to work on.
 
 ## Next Skill Guidance

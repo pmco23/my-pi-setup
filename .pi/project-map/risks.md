@@ -16,11 +16,20 @@
 
 ## Operational Risks
 
-- **Graphify dependency**: project intake depends on optional external graphify tooling. If missing, project-map docs should still be created but graph insights may be absent.
+- **Graphify semantic extraction unavailable in pi**: graphify's full pipeline requires the Agent/subagent tool to dispatch parallel extraction workers. Pi does not expose this tool, so `/workflow:refresh` and `project-intake` runs inside pi produce AST-only graphs. Semantic insights from docs, skills, and markdown are missing. For a full graph, run graphify from a harness with subagent support and commit the graph artifacts.
 - **Context7 dependency**: `find-docs`/research quality depends on `ctx7` availability, quota, and network access.
 - **pi version coupling**: extension uses pi extension APIs/events. Pi API changes can break runtime behavior even if pure tests pass.
 - **Installer `--delete` behavior**: removing a skill/extension file from repo removes it globally on install. This is intentional but risky for accidental deletions.
 - **Global theme conflict**: `onyx` should exist only as `~/.pi/agent/themes/onyx.json` plus non-discoverable repo asset `assets/onyx-theme.json`.
+
+## Graph Hotspots
+
+Latest graph refresh highlights these high-coupling nodes:
+
+- `getProjectRoot()` and `loadConfig()` are central to nearly all command and auto-continuation flows.
+- `handleStart()` and `handleOnboard()` remain high-degree command paths.
+- `saveConfig()` and `planAutoContinuation()` are key persistence/auto-mode risk points.
+- `handlePiSetup()` and `applyPiSetup()` form a distinct setup community; changes should stay covered by setup tests.
 
 ## Testing Gaps
 

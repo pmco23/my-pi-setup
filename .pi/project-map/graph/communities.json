@@ -2,6 +2,7 @@
   "0": [
     "extensions_workflow_orchestrator_src_auto_js",
     "extensions_workflow_orchestrator_src_state_js",
+    "extensions_workflow_orchestrator_test_auto_test_js",
     "src_auto_hasactiveworkflow",
     "src_auto_latestassistantmarkdown",
     "src_auto_messagetext",
@@ -11,9 +12,11 @@
     "src_state_createworkflowid",
     "src_state_nowiso",
     "src_state_pauseworkflow",
-    "src_state_resumeworkflow",
     "src_state_startworkflow",
-    "src_state_updateactiveworkflow"
+    "src_state_updateactiveworkflow",
+    "test_auto_test_activeconfig",
+    "test_auto_test_handoff",
+    "test_auto_test_markdownfor"
   ],
   "1": [
     "extensions_workflow_orchestrator_src_commands_js",
@@ -21,86 +24,115 @@
     "src_commands_handlecontext",
     "src_commands_handlecontinue",
     "src_commands_handleinit",
-    "src_commands_handleonboard",
-    "src_commands_handlepause",
     "src_commands_handlerefresh",
     "src_commands_handleresume",
     "src_commands_handlestatus",
+    "src_commands_handleupgradeconfig",
+    "src_commands_installprepushhook",
     "src_commands_parsemodeandrest",
+    "src_commands_projectmapstaleness",
     "src_config_getprojectroot",
-    "src_config_loadconfig"
+    "src_state_resumeworkflow"
   ],
   "2": [
-    "extensions_workflow_orchestrator_src_audit_js",
+    "extensions_workflow_orchestrator_src_config_js",
+    "src_commands_handleonboard",
+    "src_commands_handlepause",
+    "src_config_defaultconfig",
+    "src_config_getconfigpath",
+    "src_config_getworkflowsdir",
+    "src_config_initconfig",
+    "src_config_loadconfig",
+    "src_config_saveconfig",
+    "src_config_upgradeconfig",
+    "src_config_upgradeprojectconfig"
+  ],
+  "3": [
     "extensions_workflow_orchestrator_src_prompts_js",
-    "src_audit_appendauditentry",
-    "src_audit_readauditentries",
-    "src_audit_sanitize",
     "src_commands_handlestart",
     "src_prompts_buildcontinueprompt",
     "src_prompts_buildonboardprompt",
     "src_prompts_buildrefreshprompt",
     "src_prompts_buildskillprompt",
     "src_prompts_buildstartprompt",
-    "src_prompts_firstskillforgoal"
-  ],
-  "3": [
-    "extensions_workflow_orchestrator_src_config_js",
-    "extensions_workflow_orchestrator_test_auto_test_js",
-    "src_config_defaultconfig",
-    "src_config_getconfigpath",
-    "src_config_getworkflowsdir",
-    "src_config_initconfig",
-    "src_config_saveconfig",
-    "test_auto_test_activeconfig",
-    "test_auto_test_handoff",
-    "test_auto_test_markdownfor"
+    "src_prompts_firstskillforgoal",
+    "src_prompts_workflowreminder"
   ],
   "4": [
+    "extensions_workflow_orchestrator_src_setup_js",
+    "src_commands_handlepisetup",
+    "src_setup_applypisetup",
+    "src_setup_labeltokey",
+    "src_setup_mergesettings",
+    "src_setup_readjsonifpresent",
+    "src_setup_selectedsettings",
+    "src_setup_targetsforscope"
+  ],
+  "5": [
     "extensions_workflow_orchestrator_src_evaluator_js",
     "src_evaluator_evaluatehandoff",
     "src_evaluator_resolvemode",
     "src_evaluator_validateconfig",
     "src_evaluator_validatehandoff"
   ],
-  "5": [
+  "6": [
     "extensions_workflow_orchestrator_src_handoff_js",
     "src_handoff_extractjsonblocks",
     "src_handoff_extractlatesthandoff",
     "src_handoff_lookslikehandoff",
     "src_handoff_parsejsonblock"
   ],
-  "6": [
+  "7": [
+    "extensions_workflow_orchestrator_src_audit_js",
+    "src_audit_appendauditentry",
+    "src_audit_readauditentries",
+    "src_audit_sanitize"
+  ],
+  "8": [
+    "extensions_workflow_orchestrator_index_ts",
+    "workflow_orchestrator_index_freshrequire",
+    "workflow_orchestrator_index_workfloworchestratorextension"
+  ],
+  "9": [
     "extensions_workflow_orchestrator_test_commands_test_js",
     "test_commands_test_env",
     "test_commands_test_tmpdir"
   ],
-  "7": [
+  "10": [
     "extensions_workflow_orchestrator_test_evaluator_test_js",
     "test_evaluator_test_baseconfig",
     "test_evaluator_test_basehandoff"
   ],
-  "8": [
-    "extensions_workflow_orchestrator_index_ts",
-    "pi_coding_agent",
-    "workflow_orchestrator_index_workfloworchestratorextension"
+  "11": [
+    "extensions_workflow_orchestrator_test_skills_test_js",
+    "test_skills_test_parsefrontmatter",
+    "test_skills_test_skilldirs"
   ],
-  "9": [
+  "12": [
+    "extensions_workflow_orchestrator_test_workflow_smoke_test_js",
+    "test_workflow_smoke_test_markdownfor",
+    "test_workflow_smoke_test_tmpdir"
+  ],
+  "13": [
     "extensions_workflow_orchestrator_test_audit_test_js",
     "test_audit_test_tmpdir"
   ],
-  "10": [
+  "14": [
     "extensions_workflow_orchestrator_test_config_test_js",
     "test_config_test_tmpdir"
   ],
-  "11": [
+  "15": [
     "extensions_workflow_orchestrator_test_handoff_test_js",
     "test_handoff_test_handoffjson"
   ],
-  "12": [
+  "16": [
+    "extensions_workflow_orchestrator_test_setup_test_js",
+    "test_setup_test_tmpdir"
+  ],
+  "17": [
     "extensions_workflow_orchestrator_test_prompts_test_js"
   ],
-  "13": [
+  "18": [
     "extensions_workflow_orchestrator_test_state_test_js"
   ]
 }

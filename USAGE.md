@@ -122,6 +122,21 @@ After significant codebase changes (new modules, refactors, dependency updates, 
 
 This re-runs `project-intake` with graphify and updates all `.pi/project-map/*` files without disturbing the active workflow state. Do not manually edit `.pi/project-map/` first when the goal is to refresh context, graph insights, agent guidance, architecture maps, or repo maps.
 
+### Graphify inside pi: AST-only graphs
+
+Graphify's full pipeline uses parallel subagents for semantic extraction of docs, markdown, and code meaning. Pi does not expose the Agent/subagent tool graphify requires, so graph refreshes inside pi produce **AST-backed graphs only** — code structure nodes and edges, without document/skill/markdown semantic analysis.
+
+This is still useful for structural architecture and coupling insights. But for a full semantic graph:
+
+```bash
+# Outside pi, from a terminal
+graphify install     # update the bundled skill
+cd <project-root>
+# then invoke /graphify from a harness with subagent support (Claude Code, Codex, etc.)
+```
+
+Refresh `/.pi/project-map/graph/` artifacts and then run `/workflow:refresh` inside pi to pick up the enriched graph insights.
+
 ## Continuing later
 
 From the same project folder:

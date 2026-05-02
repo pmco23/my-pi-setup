@@ -48,6 +48,21 @@ brainstorm-spec
 
 `project-intake` is used for onboarding/refresh and can hand off to `plan` or `none`.
 
+## Graph Insights
+
+Latest graph refresh was AST-backed because the installed graphify package requires subagent support for semantic extraction in the bundled skill, which is not available in this harness.
+
+- Graph size: 98 nodes, 162 edges, 8 communities.
+- Core hubs: `getProjectRoot()` (12 edges), `loadConfig()` (11), `handleStart()` (9), `handleOnboard()` (9), `saveConfig()` (9), `planAutoContinuation()` (8).
+- Community 0: auto-continuation and workflow state (`auto.js`, `state.js`).
+- Community 1: command status/context/refresh/upgrade handlers (`commands.js`).
+- Community 2: onboarding/start config persistence (`commands.js`, `config.js`).
+- Community 3: prompt builders and workflow reminder injection (`prompts.js`).
+- Community 4: setup wizard and settings/theme writing (`setup.js`).
+- Community 5: evaluator validation/decision logic (`evaluator.js`).
+- Community 6: handoff extraction (`handoff.js`).
+- Community 7: audit logging and redaction (`audit.js`).
+
 ## Extension Components
 
 - `index.ts`: thin pi wiring, command registration, event hooks, module-cache busting.

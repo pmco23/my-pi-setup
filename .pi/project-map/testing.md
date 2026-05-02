@@ -59,6 +59,7 @@ It asserts continuation prompts include workflow reminders and that final `none`
 
 ## Gaps
 
+- Graph refresh in this harness is AST-backed only because semantic graphify extraction requires subagent/Agent tooling not exposed here.
 - No integration test with a real interactive pi/RPC session.
 - `index.ts` event wiring and `pendingWorkflowSkillResponse` lifecycle are indirectly covered through pure `planAutoContinuation`, not direct pi runtime tests.
 - No graphify output parser tests; graphify is invoked by skills rather than extension code.

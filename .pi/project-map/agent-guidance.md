@@ -69,6 +69,10 @@ brainstorm-spec
 
 `project-intake` is separate onboarding/refresh and can hand off to `plan` or `none`.
 
+## Graph Insights
+
+Latest graph refresh: 98 nodes, 162 edges, 8 communities (AST-backed only — pi lacks the subagent tool graphify needs for semantic extraction). For a full semantic graph, run graphify from Claude Code, Codex, or another harness with subagent support and commit the updated `.pi/project-map/graph/` artifacts. Core hubs: `getProjectRoot()`, `loadConfig()`, `handleStart()`, `handleOnboard()`, `saveConfig()`, and `planAutoContinuation()`.
+
 ## Risky Areas
 
 - `config.js`: high-impact default config and upgrade behavior.

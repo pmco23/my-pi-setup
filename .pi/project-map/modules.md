@@ -54,6 +54,21 @@ All under `extensions/workflow-orchestrator/src/`:
 | `ast-grep` | Structural code search via ast-grep CLI |
 | `graphify` | Knowledge graph generation via graphify Python tool |
 
+## Graph Communities
+
+Latest graph refresh identifies these implementation communities:
+
+| Community | Area |
+|-----------|------|
+| 0 | Auto-continuation and workflow state (`auto.js`, `state.js`) |
+| 1 | Context/status/refresh/upgrade command handlers (`commands.js`) |
+| 2 | Start/onboard/config persistence (`commands.js`, `config.js`) |
+| 3 | Prompt builders and workflow reminders (`prompts.js`) |
+| 4 | Setup wizard and settings/theme helpers (`setup.js`) |
+| 5 | Evaluator validation and decision logic (`evaluator.js`) |
+| 6 | Handoff parsing (`handoff.js`) |
+| 7 | Audit logging and redaction (`audit.js`) |
+
 ## Tests
 
 All tests live under `extensions/workflow-orchestrator/test/` and run with Node's built-in test runner. Current coverage includes module unit tests, command handler tests, setup tests, skill/config validation, and full workflow smoke chain.
