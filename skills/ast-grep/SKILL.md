@@ -1,6 +1,6 @@
 ---
 name: ast-grep
-description: Performs structural code search using AST patterns. Use instead of grep/rg whenever a search depends on code structure, not just text: finding all callers of a function, all implementations of an interface, all usages of a pattern inside a specific context, or all code that is missing something (e.g. async functions without error handling). Prefer ast-grep over bash text search for any structural query. Use even when grep might work — ast-grep matches structure precisely and catches edge cases text search misses.
+description: "Performs structural code search using AST patterns. Use instead of grep/rg whenever a search depends on code structure, not just text: finding all callers of a function, all implementations of an interface, all usages of a pattern inside a specific context, or all code that is missing something (e.g. async functions without error handling). Prefer ast-grep over bash text search for any structural query. Use even when grep might work — ast-grep matches structure precisely and catches edge cases text search misses."
 ---
 
 # ast-grep Code Search
