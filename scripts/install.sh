@@ -5,6 +5,21 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 mkdir -p "$HOME/.agents/skills" "$HOME/.pi/agent/extensions" "$HOME/.pi/agent" "$HOME/.pi/agent/themes"
 
+# Refresh bundled graphify skill from installed package if a newer version is available.
+# This prevents install.sh from overwriting a freshly-upgraded graphify skill with an old repo copy.
+if command -v graphify &>/dev/null; then
+  GRAPHIFY_INSTALLED_SKILL="$HOME/.pi/agent/skills/graphify"
+  GRAPHIFY_REPO_SKILL="$ROOT/skills/graphify"
+  REPO_VER="$(cat "$GRAPHIFY_REPO_SKILL/.graphify_version" 2>/dev/null || echo '0')"
+  graphify install --platform pi &>/dev/null || true
+  INSTALLED_VER="$(cat "$GRAPHIFY_INSTALLED_SKILL/.graphify_version" 2>/dev/null || echo '0')"
+  if [[ "$INSTALLED_VER" != "$REPO_VER" ]]; then
+    cp "$GRAPHIFY_INSTALLED_SKILL/SKILL.md" "$GRAPHIFY_REPO_SKILL/SKILL.md"
+    cp "$GRAPHIFY_INSTALLED_SKILL/.graphify_version" "$GRAPHIFY_REPO_SKILL/.graphify_version"
+    echo "Updated bundled graphify skill: $REPO_VER -> $INSTALLED_VER"
+  fi
+fi
+
 rsync -a --delete "$ROOT/skills/" "$HOME/.agents/skills/"
 rm -f "$HOME/.pi/agent/prompts"/workflow-*.md
 if [[ -d "$ROOT/extensions" ]]; then

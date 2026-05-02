@@ -69,3 +69,32 @@ test('config transitions and support skill references point to existing skills o
     for (const allowed of support.allowed_in) assert.ok(names.has(allowed), `${name}.allowed_in ${allowed} must exist`);
   }
 });
+
+test('bundled graphify skill version matches installed package (warns on drift)', () => {
+  const { execFileSync } = require('node:child_process');
+  const versionFile = path.join(skillsRoot, 'graphify', '.graphify_version');
+  if (!fs.existsSync(versionFile)) return; // no bundled version file, skip
+
+  const repoVersion = fs.readFileSync(versionFile, 'utf8').trim();
+
+  let installedVersion = null;
+  try {
+    const graphifyBin = execFileSync('which', ['graphify'], { encoding: 'utf8' }).trim();
+    const piSkillVersion = path.join(path.dirname(graphifyBin), '..', 'share', 'graphify', '.graphify_version');
+    const piAgentVersion = path.join(process.env.HOME, '.pi', 'agent', 'skills', 'graphify', '.graphify_version');
+    if (fs.existsSync(piAgentVersion)) {
+      installedVersion = fs.readFileSync(piAgentVersion, 'utf8').trim();
+    } else if (fs.existsSync(piSkillVersion)) {
+      installedVersion = fs.readFileSync(piSkillVersion, 'utf8').trim();
+    }
+  } catch {
+    // graphify not installed — skip version check
+    return;
+  }
+
+  if (installedVersion && installedVersion !== repoVersion) {
+    // Soft warning: print but do not fail the test suite.
+    // Run ./scripts/install.sh to auto-sync, or manually copy the updated skill.
+    console.warn(`[warn] bundled graphify skill version mismatch: repo=${repoVersion} installed=${installedVersion}. Run ./scripts/install.sh to sync.`);
+  }
+});
