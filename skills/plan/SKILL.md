@@ -42,7 +42,7 @@ Use any available input:
 
 - Use `find-docs` when planning depends on current library/API behavior.
 - Use `ast-grep` for structural discovery or impact analysis.
-- Use `graphify` for complex architecture/domain relationships.
+- Use `ast-grep` for structural discovery or impact analysis.
 
 ## Output Format
 

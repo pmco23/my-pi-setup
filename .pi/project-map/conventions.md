@@ -36,7 +36,7 @@
 
 - JSONL format: `.pi/workflows/<workflow-id>.jsonl`.
 - `sanitize()` uses `token(?!s)` to redact auth tokens while preserving `input_tokens`/`output_tokens` metric fields.
-- Do not widen the regex without understanding impact on graphify cost fields in audit logs.
+- Do not widen the regex without understanding impact on metric fields in audit logs.
 
 ## Generated / Local Files
 
@@ -47,6 +47,6 @@
 
 ## Do Not Modify Unless Asked
 
-- `skills/find-docs/`, `skills/ast-grep/`, `skills/graphify/`: bundled third-party support skills.
+- `skills/find-docs/`, `skills/ast-grep/`: bundled third-party support skills.
 - `settings/global-settings.json`: reference copy, not directly used by pi.
 - `.pi/project-map/graph/graph.json`: regenerate via `/workflow:refresh`; do not hand-edit.

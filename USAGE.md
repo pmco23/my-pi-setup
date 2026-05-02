@@ -63,7 +63,7 @@ Before starting feature work on an unfamiliar project:
 /skill:project-intake
 ```
 
-This runs graphify-first analysis and creates `.pi/project-map/` with architecture docs, module map, agent guidance, and graph artifacts.
+This scans the codebase and creates `.pi/project-map/` with architecture docs, module map, agent guidance, and more.
 
 To refresh after significant changes:
 
@@ -73,11 +73,6 @@ To refresh after significant changes:
 
 The skill detects whether it is a first-time onboard or a refresh automatically.
 
-### Graphify inside pi: AST-only graphs
-
-Graphify's full pipeline requires parallel subagents. Pi does not expose this, so graph refreshes inside pi produce **AST-backed graphs only**.
-
-For a full semantic graph, run graphify from a harness with subagent support (Claude Code, Codex, etc.) and commit the updated `.pi/project-map/graph/` artifacts.
 
 ---
 
@@ -88,7 +83,6 @@ These enrich the current workflow phase rather than advancing it:
 ```text
 /skill:find-docs     → fetch current library/API docs via Context7
 /skill:ast-grep      → structural code search
-/skill:graphify      → architecture and knowledge graph
 ```
 
 ---
@@ -120,9 +114,3 @@ On another machine:
 ./scripts/install.sh
 ```
 
-## Keeping graphify up to date
-
-```bash
-uv tool upgrade graphifyy      # or: pip install --upgrade graphifyy
-./scripts/install.sh           # auto-syncs bundled skill then installs everything
-```

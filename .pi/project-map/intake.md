@@ -11,17 +11,16 @@ Portable pi workflow setup. Contains global workflow skills, a workflow-orchestr
 - TypeScript (pi extension entrypoint, loaded via jiti — no build step)
 - Bash (install/uninstall/backup scripts)
 - Markdown (skills, docs, project map)
-- Python/graphify (optional for graphify-first project onboarding)
 - Context7 CLI (`ctx7`) for docs/research support via `find-docs`
 
 ## Important Files
 
-- `README.md`: overview, prerequisites, install guide, graphify upgrade flow
-- `USAGE.md`: day-to-day workflow usage; graphify AST-only limitation documented
+- `README.md`: overview, prerequisites, install guide
+- `USAGE.md`: day-to-day workflow usage
 - `AGENTS.md`: repository instructions for coding agents
-- `CONTRIBUTING.md`: contributor guide; graphify upgrade section
+- `CONTRIBUTING.md`: contributor guide
 - `package.json`: root test script
-- `scripts/install.sh`: auto-syncs graphify skill, installs skills + extension + onyx theme
+- `scripts/install.sh`: installs skills + extension + onyx theme
 - `scripts/uninstall.sh`: removes workflow extension and all workflow skills (incl. implementation-research)
 - `scripts/backup-current.sh`: refreshes repo from installed state
 - `extensions/workflow-orchestrator/index.ts`: pi extension entrypoint

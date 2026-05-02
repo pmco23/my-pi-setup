@@ -22,7 +22,6 @@ USAGE.md                  How to use the workflow day to day
 - [pi](https://github.com/badlogic/pi-mono) installed and available on PATH
 - Node.js ≥ 18 (for extension runtime and tests)
 - rsync (used by installer scripts)
-- Python 3 + [graphify](https://pypi.org/project/graphifyy/) (optional, for `/skill:project-intake`)
 
 ## Local development
 
@@ -44,8 +43,7 @@ From this folder:
 
 The installer:
 
-1. Checks if graphify is installed and auto-syncs the bundled `skills/graphify/` skill if the installed package is newer — so the repo always has the current skill version before copying to global locations.
-2. Copies skills and extension to global pi locations.
+1. Copies skills and extension to global pi locations.
 3. Copies the bundled `onyx` theme to `~/.pi/agent/themes/onyx.json`.
 4. Ensures `enableSkillCommands: true` in `~/.pi/agent/settings.json`.
 
@@ -55,22 +53,6 @@ After installing, restart pi or run:
 /reload
 ```
 
-## Keeping graphify up to date
-
-The bundled `skills/graphify/` skill tracks the installed graphify package version in `.graphify_version`. When you upgrade graphify, running `./scripts/install.sh` is enough — it auto-refreshes the bundled skill before syncing:
-
-```bash
-# Upgrade graphify
-uv tool upgrade graphifyy
-# or: pip install --upgrade graphifyy
-
-# Re-run install — auto-syncs bundled skill then installs everything
-./scripts/install.sh
-```
-
-The installer prints `Updated bundled graphify skill: <old> -> <new>` when it detects and syncs a version change.
-
-The test suite also includes a soft version-drift check — if the repo and installed versions differ, it prints a warning and reminds you to run `./scripts/install.sh`.
 
 ## What gets installed
 
@@ -109,7 +91,6 @@ Support skills (third-party, bundled for portability):
 ```text
 /skill:find-docs
 /skill:ast-grep
-/skill:graphify
 ```
 
 ## Per-project workflow state
@@ -149,17 +130,7 @@ For an existing codebase, onboard/map it before feature work:
 /workflow:onboard
 ```
 
-To refresh project context or graph insights later, do not manually edit `.pi/project-map/` first. Use the graphify-backed refresh flow:
-
-```text
-/workflow:refresh
-```
-
-Check stale status with:
-
-```text
-/workflow:context
-```
+To refresh project context or graph insights later, do not manually edit `.pi/project-map/` first. Use `/skill:project-intake` to refresh.
 
 ## Uninstall
 
@@ -172,7 +143,7 @@ To remove everything from the current machine:
 This removes the extension and workflow skills but leaves:
 
 - `~/.pi/agent/settings.json` intact
-- Support skills (`find-docs`, `ast-grep`, `graphify`) in place
+- Support skills (`find-docs`, `ast-grep`) in place
 - Project-local `.pi/` directories untouched
 
 After uninstalling, restart pi or run `/reload`.

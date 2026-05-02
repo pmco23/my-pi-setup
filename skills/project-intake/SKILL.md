@@ -1,6 +1,6 @@
 ---
 name: project-intake
-description: Maps or refreshes an existing codebase before feature work. Use when entering a project, when project context is stale, or whenever the user asks to "refresh project context", "update project map", "refresh agent guidance", "map the repo", or "regenerate graph". Performs a graphify-first onboarding/refresh flow and produces durable context under .pi/project-map.
+description: Maps or refreshes an existing codebase before feature work. Use when entering a project, when project context is stale, or whenever the user asks to "refresh project context", "update project map", "refresh agent guidance", or "map the repo". Scans the codebase and produces durable context under .pi/project-map.
 ---
 
 # Project Intake
@@ -11,10 +11,10 @@ Create durable project context under `.pi/project-map/` before feature work.
 
 - Inspect before summarizing.
 - Do not modify source code.
-- Use `graphify` from the beginning unless the project has no supported files or the user opts out.
-- Use `ast-grep` for structural discovery when useful.
+- Use `ast-grep` for structural code discovery when useful.
 - Use `find-docs` only when framework/library behavior must be verified.
 - Prefer concise durable docs over long analysis dumps.
+- Keep `agent-guidance.md` ≤100 lines.
 
 When used standalone, complete this skill normally without assuming workflow state; treat `## Next Step` as a manual recommendation for the user.
 
@@ -29,73 +29,46 @@ When used standalone, complete this skill normally without assuming workflow sta
 .pi/project-map/conventions.md
 .pi/project-map/risks.md
 .pi/project-map/agent-guidance.md
-.pi/project-map/graph/graph.html
-.pi/project-map/graph/graph.json
-.pi/project-map/graph/audit.md
 ```
 
 ## Workflow
 
-1. Detect project root and create `.pi/project-map/` and `.pi/project-map/graph/`.
-2. Determine first-time onboard vs refresh.
-3. Scan README/docs, package/config files, source, tests, CI, env examples, generated-code indicators, and agent instruction files.
-4. Select focused graphify inputs; avoid secrets, binaries, generated/vendor/build/cache directories.
-5. Run/use `graphify` and place graph outputs under `.pi/project-map/graph/`.
-6. Synthesize graph insights and repository scan into the required markdown files.
-7. Keep `agent-guidance.md` concise, actionable, and ≤100 lines.
-8. Self-check outputs before final response.
+1. Detect project root and create `.pi/project-map/` if missing.
+2. Determine first-time onboard vs refresh (`.pi/project-map/` already exists).
+3. Scan:
+   - README and docs
+   - package/config files (package.json, pyproject.toml, Cargo.toml, etc.)
+   - source directories
+   - test directories
+   - CI workflows
+   - env examples and generated-code indicators
+   - existing AGENTS.md or CLAUDE.md
+4. Synthesize findings into the required markdown files.
+5. Self-check outputs before final response.
 
 ## Refresh Mode
 
 When `.pi/project-map/` already exists:
 
 - Read existing project-map files first.
-- Identify codebase changes since last onboard.
-- Re-run graphify when structural changes are likely.
+- Identify what has changed since the last onboard.
 - Preserve valid historical context.
-- Update `agent-guidance.md` with new risks, modules, conventions, commands, or do-not-touch items.
+- Update `agent-guidance.md` with new risks, modules, conventions, or commands.
 
 ## File Content Guide
 
-- `intake.md`: project summary, stack, important files, entrypoints, graphify inputs.
+- `intake.md`: project summary, stack, important files, entrypoints.
 - `commands.md`: install, run, test, lint/format, notes.
-- `architecture.md`: high-level architecture, runtime flow, integrations, graph communities.
+- `architecture.md`: high-level architecture, runtime flow, key integrations.
 - `modules.md`: major modules/directories, responsibilities, relationships.
 - `testing.md`: framework, locations, commands, gaps.
-- `conventions.md`: style, naming, error handling, generated files, schema/migration conventions.
-- `risks.md`: hotspots, coupling, missing tests, security/privacy concerns.
-- `agent-guidance.md`: before-editing checklist, project map links, common tasks, validation, graph insights, risky areas, do-not-touch list.
-
-## Graphify Execution Modes
-
-Graphify semantic extraction requires dispatching parallel subagents (via an `Agent` tool or `spawn_agent`). Not all harnesses provide this.
-
-| Harness capability | Graphify mode | Graph quality |
-|---|---|---|
-| Agent tool / spawn_agent available | Full semantic + AST | Rich: code structure + doc/paper/image meaning |
-| No subagent tool (e.g. pi) | AST-only | Structural: code nodes/edges, no doc semantics |
-
-**When running inside pi:**
-
-- Use graphify's Python modules or `graphify update <path>` directly for AST extraction.
-- Semantic extraction of docs and markdown is not available inside pi — the graph will be code-structure only.
-- Note this clearly in `risks.md` and `agent-guidance.md`.
-- For full semantic graph generation, the user should run graphify manually from a terminal:
-
-```bash
-cd <project-root>
-graphify install   # ensure skill is up to date
-# then invoke the full /graphify pipeline from a harness with subagent support
-```
-
-- Do not fabricate semantic insights if graphify only ran in AST mode.
+- `conventions.md`: style, naming, error handling, generated files, schema conventions.
+- `risks.md`: hotspots, coupling concerns, missing tests, security notes.
+- `agent-guidance.md`: before-editing checklist, project map links, common tasks, validation commands, risky areas, do-not-touch list.
 
 ## Rules
 
-- Do not claim graphify insights unless graphify ran or graph artifacts already existed.
-- If graphify cannot run, still create project-map files and explain the gap in `risks.md` and the final response.
 - Do not put absolute paths in generated project-map files.
-- If graphify ran in AST-only mode, label graph insights accordingly in `architecture.md`, `agent-guidance.md`, and `risks.md`.
 - If the user included a feature goal, recommend `plan` next; otherwise recommend `none` and ask what they want to work on.
 
 ## Next Skill Guidance

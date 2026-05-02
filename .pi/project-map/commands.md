@@ -2,7 +2,7 @@
 
 ## Install
 
-- `./scripts/install.sh` — auto-syncs graphify skill if newer, installs skills + extension globally, copies `onyx` theme.
+- `./scripts/install.sh` — installs skills + extension globally, copies `onyx` theme.
 
 ## Uninstall
 
@@ -34,15 +34,8 @@ After install and `/reload`:
 - `/workflow:pause [reason]` — pause active workflow.
 - `/workflow:resume` — clear pause without continuing.
 - `/workflow:onboard [auto|user-in-the-loop] [optional goal]` — project intake/refresh.
-- `/workflow:refresh` — refresh project map using graphify.
+
 - `/workflow:context` — show project-map status and staleness.
-
-## Keeping Graphify Up to Date
-
-```bash
-uv tool upgrade graphifyy      # or: pip install --upgrade graphifyy
-./scripts/install.sh           # auto-syncs bundled skill then installs everything
-```
 
 ## Notes
 

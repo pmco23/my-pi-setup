@@ -34,13 +34,13 @@ echo "  ~/.pi/agent/prompts/workflow-*.md (if present)"
 echo
 echo "NOT removed:"
 echo "  ~/.pi/agent/settings.json (enableSkillCommands left intact)"
-echo "  ~/.agents/skills/{find-docs,ast-grep,graphify}/ (support skills kept)"
+echo "  ~/.agents/skills/{find-docs,ast-grep}/ (support skills kept)"
 echo "  Project-local .pi/ directories (workflow config and project maps)"
 echo
 echo "Reload pi with /reload or restart pi."
 echo
 echo "To also remove support skills:"
-echo "  rm -rf ~/.agents/skills/find-docs ~/.agents/skills/ast-grep ~/.agents/skills/graphify"
+echo "  rm -rf ~/.agents/skills/find-docs ~/.agents/skills/ast-grep"
 echo
 echo "To remove project-local workflow state from a project:"
 echo "  rm -rf <project>/.pi/workflow-orchestrator.json <project>/.pi/workflows/ <project>/.pi/project-map/"

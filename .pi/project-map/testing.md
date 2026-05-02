@@ -25,7 +25,7 @@ All under `extensions/workflow-orchestrator/test/`:
 | `handoff.test.js` | JSON extraction, malformed handling, fail-closed behavior |
 | `prompts.test.js` | Skill prompt builders, runtime workflow reminders, onboard/refresh/continue prompts |
 | `setup.test.js` | Settings/theme writes, onyx install, scope handling, malformed settings fallback |
-| `skills.test.js` | Skill frontmatter, configured skill existence, transition/support-skill integrity, graphify version drift |
+| `skills.test.js` | Skill frontmatter, configured skill existence, transition/support-skill integrity |
 | `state.test.js` | Workflow start/update/pause/resume/clear state transitions |
 | `workflow-smoke.test.js` | Full default chain smoke test through completion |
 
@@ -48,5 +48,4 @@ Asserts continuation prompts include workflow reminders, allowed next skills, an
 
 - No integration test with a real interactive pi/RPC session.
 - `index.ts` event wiring and `pendingWorkflowSkillResponse` lifecycle only indirectly covered.
-- No graphify output parser tests (graphify invoked by skills, not extension code).
 - No automated test for installer effects in a sandboxed fake home directory.

@@ -31,7 +31,7 @@ When used standalone, complete this skill normally without assuming workflow sta
 
 - Prefer `implementation-research` as the next phase when the idea needs current examples, prior art, external docs, or approach comparison.
 - Use `find-docs` only when a design decision depends on current API/framework behavior.
-- Use `graphify` when the idea has complex entities, workflows, dependencies, or architecture.
+- Use `ast-grep` when the idea has complex structural relationships across the codebase.
 
 ## Output Format
 

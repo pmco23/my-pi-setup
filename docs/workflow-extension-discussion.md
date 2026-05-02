@@ -159,7 +159,7 @@ On `agent_end`:
 - **Artifact log format:** JSONL only.
 - **Prompt templates:** removed; extension commands are authoritative.
 - **Evaluator location:** extension module at `src/evaluator.js`.
-- **Support skills:** `find-docs`, `ast-grep`, and `graphify` are support skills, not main workflow transitions.
+- **Support skills:** `find-docs` and `ast-grep` are support skills, not main workflow transitions.
 
 ## Remaining Improvements
 

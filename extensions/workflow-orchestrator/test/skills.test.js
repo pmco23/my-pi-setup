@@ -64,18 +64,3 @@ test('workflow skill SKILL.md files mention next step guidance', () => {
     assert.match(fs.readFileSync(file, 'utf8'), /## Next Step|## Next Skill Guidance/, `${name} should describe next step behavior`);
   }
 });
-
-test('bundled graphify skill version matches installed package (warns on drift)', () => {
-  const { execFileSync } = require('node:child_process');
-  const versionFile = path.join(skillsRoot, 'graphify', '.graphify_version');
-  if (!fs.existsSync(versionFile)) return;
-  const repoVersion = fs.readFileSync(versionFile, 'utf8').trim();
-  let installedVersion = null;
-  try {
-    const piAgentVersion = path.join(process.env.HOME, '.pi', 'agent', 'skills', 'graphify', '.graphify_version');
-    if (fs.existsSync(piAgentVersion)) installedVersion = fs.readFileSync(piAgentVersion, 'utf8').trim();
-  } catch { return; }
-  if (installedVersion && installedVersion !== repoVersion) {
-    console.warn(`[warn] graphify skill version mismatch: repo=${repoVersion} installed=${installedVersion}. Run ./scripts/install.sh to sync.`);
-  }
-});

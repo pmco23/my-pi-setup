@@ -52,7 +52,6 @@ All under `extensions/workflow-orchestrator/src/`:
 |-------|---------|------|
 | `find-docs` | Current docs/API verification via Context7 CLI | Manual |
 | `ast-grep` | Structural code search via ast-grep CLI | Manual |
-| `graphify` | Knowledge graph generation via graphify Python tool | Auto-synced by `install.sh` via `.graphify_version` |
 
 ## Graph Communities (AST-backed)
 

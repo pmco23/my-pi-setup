@@ -13,7 +13,7 @@ docs/                               Design notes
 
 ## Runtime Flow
 
-1. `./scripts/install.sh` — auto-syncs graphify skill, copies skills + extension globally, copies `onyx` theme.
+1. `./scripts/install.sh` — copies skills + extension globally, copies `onyx` theme.
 2. Pi loads extension on startup or `/reload` — module cache is busted so `src/*.js` changes take effect.
 3. Extension registers `/my-pi:setup` and 12 `/workflow:*` commands.
 4. `createWorkflowEnv` wraps command env, sets `pendingWorkflowSkillResponse` before sending skill prompts.
@@ -67,12 +67,9 @@ brainstorm-spec
 | C6 | `extractLatestHandoff`, `extractJsonBlocks` |
 | C7 | `appendAuditEntry`, `sanitize` |
 
-AST-backed only — pi lacks subagent tool for semantic extraction. For a full semantic graph run graphify from Claude Code or Codex and commit updated graph artifacts.
-
 ## Dependencies
 
 - No npm runtime dependencies.
 - Pi extension types from `@mariozechner/pi-coding-agent` at runtime.
 - `ctx7` CLI used by the `find-docs` skill.
 - `ast-grep` CLI used by the `ast-grep` skill.
-- `graphify` Python tool (graphifyy package) used by the `graphify`/`project-intake` flow.

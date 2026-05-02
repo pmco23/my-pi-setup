@@ -4,7 +4,7 @@
 
 - Read `AGENTS.md` for project rules.
 - Read `.pi/project-map/architecture.md`, `.pi/project-map/modules.md`, and `.pi/project-map/risks.md` for current context.
-- If asked to refresh project context, project map, agent guidance, repo map, architecture map, or graph insights, run `/workflow:refresh` or use `project-intake` with graphify first; do not manually edit `.pi/project-map/` before graph refresh.
+- If asked to refresh project context or project map, use `/skill:project-intake` directly. Do not manually edit `.pi/project-map/` files.
 - Run validation before and after changes:
 
 ```bash
@@ -72,7 +72,7 @@ brainstorm-spec → implementation-research → acceptance-criteria
 
 Communities: C0 = auto/state, C1 = context/status/refresh cmds, C2 = onboard/config cmds, C3 = prompts, C4 = setup wizard, C5 = evaluator, C6 = handoff, C7 = audit.
 
-AST-backed only — pi lacks subagent tool for semantic extraction. For full semantic graph, run graphify from Claude Code or Codex and commit updated graph artifacts.
+
 
 ## Risky Areas
 
@@ -81,11 +81,11 @@ AST-backed only — pi lacks subagent tool for semantic extraction. For full sem
 - `auto.js` + `evaluator.js`: complete/pause/continue semantics.
 - `audit.js`: `token(?!s)` pattern — do not widen without understanding impact on metric fields.
 - `index.ts`: pi runtime wiring, module cache busting, `agent_end` flag lifecycle.
-- `scripts/install.sh`: `rsync --delete` + graphify auto-sync — repo removals propagate globally.
+- `scripts/install.sh`: `rsync --delete` — repo removals propagate globally.
 
 ## Do Not Touch Unless Asked
 
-- `skills/find-docs/`, `skills/ast-grep/`, `skills/graphify/`: bundled third-party support skills.
+- `skills/find-docs/`, `skills/ast-grep/`: bundled third-party support skills.
 - `settings/global-settings.json`: reference copy, not used by pi directly.
 - `.pi/project-map/graph/graph.json`: regenerate via `/workflow:refresh`; do not hand-edit.
 - `.pi/settings.json`: local project pi settings; do not commit unless explicitly intended.

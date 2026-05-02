@@ -15,13 +15,11 @@
 
 ## Audit / Sanitize
 
-- **`token(?!s)` pattern** in `audit.js` intentionally excludes `input_tokens`/`output_tokens` from redaction. Do not widen to plain `token` without considering impact on graphify cost fields.
+- **`token(?!s)` pattern** in `audit.js` intentionally excludes `input_tokens`/`output_tokens` from redaction. Do not widen to plain `token`.
 - The regex is still not exhaustive — bearer tokens in URL query strings or non-standard key names could be missed.
 
 ## Operational Risks
 
-- **Graphify semantic extraction unavailable in pi**: graphify requires Agent/subagent tool for full pipeline. Pi does not expose this. Graph refreshes inside pi are AST-only. For full semantic graph, run graphify from a subagent-capable harness and commit the artifacts.
-- **`install.sh` graphify auto-sync**: runs `graphify install --platform pi` on every install. If graphify is not installed or the command fails, it exits with `|| true` — the install continues but the repo skill may be stale.
 - **`install.sh` uses `rsync --delete`**: removing a file from the repo removes it globally on the next install. Intentional but high-impact.
 - **pi version coupling**: extension uses pi event APIs. Pi API changes can break runtime behavior even if all pure module tests pass.
 
@@ -29,6 +27,5 @@
 
 - No real pi interactive/RPC integration test.
 - No direct test for `index.ts` registered command discovery after `/reload`.
-- No graphify output parsing/validation tests.
 - No automated installer sandbox test.
 - Runtime project-map manual-edit guard in `index.ts` is not unit-tested against pi events.
