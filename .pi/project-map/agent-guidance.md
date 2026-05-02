@@ -4,6 +4,7 @@
 
 - Read `AGENTS.md` for project rules.
 - Read `.pi/project-map/architecture.md`, `.pi/project-map/modules.md`, and `.pi/project-map/risks.md` for current context.
+- If asked to refresh project context, project map, agent guidance, repo map, architecture map, or graph insights, run `/workflow:refresh` or use `project-intake` with graphify first; do not manually edit `.pi/project-map/` before graph refresh.
 - Run validation before and after changes:
 
 ```bash
@@ -40,7 +41,7 @@ npm test
 
 ## Validation Expectations
 
-Current expected test count: 75 tests, 0 failures.
+Current expected test count: 76 tests, 0 failures.
 
 Important coverage includes:
 

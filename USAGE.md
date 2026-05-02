@@ -120,7 +120,7 @@ After significant codebase changes (new modules, refactors, dependency updates, 
 /workflow:refresh
 ```
 
-This re-runs `project-intake` with graphify and updates all `.pi/project-map/*` files without disturbing the active workflow state.
+This re-runs `project-intake` with graphify and updates all `.pi/project-map/*` files without disturbing the active workflow state. Do not manually edit `.pi/project-map/` first when the goal is to refresh context, graph insights, agent guidance, architecture maps, or repo maps.
 
 ## Continuing later
 
@@ -165,6 +165,8 @@ This should summarize:
 - next skill
 - artifact log path
 - last update
+- project-map file presence and stale status
+- suggested `/workflow:refresh` when context appears stale
 
 ## Direct skill usage
 

@@ -1,6 +1,6 @@
 ---
 name: project-intake
-description: Maps an existing codebase before feature work. Use when entering a project not created with this workflow or when project context is stale. Performs a graphify-first onboarding flow and produces durable project context under .pi/project-map for future planning and execution.
+description: Maps or refreshes an existing codebase before feature work. Use when entering a project, when project context is stale, or whenever the user asks to "refresh project context", "update project map", "refresh agent guidance", "map the repo", or "regenerate graph". Performs a graphify-first onboarding/refresh flow and produces durable context under .pi/project-map.
 ---
 
 # Project Intake

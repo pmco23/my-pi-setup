@@ -24,6 +24,7 @@ All under `extensions/workflow-orchestrator/src/`:
 - Registers `/my-pi:setup`.
 - Registers workflow commands: init, upgrade-config, status, start, auto, manual, onboard, refresh, context, continue, pause, resume.
 - Warns on `git push` if project-map context may be stale.
+- Warns when `.pi/project-map/*.md` is edited without a graphify-backed refresh marker.
 - Handles `agent_end` auto-continuation/pause/complete notifications.
 - Keeps business logic in `src/*.js`.
 

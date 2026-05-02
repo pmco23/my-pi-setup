@@ -39,8 +39,6 @@ async function handleInit(args, env) {
 }
 
 function installPrePushHook(projectRoot, env) {
-  const fs = require('node:fs');
-  const path = require('node:path');
   const hooksDir = path.join(projectRoot, '.git', 'hooks');
   if (!fs.existsSync(path.join(projectRoot, '.git'))) return;
   const hookPath = path.join(hooksDir, 'pre-push');
@@ -166,9 +164,33 @@ async function handleRefresh(args, env) {
   return { ok: true, projectRoot, config: loaded.config, prompt };
 }
 
+function projectMapStaleness(projectRoot, guidancePath) {
+  if (!fs.existsSync(guidancePath)) return { stale: false, reason: 'agent guidance missing' };
+  const guidanceMtime = fs.statSync(guidancePath).mtimeMs;
+  const srcDirs = ['src', 'lib', 'extensions', 'skills', 'scripts', 'docs', 'README.md', 'USAGE.md', 'AGENTS.md', 'CONTRIBUTING.md'];
+  for (const entry of srcDirs) {
+    const fullPath = path.join(projectRoot, entry);
+    if (!fs.existsSync(fullPath)) continue;
+    const stat = fs.statSync(fullPath);
+    if (stat.isFile()) {
+      if (stat.mtimeMs > guidanceMtime) return { stale: true, reason: `${entry} changed after agent guidance` };
+      continue;
+    }
+    try {
+      const files = fs.readdirSync(fullPath, { recursive: true, withFileTypes: true });
+      for (const file of files) {
+        if (!file.isFile()) continue;
+        const filePath = path.join(file.parentPath || file.path, file.name);
+        if (fs.statSync(filePath).mtimeMs > guidanceMtime) {
+          return { stale: true, reason: `${path.relative(projectRoot, filePath)} changed after agent guidance` };
+        }
+      }
+    } catch {}
+  }
+  return { stale: false, reason: null };
+}
+
 async function handleContext(_args, env) {
-  const fs = require('node:fs');
-  const path = require('node:path');
   const projectRoot = getProjectRoot(env.cwd);
   const loaded = loadConfig(projectRoot);
   if (!loaded.ok) {
@@ -184,6 +206,7 @@ async function handleContext(_args, env) {
     graphJson: path.join(projectRoot, graph.json || '.pi/project-map/graph/graph.json'),
     graphAudit: path.join(projectRoot, graph.audit || '.pi/project-map/graph/audit.md'),
   };
+  const staleness = projectMapStaleness(projectRoot, files.guidance);
   const summary = [
     `Project map: ${map.path || '.pi/project-map'}`,
     `Agent guidance: ${fs.existsSync(files.guidance) ? 'present' : 'missing'} (${guidance})`,
@@ -191,9 +214,11 @@ async function handleContext(_args, env) {
     `Graph JSON: ${fs.existsSync(files.graphJson) ? 'present' : 'missing'}`,
     `Graph audit: ${fs.existsSync(files.graphAudit) ? 'present' : 'missing'}`,
     `Last updated: ${map.last_updated || 'unknown'}`,
+    `Project map stale: ${staleness.stale ? 'yes' : 'no'}${staleness.reason ? ` (${staleness.reason})` : ''}`,
+    `Suggested refresh: ${staleness.stale ? '/workflow:refresh' : 'not needed'}`,
   ].join('\n');
   env.notify(summary, 'info');
-  return { ok: true, projectRoot, config: loaded.config, summary, files };
+  return { ok: true, projectRoot, config: loaded.config, summary, files, staleness };
 }
 
 async function handleContinue(args, env) {
@@ -289,6 +314,7 @@ module.exports = {
   handleStart,
   handleOnboard,
   handleRefresh,
+  projectMapStaleness,
   handleContext,
   handleContinue,
   handlePause,

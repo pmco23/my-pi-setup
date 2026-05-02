@@ -146,6 +146,18 @@ For an existing codebase, onboard/map it before feature work:
 /workflow:onboard
 ```
 
+To refresh project context or graph insights later, do not manually edit `.pi/project-map/` first. Use the graphify-backed refresh flow:
+
+```text
+/workflow:refresh
+```
+
+Check stale status with:
+
+```text
+/workflow:context
+```
+
 ## Uninstall
 
 To remove everything from the current machine:

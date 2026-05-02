@@ -128,6 +128,26 @@ test('handleContext reports missing project map files', async () => {
   assert.equal(result.ok, true);
   assert.match(result.summary, /Agent guidance: missing/);
   assert.match(result.summary, /Graph JSON: missing/);
+  assert.match(result.summary, /Project map stale: no/);
+});
+
+test('handleContext reports stale project map when source changes after guidance', async () => {
+  const root = tmpdir();
+  const e = env(root);
+  await handleInit('auto', e);
+  const guidancePath = path.join(root, '.pi', 'project-map', 'agent-guidance.md');
+  fs.mkdirSync(path.dirname(guidancePath), { recursive: true });
+  fs.writeFileSync(guidancePath, '# guidance\n');
+  const oldTime = new Date(Date.now() - 60_000);
+  fs.utimesSync(guidancePath, oldTime, oldTime);
+  fs.mkdirSync(path.join(root, 'skills', 'x'), { recursive: true });
+  fs.writeFileSync(path.join(root, 'skills', 'x', 'SKILL.md'), '# changed\n');
+
+  const result = await handleContext('', e);
+  assert.equal(result.ok, true);
+  assert.equal(result.staleness.stale, true);
+  assert.match(result.summary, /Project map stale: yes/);
+  assert.match(result.summary, /Suggested refresh: \/workflow:refresh/);
 });
 
 test('handleRefresh sends project-intake with refresh instructions', async () => {

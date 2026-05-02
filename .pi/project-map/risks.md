@@ -25,6 +25,7 @@
 ## Testing Gaps
 
 - No real pi interactive/RPC integration test.
+- Runtime project-map manual-edit guard in `index.ts` is not directly unit-tested against pi events.
 - No direct test for `index.ts` registered command discovery after `/reload`.
 - No graphify output parsing/validation tests.
 - No automated test for installer effects in a sandboxed fake home.

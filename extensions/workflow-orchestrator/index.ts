@@ -22,6 +22,24 @@ const { latestAssistantMarkdown, planAutoContinuation } = freshRequire("./src/au
 export default function workflowOrchestratorExtension(pi: ExtensionAPI) {
 	// Flag: tracks whether the current agent turn was triggered by a workflow skill invocation
 	let pendingWorkflowSkillResponse = false;
+	const projectMapRefreshMarkers = new Set<string>();
+
+	function markProjectMapRefresh(ctx: any) {
+		projectMapRefreshMarkers.add(getProjectRoot(ctx.cwd));
+	}
+
+	function touchesProjectMapMarkdown(event: any) {
+		const toolName = event.toolName;
+		const input = event.input || {};
+		if ((toolName === "write" || toolName === "edit") && typeof input.path === "string") {
+			return /(^|\/)\.pi\/project-map\/.*\.md$/.test(input.path);
+		}
+		if (toolName === "bash") {
+			const cmd = input.command || "";
+			return /\.pi\/project-map\/[^\s;&|]*\.md/.test(cmd) && /(^|\s)(printf|echo|cat|tee|python3?|node|touch|rm|mv|cp)\b|>|>>/.test(cmd);
+		}
+		return false;
+	}
 
 	// Helper: send a skill prompt and set the flag
 	function sendWorkflowSkillPrompt(prompt: string) {
@@ -92,6 +110,7 @@ export default function workflowOrchestratorExtension(pi: ExtensionAPI) {
 	pi.registerCommand("workflow:onboard", {
 		description: "Onboard/map an existing codebase with graphify-first project intake",
 		handler: async (args, ctx) => {
+			markProjectMapRefresh(ctx);
 			await commands.handleOnboard(args, createWorkflowEnv(ctx));
 		},
 	});
@@ -99,6 +118,7 @@ export default function workflowOrchestratorExtension(pi: ExtensionAPI) {
 	pi.registerCommand("workflow:refresh", {
 		description: "Refresh the project map after codebase changes",
 		handler: async (args, ctx) => {
+			markProjectMapRefresh(ctx);
 			await commands.handleRefresh(args, createWorkflowEnv(ctx));
 		},
 	});
@@ -131,40 +151,22 @@ export default function workflowOrchestratorExtension(pi: ExtensionAPI) {
 		},
 	});
 
-	// Warn on git push if project context is stale
+	// Warn when project context is stale or project-map files are edited without graphify-backed refresh.
 	pi.on("tool_call", async (event, ctx) => {
-		if (event.toolName !== "bash") return;
-		const cmd = event.input?.command || "";
-		if (!/\bgit\s+push\b/.test(cmd)) return;
-
-		const fs = require("node:fs");
 		const path = require("node:path");
 		const projectRoot = getProjectRoot(ctx.cwd);
-		const guidancePath = path.join(projectRoot, ".pi", "project-map", "agent-guidance.md");
-		if (!fs.existsSync(guidancePath)) return;
+		const cmd = event.input?.command || "";
+		if (event.toolName === "bash" && /\b(graphify|workflow:refresh)\b/.test(cmd)) markProjectMapRefresh(ctx);
 
-		const guidanceMtime = fs.statSync(guidancePath).mtimeMs;
-		const srcDirs = ["src", "lib", "extensions", "skills", "scripts"];
-		let stale = false;
-		for (const dir of srcDirs) {
-			const fullDir = path.join(projectRoot, dir);
-			if (!fs.existsSync(fullDir)) continue;
-			try {
-				const files = fs.readdirSync(fullDir, { recursive: true, withFileTypes: true });
-				for (const f of files) {
-					if (!f.isFile()) continue;
-					const filePath = path.join(f.parentPath || f.path, f.name);
-					if (fs.statSync(filePath).mtimeMs > guidanceMtime) {
-						stale = true;
-						break;
-					}
-				}
-			} catch {}
-			if (stale) break;
+		if (touchesProjectMapMarkdown(event) && !projectMapRefreshMarkers.has(projectRoot)) {
+			ctx.ui.notify("Project-map markdown is being edited without a graphify-backed refresh marker. Prefer /workflow:refresh for context refreshes.", "warning");
 		}
 
-		if (stale) {
-			ctx.ui.notify("Project context (.pi/project-map/) may be stale. Consider /workflow:refresh.", "warning");
+		if (event.toolName !== "bash" || !/\bgit\s+push\b/.test(cmd)) return;
+		const guidancePath = path.join(projectRoot, ".pi", "project-map", "agent-guidance.md");
+		const staleness = commands.projectMapStaleness(projectRoot, guidancePath);
+		if (staleness.stale) {
+			ctx.ui.notify(`Project context (.pi/project-map/) may be stale: ${staleness.reason}. Consider /workflow:refresh.`, "warning");
 		}
 	});
 

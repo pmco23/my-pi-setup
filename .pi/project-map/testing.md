@@ -38,7 +38,7 @@ All under `extensions/workflow-orchestrator/test/`:
 
 ## Current Coverage
 
-75 tests, all passing as of this refresh.
+76 tests, all passing as of this refresh.
 
 ## Important Smoke Path
 

@@ -35,6 +35,7 @@ Do not guess pi API behavior. Verify against docs first.
 ## Before editing
 
 - Read `.pi/project-map/agent-guidance.md` for full project context.
+- If the user asks to refresh project context, project map, agent guidance, repo map, architecture map, or graph insights, do not manually edit `.pi/project-map/` first. Run `/workflow:refresh` or use `project-intake`, and use graphify from the beginning.
 - Run `npm test` before and after changes.
 - Never edit installed files directly. Edit the repo, then run `./scripts/install.sh`.
 
