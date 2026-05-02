@@ -41,7 +41,7 @@ npm test
 
 ## Validation Expectations
 
-Current expected test count: 76 tests, 0 failures.
+Current expected test count: 77 tests, 0 failures.
 
 Important coverage includes:
 

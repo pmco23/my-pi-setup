@@ -10,6 +10,7 @@ rm -rf "$HOME/.pi/agent/extensions/workflow-orchestrator"
 SKILLS=(
   project-intake
   brainstorm-spec
+  implementation-research
   acceptance-criteria
   plan
   execute
@@ -28,7 +29,7 @@ rm -f "$HOME/.pi/agent/prompts"/workflow-*.md
 
 echo "Removed:"
 echo "  ~/.pi/agent/extensions/workflow-orchestrator/"
-echo "  ~/.agents/skills/{project-intake,brainstorm-spec,acceptance-criteria,plan,execute,review-against-plan,code-review}/"
+echo "  ~/.agents/skills/{project-intake,brainstorm-spec,implementation-research,acceptance-criteria,plan,execute,review-against-plan,code-review}/"
 echo "  ~/.pi/agent/prompts/workflow-*.md (if present)"
 echo
 echo "NOT removed:"

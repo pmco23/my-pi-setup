@@ -167,7 +167,7 @@ async function handleRefresh(args, env) {
 function projectMapStaleness(projectRoot, guidancePath) {
   if (!fs.existsSync(guidancePath)) return { stale: false, reason: 'agent guidance missing' };
   const guidanceMtime = fs.statSync(guidancePath).mtimeMs;
-  const srcDirs = ['src', 'lib', 'extensions', 'skills', 'scripts', 'docs', 'README.md', 'USAGE.md', 'AGENTS.md', 'CONTRIBUTING.md'];
+  const srcDirs = ['extensions', 'skills', 'docs'];
   for (const entry of srcDirs) {
     const fullPath = path.join(projectRoot, entry);
     if (!fs.existsSync(fullPath)) continue;
