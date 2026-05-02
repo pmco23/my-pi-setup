@@ -6,3 +6,4 @@
 # Graphify cache and temp files
 .pi/project-map/graph/graphify-out/
 .pi/project-map/graph/.graphify_*
+extensions/workflow-orchestrator/graphify-out/
