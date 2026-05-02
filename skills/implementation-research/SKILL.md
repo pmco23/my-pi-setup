@@ -21,6 +21,8 @@ When used standalone, complete this skill normally without assuming workflow sta
 
 ## Workflow
 
+If `Previous artifact:` is provided in the prompt, read that file with the read tool before starting. It contains the full output of the previous skill.
+
 1. Restate the idea, goal, and project context.
 2. Identify research questions and likely technologies/patterns.
 3. Search current sources:

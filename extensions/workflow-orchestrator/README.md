@@ -1,6 +1,6 @@
 # Workflow Orchestrator Extension
 
-Simplified pi workflow orchestration extension. Five commands. No routing. No flag.
+Simplified pi workflow orchestration extension. Six commands. No routing. No flag.
 
 ## Commands
 
@@ -10,6 +10,7 @@ Simplified pi workflow orchestration extension. Five commands. No routing. No fl
 /workflow:continue   → advance to suggested next skill, or resume after a pause
 /workflow:pause      → stop auto-continuation
 /workflow:status     → show current workflow state
+/workflow:debug      → show last handoff, evaluator decision, stop conditions, transitions
 ```
 
 ## Modes

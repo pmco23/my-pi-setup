@@ -29,6 +29,8 @@ Use any available input:
 
 ## Workflow
 
+If `Previous artifact:` is provided in the prompt, read that file with the read tool before starting. It contains the full output of the previous skill.
+
 1. Restate scope and assumptions.
 2. Define in-scope and out-of-scope behavior.
 3. Write functional acceptance criteria with stable IDs.

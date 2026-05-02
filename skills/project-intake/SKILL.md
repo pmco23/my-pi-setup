@@ -33,6 +33,8 @@ When used standalone, complete this skill normally without assuming workflow sta
 
 ## Workflow
 
+If `Previous artifact:` is provided in the prompt, read that file with the read tool before starting. It contains the full output of the previous skill.
+
 1. Detect project root and create `.pi/project-map/` if missing.
 2. Determine first-time onboard vs refresh (`.pi/project-map/` already exists).
 3. Scan:

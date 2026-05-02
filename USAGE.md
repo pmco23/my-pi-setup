@@ -53,6 +53,7 @@ brainstorm-spec
 /workflow:continue   → advance to the suggested next skill, or resume after a pause
 /workflow:pause      → stop auto-continuation with an optional reason
 /workflow:status     → show current workflow state (skill, goal, artifact, paused)
+/workflow:debug      → show last handoff parse, evaluator decision, stop conditions, transitions
 ```
 
 ---

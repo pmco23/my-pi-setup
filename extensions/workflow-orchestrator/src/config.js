@@ -7,10 +7,10 @@ const DEFAULT_TRANSITIONS = {
   'implementation-research': ['acceptance-criteria', 'plan'],
   'acceptance-criteria': ['plan'],
   plan: ['execute'],
-  execute: ['review-against-plan'],
+  execute: ['review-against-plan', 'execute'],
   'review-against-plan': ['execute', 'code-review', 'none'],
   'code-review': ['execute', 'review-against-plan', 'none'],
-  'project-intake': ['plan', 'none'],
+  'project-intake': ['plan', 'brainstorm-spec', 'none'],
 };
 
 function defaultConfig(mode = 'user-in-the-loop') {

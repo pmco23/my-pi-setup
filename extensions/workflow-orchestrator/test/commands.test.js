@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const { handleInit, handleContinue, handlePause, handleStart, handleStatus, projectMapStaleness } = require('../src/commands');
+const { handleInit, handleContinue, handlePause, handleStart, handleStatus, handleDebug, projectMapStaleness } = require('../src/commands');
 const { loadConfig } = require('../src/config');
 
 function tmpdir() { return fs.mkdtempSync(path.join(os.tmpdir(), 'wf-cmd-')); }
@@ -314,4 +314,88 @@ test('handleStatus reports when no config exists', async () => {
   const result = await handleStatus('', e);
   assert.equal(result.ok, false);
   assert.match(e.notifications[0].message, /No workflow configured/);
+});
+
+// ── handleDebug ──────────────────────────────────────────────────────────────
+
+test('handleDebug shows active workflow state and stop conditions', async () => {
+  const root = tmpdir();
+  const e1 = env(root,
+    ['Project (.pi/settings.json)', 'auto — pi chains skills until blocked', 'dark', 'medium'],
+    [true, true]
+  );
+  await handleInit('', e1);
+  const { saveConfig, loadConfig: lc } = require('../src/config');
+  const { startWorkflow, updateActiveWorkflow } = require('../src/state');
+  let config = lc(root).config;
+  config = startWorkflow(config, { firstSkill: 'plan', goal: 'Debug test', workflowId: 'wf-debug' });
+  config = updateActiveWorkflow(config, {
+    workflow_mode: 'auto', current_skill: 'plan', next_skill: 'execute',
+    stop_reason: null, confidence: 'high', open_questions: [],
+    artifact: '.pi/workflows/wf-debug/01-plan.md',
+  });
+  saveConfig(root, config);
+
+  const e = env(root);
+  const result = await handleDebug('', e);
+  assert.equal(result.ok, true);
+  const output = e.notifications.at(-1).message;
+  assert.match(output, /Active Workflow/);
+  assert.match(output, /wf-debug/);
+  assert.match(output, /Debug test/);
+  assert.match(output, /Stop Conditions/);
+  assert.match(output, /Transitions from execute/);
+});
+
+test('handleDebug reports no config', async () => {
+  const root = tmpdir();
+  const e = env(root);
+  const result = await handleDebug('', e);
+  assert.equal(result.ok, false);
+  assert.match(e.notifications[0].message, /No workflow config/);
+});
+
+test('handleDebug re-parses handoff from session branch', async () => {
+  const root = tmpdir();
+  const e1 = env(root,
+    ['Project (.pi/settings.json)', 'auto — pi chains skills until blocked', 'dark', 'medium'],
+    [true, true]
+  );
+  await handleInit('', e1);
+  const { saveConfig, loadConfig: lc } = require('../src/config');
+  const { startWorkflow } = require('../src/state');
+  let config = lc(root).config;
+  config = startWorkflow(config, { firstSkill: 'plan', workflowId: 'wf-dbg2' });
+  saveConfig(root, config);
+
+  const handoffJson = JSON.stringify({
+    workflow_mode: 'auto', current_skill: 'plan', next_skill: 'execute',
+    stop_reason: null, confidence: 'high', open_questions: [],
+  }, null, 2);
+  const fakeAssistant = { type: 'message', message: { role: 'assistant', content: `Done.\n\nAuto handoff:\n\`\`\`json\n${handoffJson}\n\`\`\`` } };
+
+  const e = env(root);
+  e.getBranch = () => [{ type: 'message', message: { role: 'user', content: 'test' } }, fakeAssistant];
+  const result = await handleDebug('', e);
+  assert.equal(result.ok, true);
+  assert.ok(result.lastHandoff);
+  assert.equal(result.lastHandoff.next_skill, 'execute');
+  const output = e.notifications.at(-1).message;
+  assert.match(output, /Last Parsed Handoff/);
+  assert.match(output, /execute/);
+});
+
+test('handleDebug shows no active workflow when none exists', async () => {
+  const root = tmpdir();
+  const e1 = env(root,
+    ['Project (.pi/settings.json)', 'auto — pi chains skills until blocked', 'dark', 'medium'],
+    [true, true]
+  );
+  await handleInit('', e1);
+  const e = env(root);
+  const result = await handleDebug('', e);
+  assert.equal(result.ok, true);
+  const output = e.notifications.at(-1).message;
+  assert.match(output, /No active workflow/);
+  assert.match(output, /session branch not available/);
 });

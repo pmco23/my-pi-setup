@@ -15,10 +15,13 @@ Shape an early idea into a concrete design specification.
 - Make tradeoffs explicit: value, complexity, risk, UX, maintainability, reversibility.
 - Do not edit project files unless explicitly asked.
 - If `.pi/project-map/agent-guidance.md` exists, read it to ground the spec in project architecture and constraints.
+- In auto mode (no user present to answer questions): use the goal and provided context to infer reasonable defaults, state assumptions explicitly in the spec, capture unresolved questions in Open Questions rather than blocking, and produce a complete spec even with assumptions — downstream skills can refine.
 
 When used standalone, complete this skill normally without assuming workflow state; treat `## Next Step` as a manual recommendation for the user.
 
 ## Workflow
+
+If `Previous artifact:` is provided in the prompt, read that file with the read tool before starting. It contains the full output of the previous skill.
 
 1. Clarify the problem, audience, goals, and constraints.
 2. Brainstorm possible approaches.

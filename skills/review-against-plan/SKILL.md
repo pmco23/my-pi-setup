@@ -31,6 +31,8 @@ If plan or criteria are missing, state the limitation and review against the use
 
 ## Workflow
 
+If `Previous artifact:` is provided in the prompt, read that file with the read tool before starting. It contains the full output of the previous skill.
+
 1. Identify intended scope and expected task/criteria coverage.
 2. Inspect changed files and relevant context.
 3. Map implementation to tasks/criteria.

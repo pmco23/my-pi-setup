@@ -14,7 +14,7 @@ if [ -f .pi/project-map/agent-guidance.md ]; then
     echo ""
     echo "⚠️  Project context (.pi/project-map/) may be stale."
     echo "   Source files have changed since last refresh."
-    echo "   Consider running /workflow:refresh in pi before or after pushing."
+    echo "   Consider running /skill:project-intake in pi before or after pushing."
     echo ""
   fi
 fi

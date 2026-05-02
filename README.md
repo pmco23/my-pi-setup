@@ -70,6 +70,7 @@ The installer copies `onyx` to `~/.pi/agent/themes/onyx.json`, so it is availabl
 /workflow:continue   → advance to suggested next skill, or resume after a pause
 /workflow:pause      → stop auto-continuation
 /workflow:status     → show current workflow state
+/workflow:debug      → show last handoff, evaluator decision, and config
 ```
 
 ### Skill commands

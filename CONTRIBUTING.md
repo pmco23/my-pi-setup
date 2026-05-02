@@ -97,6 +97,16 @@ npm test
 3. Add test in `test/commands.test.js`.
 4. Update `README.md`, `USAGE.md`, `scripts/install.sh` output.
 
+## Extension event hooks
+
+The extension subscribes to these pi lifecycle events:
+
+- `session_start`: loads config and notifies if an active workflow exists.
+- `before_agent_start`: injects active workflow context (ID, goal, step, artifact, mode, transitions) into the system prompt.
+- `session_shutdown`: defensive config save.
+- `tool_call`: stale-context and project-map edit guard.
+- `agent_end`: evaluates every agent response for a workflow handoff and auto-continues or pauses.
+
 ## Modifying config shape
 
 1. Edit `defaultConfig()` in `src/config.js`.

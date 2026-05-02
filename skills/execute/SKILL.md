@@ -22,6 +22,8 @@ When used standalone, complete this skill normally without assuming workflow sta
 
 ## Workflow
 
+If `Previous artifact:` is provided in the prompt, read that file with the read tool before starting. It contains the full output of the previous skill.
+
 1. Confirm the target task and constraints.
 2. Inspect relevant files/current behavior.
 3. Implement changes in small, coherent steps.

@@ -15,6 +15,7 @@ const commands = freshRequire("./src/commands");
 const { getProjectRoot, loadConfig, saveConfig } = freshRequire("./src/config");
 const { appendAuditEntry } = freshRequire("./src/audit");
 const { latestAssistantMarkdown, planAutoContinuation } = freshRequire("./src/auto");
+const { buildWorkflowSystemPrompt } = freshRequire("./src/prompts");
 
 export default function workflowOrchestratorExtension(pi: ExtensionAPI) {
 
@@ -68,6 +69,54 @@ export default function workflowOrchestratorExtension(pi: ExtensionAPI) {
 		handler: async (args, ctx) => {
 			await commands.handleStatus(args, createWorkflowEnv(ctx));
 		},
+	});
+
+	pi.registerCommand("workflow:debug", {
+		description: "Show last handoff parse, evaluator decision, stop conditions, and transitions",
+		handler: async (args, ctx) => {
+			const env = createWorkflowEnv(ctx);
+			env.getBranch = () => ctx.sessionManager.getBranch?.() || [];
+			await commands.handleDebug(args, env);
+		},
+	});
+
+	// Restore workflow state on session start/reload
+	pi.on("session_start", async (_event, ctx) => {
+		try {
+			const projectRoot = getProjectRoot(ctx.cwd);
+			const loaded = loadConfig(projectRoot);
+			if (!loaded.ok) return;
+			const active = loaded.config.active_workflow;
+			if (active?.id) {
+				const goalSuffix = active.goal ? ` (goal: ${active.goal})` : "";
+				const pauseSuffix = active.paused ? " [PAUSED]" : "";
+				ctx.ui.notify(`Active workflow: ${active.id}${goalSuffix}${pauseSuffix}. Next: ${active.next_skill || "(none)"}.`, "info");
+			}
+		} catch {}
+	});
+
+	// Inject active workflow context into system prompt
+	pi.on("before_agent_start", async (_event, ctx) => {
+		try {
+			const projectRoot = getProjectRoot(ctx.cwd);
+			const loaded = loadConfig(projectRoot);
+			if (!loaded.ok) return;
+			const block = buildWorkflowSystemPrompt(loaded.config);
+			if (block) {
+				return { systemPrompt: _event.systemPrompt + "\n\n" + block };
+			}
+		} catch {}
+	});
+
+	// Defensive config save on session shutdown
+	pi.on("session_shutdown", async (_event, ctx) => {
+		try {
+			const projectRoot = getProjectRoot(ctx.cwd);
+			const loaded = loadConfig(projectRoot);
+			if (loaded.ok) {
+				saveConfig(projectRoot, loaded.config);
+			}
+		} catch {}
 	});
 
 	// Stale-context and project-map edit guard

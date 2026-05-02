@@ -43,11 +43,12 @@ Installed global theme:
 - onyx
 
 Extension commands:
-- /workflow:init       → setup wizard (mode, theme, thinking level, compaction, retry)
-- /workflow:start      → start a new workflow with a skill and goal
-- /workflow:continue   → advance or resume
-- /workflow:pause      → pause
-- /workflow:status     → show current workflow state
+- `/workflow:init` — setup wizard: mode + pi settings + project config
+- `/workflow:start` — start a new workflow with a skill and goal
+- `/workflow:continue` — advance or resume
+- `/workflow:pause` — pause
+- `/workflow:status` — show current workflow state
+- `/workflow:debug` — show last handoff, evaluator decision, stop conditions
 
 Skill commands:
 - /skill:project-intake

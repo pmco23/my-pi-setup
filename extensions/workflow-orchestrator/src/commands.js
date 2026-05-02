@@ -3,9 +3,10 @@ const os = require('node:os');
 const path = require('node:path');
 const { getProjectRoot, loadConfig, saveConfig, initConfigV2 } = require('./config');
 const { pauseWorkflow, resumeWorkflow, startWorkflow } = require('./state');
-const { appendAuditEntry } = require('./audit');
+const { appendAuditEntry, readAuditEntries } = require('./audit');
 const { buildContinuePrompt, buildSkillPrompt, artifactDir } = require('./prompts');
 const { applyPiSetup, SCOPE_LABELS, THEME_LABELS, THINKING_LEVELS, labelToKey, targetsForScope } = require('./setup');
+const { extractLatestHandoff } = require('./handoff');
 
 function createCommandEnv(ctx, pi) {
   return {
@@ -231,6 +232,100 @@ async function handleStart(_args, env) {
   return { ok: true, projectRoot, config, prompt };
 }
 
+async function handleDebug(_args, env) {
+  const projectRoot = getProjectRoot(env.cwd);
+  const loaded = loadConfig(projectRoot);
+  if (!loaded.ok) {
+    env.notify(`No workflow config: ${loaded.reason}`, 'info');
+    return { ok: false, reason: loaded.reason, projectRoot };
+  }
+
+  const config = loaded.config;
+  const active = config.active_workflow || {};
+  const sections = [];
+
+  // Section 1: Active workflow state
+  if (active.id) {
+    sections.push([
+      '── Active Workflow ──',
+      `ID: ${active.id}`,
+      active.goal ? `Goal: ${active.goal}` : 'Goal: (none)',
+      `Current: ${active.current_skill || '(none)'} → next: ${active.next_skill || '(none)'}`,
+      `Step: ${active.step_number || 0}`,
+      `Paused: ${active.paused ? `yes (${active.pause_reason})` : 'no'}`,
+      active.last_artifact ? `Last artifact: ${active.last_artifact}` : 'Last artifact: (none)',
+    ].join('\n'));
+  } else {
+    sections.push('── Active Workflow ──\nNo active workflow.');
+  }
+
+  // Section 2: Stop conditions
+  const auto = config.auto_continue || {};
+  sections.push([
+    '── Stop Conditions ──',
+    `Mode: ${config.mode} | auto_continue: ${auto.enabled ? 'on' : 'off'}`,
+    `stop_on_open_questions: ${auto.stop_on_open_questions}`,
+    `stop_on_low_confidence: ${auto.stop_on_low_confidence}`,
+    `stop_before_execute: ${auto.stop_before_execute}`,
+    `stop_on_failed_validation: ${auto.stop_on_failed_validation}`,
+    `stop_on_blockers: ${auto.stop_on_blockers}`,
+  ].join('\n'));
+
+  // Section 3: Transitions for current next_skill
+  if (active.next_skill && config.transitions) {
+    const allowed = config.transitions[active.next_skill] || [];
+    sections.push(`── Transitions from ${active.next_skill} ──\n${allowed.length ? allowed.join(', ') : '(none configured)'}`);
+  }
+
+  // Section 4: Last audit entries
+  if (active.artifact_log) {
+    try {
+      const entries = readAuditEntries(projectRoot, active.artifact_log);
+      const recent = entries.slice(-3);
+      if (recent.length) {
+        sections.push('── Recent Audit Entries ──\n' + recent.map(e => JSON.stringify(e)).join('\n'));
+      } else {
+        sections.push('── Recent Audit Entries ──\n(empty)');
+      }
+    } catch {
+      sections.push('── Recent Audit Entries ──\n(could not read audit log)');
+    }
+  }
+
+  // Section 5: Re-parse last assistant handoff from session branch
+  let lastHandoff = null;
+  if (env.getBranch) {
+    try {
+      const branch = env.getBranch();
+      // getBranch() returns session entries: { type: 'message', message: { role, content } }
+      const assistantEntries = (branch || []).filter(m => m && m.type === 'message' && m.message?.role === 'assistant');
+      if (assistantEntries.length) {
+        const lastMsg = assistantEntries.at(-1).message;
+        const text = typeof lastMsg.content === 'string' ? lastMsg.content
+          : Array.isArray(lastMsg.content) ? lastMsg.content.map(p => (typeof p === 'string' ? p : p?.text || '')).join('\n')
+          : '';
+        const parsed = extractLatestHandoff(text);
+        if (parsed.ok) {
+          lastHandoff = parsed.handoff;
+          sections.push('── Last Parsed Handoff ──\n' + JSON.stringify(parsed.handoff, null, 2));
+        } else {
+          sections.push(`── Last Parsed Handoff ──\n${parsed.reason}`);
+        }
+      } else {
+        sections.push('── Last Parsed Handoff ──\n(no assistant messages in branch)');
+      }
+    } catch {
+      sections.push('── Last Parsed Handoff ──\n(could not read session branch)');
+    }
+  } else {
+    sections.push('── Last Parsed Handoff ──\n(session branch not available)');
+  }
+
+  const output = sections.join('\n\n');
+  env.notify(output, 'info');
+  return { ok: true, projectRoot, config, lastHandoff };
+}
+
 module.exports = {
   createCommandEnv,
   installPrePushHook,
@@ -240,4 +335,5 @@ module.exports = {
   handlePause,
   handleStart,
   handleStatus,
+  handleDebug,
 };

@@ -87,6 +87,11 @@ test('DEFAULT_TRANSITIONS contains expected skill chain', () => {
   assert.ok(DEFAULT_TRANSITIONS['code-review'].includes('none'));
 });
 
+test('DEFAULT_TRANSITIONS allows execute to execute and project-intake to brainstorm-spec', () => {
+  assert.ok(DEFAULT_TRANSITIONS['execute'].includes('execute'), 'execute → execute should be valid');
+  assert.ok(DEFAULT_TRANSITIONS['project-intake'].includes('brainstorm-spec'), 'project-intake → brainstorm-spec should be valid');
+});
+
 test('defaultConfig sets stop_before_execute to true', () => {
   const c = defaultConfig('auto');
   assert.equal(c.auto_continue.stop_before_execute, true);

@@ -30,6 +30,8 @@ Use any available input:
 
 ## Workflow
 
+If `Previous artifact:` is provided in the prompt, read that file with the read tool before starting. It contains the full output of the previous skill.
+
 1. Understand the goal and constraints.
 2. Inspect relevant code/docs when needed.
 3. State assumptions and out-of-scope items.

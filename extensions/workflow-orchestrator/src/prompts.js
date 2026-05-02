@@ -1,14 +1,18 @@
 function workflowReminder(payload = {}) {
   if (!payload.workflowId) return null;
   const allowed = payload.allowedNext && payload.allowedNext.length ? payload.allowedNext.join(', ') : 'use the skill guidance';
-  return [
+  const lines = [
     'Workflow reminder:',
     `- Current skill: ${payload.currentSkill || 'unknown'}`,
     `- Allowed next skills: ${allowed}`,
     '- End the final response with `## Next Step`.',
     '- Include recommended skill, reason, user prompt, and compact auto handoff JSON.',
     '- If standalone or uncertain, ask the user before continuing.',
-  ].join('\n');
+  ];
+  if (payload.previousArtifact) {
+    lines.push('- If `Previous artifact:` path is present, read it before starting.');
+  }
+  return lines.join('\n');
 }
 
 function buildSkillPrompt(skillName, payload = {}) {
@@ -53,4 +57,22 @@ function buildContinuePrompt(config) {
   });
 }
 
-module.exports = { workflowReminder, buildSkillPrompt, buildContinuePrompt, artifactDir };
+function buildWorkflowSystemPrompt(config) {
+  const active = config?.active_workflow;
+  if (!active?.id) return null;
+  const transitions = config.transitions?.[active.next_skill] || [];
+  const lines = [
+    '[Active Workflow]',
+    `ID: ${active.id}`,
+    active.goal ? `Goal: ${active.goal}` : null,
+    `Step: ${active.step_number || 0}`,
+    `Current skill: ${active.current_skill || '(none)'}`,
+    `Next skill: ${active.next_skill || '(none)'}`,
+    active.last_artifact ? `Last artifact: ${active.last_artifact}` : null,
+    `Mode: ${config.mode}`,
+    transitions.length ? `Allowed transitions from ${active.next_skill}: ${transitions.join(', ')}` : null,
+  ].filter(Boolean);
+  return lines.join('\n');
+}
+
+module.exports = { workflowReminder, buildSkillPrompt, buildContinuePrompt, buildWorkflowSystemPrompt, artifactDir };

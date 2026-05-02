@@ -29,6 +29,8 @@ Use any available input:
 
 ## Workflow
 
+If `Previous artifact:` is provided in the prompt, read that file with the read tool before starting. It contains the full output of the previous skill.
+
 1. Determine changed files and review scope.
 2. Inspect relevant code paths and tests.
 3. Evaluate risks and quality criteria.
