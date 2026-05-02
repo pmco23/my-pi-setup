@@ -2,45 +2,33 @@
 
 ## Architecture Risks
 
-- **`commands.js` remains a hub**: it handles workflow commands and setup orchestration. If it grows further, split command groups by domain.
-- **`config.js` is high impact**: default sequence, transitions, support skills, and upgrade behavior affect evaluator, commands, auto-continuation, and tests.
-- **Config upgrade is explicit**: existing project configs do not auto-migrate; users must run `/workflow:upgrade-config`.
-- **`index.ts` runtime wiring is hard to unit-test**: pi event hooks and `pendingWorkflowSkillResponse` lifecycle are mostly validated indirectly through pure modules.
-- **Completion semantics changed**: `next_skill: "none"` now produces `action: "complete"`; any future runtime code should preserve that distinction from pause.
+- **`commands.js` is the hub**: 12 handlers plus `projectMapStaleness`. Adding more increases coupling. Consider splitting by domain if it grows further.
+- **`config.js` is high impact**: `defaultConfig()`, `upgradeConfig()`, and `loadConfig()` are called from every command and auto-continuation. Shape changes require updating config, evaluator, smoke tests, and project-level configs.
+- **Config upgrade is explicit**: existing `.pi/workflow-orchestrator.json` files do not auto-migrate; users must run `/workflow:upgrade-config`.
+- **`index.ts` runtime wiring is hard to unit-test**: `pendingWorkflowSkillResponse` and `projectMapRefreshMarkers` lifecycle are only indirectly validated through pure module tests.
+- **Completion semantics**: `next_skill: "none"` returns `action: "complete"`, not `"pause"`. Runtime code depending on pause-only semantics must be aware of this distinction.
 
 ## Workflow Risks
 
-- Skills are intentionally concise; runtime prompt reminders carry workflow handoff mechanics. If users invoke skills outside workflow-orchestrator, skills still work but continuation is manual.
-- `implementation-research` can consume external context quickly. Keep research focused and avoid leaking secrets into Context7/web queries.
-- Missing or malformed handoff from workflow skill responses pauses by design; this is safe but can interrupt auto mode if a model ignores the reminder.
+- Skills are intentionally concise; runtime prompt reminders carry workflow handoff mechanics. If a model ignores the reminder, continuation may produce missing/malformed handoffs, causing pauses.
+- `implementation-research` can consume external context quickly via Context7. Keep queries focused and avoid leaking sensitive information.
+
+## Audit / Sanitize
+
+- **`token(?!s)` pattern** in `audit.js` intentionally excludes `input_tokens`/`output_tokens` from redaction. Do not widen to plain `token` without considering impact on graphify cost fields.
+- The regex is still not exhaustive — bearer tokens in URL query strings or non-standard key names could be missed.
 
 ## Operational Risks
 
-- **Graphify semantic extraction unavailable in pi**: graphify's full pipeline requires the Agent/subagent tool to dispatch parallel extraction workers. Pi does not expose this tool, so `/workflow:refresh` and `project-intake` runs inside pi produce AST-only graphs. Semantic insights from docs, skills, and markdown are missing. For a full graph, run graphify from a harness with subagent support and commit the graph artifacts.
-- **Context7 dependency**: `find-docs`/research quality depends on `ctx7` availability, quota, and network access.
-- **pi version coupling**: extension uses pi extension APIs/events. Pi API changes can break runtime behavior even if pure tests pass.
-- **Installer `--delete` behavior**: removing a skill/extension file from repo removes it globally on install. This is intentional but risky for accidental deletions.
-- **Global theme conflict**: `onyx` should exist only as `~/.pi/agent/themes/onyx.json` plus non-discoverable repo asset `assets/onyx-theme.json`.
-
-## Graph Hotspots
-
-Latest graph refresh highlights these high-coupling nodes:
-
-- `getProjectRoot()` and `loadConfig()` are central to nearly all command and auto-continuation flows.
-- `handleStart()` and `handleOnboard()` remain high-degree command paths.
-- `saveConfig()` and `planAutoContinuation()` are key persistence/auto-mode risk points.
-- `handlePiSetup()` and `applyPiSetup()` form a distinct setup community; changes should stay covered by setup tests.
+- **Graphify semantic extraction unavailable in pi**: graphify requires Agent/subagent tool for full pipeline. Pi does not expose this. Graph refreshes inside pi are AST-only. For full semantic graph, run graphify from a subagent-capable harness and commit the artifacts.
+- **`install.sh` graphify auto-sync**: runs `graphify install --platform pi` on every install. If graphify is not installed or the command fails, it exits with `|| true` — the install continues but the repo skill may be stale.
+- **`install.sh` uses `rsync --delete`**: removing a file from the repo removes it globally on the next install. Intentional but high-impact.
+- **pi version coupling**: extension uses pi event APIs. Pi API changes can break runtime behavior even if all pure module tests pass.
 
 ## Testing Gaps
 
 - No real pi interactive/RPC integration test.
-- Runtime project-map manual-edit guard in `index.ts` is not directly unit-tested against pi events.
 - No direct test for `index.ts` registered command discovery after `/reload`.
 - No graphify output parsing/validation tests.
-- No automated test for installer effects in a sandboxed fake home.
-
-## Security / Privacy
-
-- `audit.js` redaction is regex-based and not exhaustive.
-- Workflow logs and project configs can contain user goals or artifact summaries; review before sharing.
-- External research queries must not include secrets, credentials, proprietary code, or personal data.
+- No automated installer sandbox test.
+- Runtime project-map manual-edit guard in `index.ts` is not unit-tested against pi events.

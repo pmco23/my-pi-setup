@@ -1,7 +1,7 @@
 # Graph Report - .  (2026-05-02)
 
 ## Corpus Check
-- Corpus is ~24,920 words - fits in a single context window. You may not need a graph.
+- Corpus is ~25,273 words - fits in a single context window. You may not need a graph.
 
 ## Summary
 - 98 nodes · 162 edges · 8 communities detected
@@ -102,4 +102,4 @@ _Questions this graph is uniquely positioned to answer:_
 
 ## Refresh Notes
 
-Semantic extraction was skipped because this environment does not expose the subagent/Agent tool required by the bundled graphify skill. The graph is AST-backed and should be treated as structural code analysis, not full semantic documentation analysis.
+AST-backed graph (pi harness lacks subagent tool required for semantic extraction). Structural code analysis only.

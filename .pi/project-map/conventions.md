@@ -11,38 +11,39 @@
 ## Architecture Patterns
 
 - **Thin entrypoint**: `index.ts` registers commands and runtime hooks only.
-- **Pure modules**: config, evaluator, handoff, state, audit, prompts, setup, and auto planning stay pi-runtime independent where possible.
-- **Dependency injection**: command handlers receive an `env` object for UI/message/filesystem concerns.
+- **Pure modules**: config, evaluator, handoff, state, audit, prompts, setup, and auto planning stay pi-runtime independent.
+- **Dependency injection**: command handlers receive `env` objects for UI/message/filesystem concerns.
 - **Fail-closed workflow**: invalid/missing handoffs from workflow skill responses pause; side conversations without handoffs are ignored.
-- **Runtime reminder injection**: detailed workflow mechanics are injected by prompt builders instead of duplicated in every skill.
+- **Runtime reminder injection**: `workflowReminder()` in `prompts.js` carries handoff mechanics so skill files stay concise.
 - **Module cache busting**: `index.ts` clears local CommonJS `require.cache` entries so `/reload` picks up `src/*.js` changes.
+- **Completion semantics**: `next_skill: "none"` → `action: "complete"`, not `"pause"`. Runtime code must handle both.
 
 ## Naming
 
 - Skills: lowercase hyphenated directory names with `SKILL.md`.
-- Extension modules: lowercase domain names (`config.js`, `auto.js`, `setup.js`).
-- Tests: `<module>.test.js`, plus integration-like tests such as `workflow-smoke.test.js`.
-- Commands: `workflow:<verb>` for orchestrator commands; `my-pi:setup` for setup wizard.
+- Extension modules: lowercase domain names.
+- Tests: `<module>.test.js`, plus integration-style tests (`workflow-smoke.test.js`).
+- Commands: `workflow:<verb>` for orchestrator; `my-pi:setup` for setup wizard.
 
 ## Project Config
 
-- Project config path: `.pi/workflow-orchestrator.json` (gitignored).
-- Config shape is defined by `defaultConfig()` in `src/config.js`.
-- Existing configs do not auto-migrate; use `/workflow:upgrade-config`.
-- Changes to sequence/transitions/support skills require config tests and skill/config validation tests.
+- Path: `.pi/workflow-orchestrator.json` (gitignored).
+- Shape defined by `defaultConfig()` in `src/config.js`.
+- No auto-migration; use `/workflow:upgrade-config`.
+- Changing sequence/transitions/support skills requires updating config, evaluator, and smoke tests.
 
-## Workflow Logs
+## Audit and Sanitize
 
-- JSONL only: `.pi/workflows/<workflow-id>.jsonl`.
-- One JSON object per line.
-- `audit.js` redacts obvious secret patterns before writing.
+- JSONL format: `.pi/workflows/<workflow-id>.jsonl`.
+- `sanitize()` uses `token(?!s)` to redact auth tokens while preserving `input_tokens`/`output_tokens` metric fields.
+- Do not widen the regex without understanding impact on graphify cost fields in audit logs.
 
 ## Generated / Local Files
 
-- `.pi/workflow-orchestrator.json` and `.pi/workflows/` are personal/session state and gitignored.
-- `.pi/project-map/` is committed durable context.
-- `.pi/project-map/graph/graphify-out/` and `.pi/project-map/graph/.graphify_*` are graphify cache/temp and gitignored.
-- `.pi/settings.json` may be local project pi settings; do not commit unless intentionally sharing project defaults.
+- `.pi/workflow-orchestrator.json` and `.pi/workflows/` — personal/session state, gitignored.
+- `.pi/project-map/` — committed durable context.
+- `.pi/project-map/graph/graphify-out/` and `.pi/project-map/graph/.graphify_*` — graphify cache/temp, gitignored.
+- `.pi/settings.json` — local project pi settings; do not commit unless intentionally sharing project defaults.
 
 ## Do Not Modify Unless Asked
 
