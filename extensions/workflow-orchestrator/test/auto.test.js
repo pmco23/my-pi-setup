@@ -74,9 +74,26 @@ test('planAutoContinuation ignores duplicate processed entry', () => {
   assert.equal(result.action, 'none');
 });
 
-test('planAutoContinuation no-ops without active workflow', () => {
-  const result = planAutoContinuation({ config: defaultConfig('auto'), markdown: markdownFor(handoff()), entryId: 'e1' });
+test('planAutoContinuation no-ops without active workflow and no handoff', () => {
+  const result = planAutoContinuation({ config: defaultConfig('auto'), markdown: 'no handoff here', entryId: 'e1' });
   assert.equal(result.action, 'none');
+});
+
+test('planAutoContinuation bootstraps workflow from first handoff in auto mode', () => {
+  const result = planAutoContinuation({ config: defaultConfig('auto'), markdown: markdownFor(handoff()), entryId: 'e1' });
+  assert.equal(result.action, 'continue');
+  assert.equal(result.nextSkill, 'execute');
+  assert.ok(result.config.active_workflow.id, 'workflow id should be set after bootstrap');
+  assert.ok(result.config.active_workflow.artifact_log, 'artifact_log should be set after bootstrap');
+  assert.equal(result.config.active_workflow.goal, 'Plan output');
+});
+
+test('planAutoContinuation bootstraps and suggests from first handoff in user-in-the-loop mode', () => {
+  const result = planAutoContinuation({ config: defaultConfig('user-in-the-loop'), markdown: markdownFor(handoff()), entryId: 'e1' });
+  assert.equal(result.action, 'suggest');
+  assert.equal(result.nextSkill, 'execute');
+  assert.ok(result.config.active_workflow.id, 'workflow id should be set after bootstrap');
+  assert.ok(result.config.active_workflow.artifact_log, 'artifact_log should be set after bootstrap');
 });
 
 test('planAutoContinuation completes when next_skill is none', () => {

@@ -1,6 +1,6 @@
 const { extractLatestHandoff } = require('./handoff');
 const { evaluateHandoff } = require('./evaluator');
-const { updateActiveWorkflow, pauseWorkflow, clearWorkflow } = require('./state');
+const { startWorkflow, updateActiveWorkflow, pauseWorkflow, clearWorkflow } = require('./state');
 const { buildSkillPrompt } = require('./prompts');
 
 function messageText(message) {
@@ -33,8 +33,18 @@ function hasActiveWorkflow(config) {
 // In v2 there is no pendingWorkflowSkillResponse flag — always evaluate in auto mode.
 // In user-in-the-loop mode, evaluate to get the decision but return action: 'suggest' instead of continuing.
 function planAutoContinuation({ config, markdown, entryId, modeOverride }) {
+  // Parse handoff first so it is available for bootstrapping if needed.
+  const parsed = extractLatestHandoff(markdown || '');
+
   if (!hasActiveWorkflow(config)) {
-    return { action: 'none', reason: 'No active workflow' };
+    // Bootstrap a new workflow from the first skill handoff if one is present.
+    if (!parsed.ok) {
+      return { action: 'none', reason: 'No active workflow' };
+    }
+    config = startWorkflow(config, {
+      firstSkill: parsed.handoff.next_skill,
+      goal: parsed.handoff.inputs?.primary_artifact ?? null,
+    });
   }
 
   if (entryId && config.active_workflow.last_processed_entry_id === entryId) {
@@ -43,7 +53,6 @@ function planAutoContinuation({ config, markdown, entryId, modeOverride }) {
 
   const mode = modeOverride || config.mode;
   const artifactLog = config.active_workflow.artifact_log;
-  const parsed = extractLatestHandoff(markdown || '');
 
   if (!parsed.ok) {
     // In auto mode: pause. In human mode: silently skip — user drives manually.
