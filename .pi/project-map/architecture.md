@@ -40,6 +40,7 @@ brainstorm-spec
 - **Runtime reminder injection**: `workflowReminder()` in `prompts.js` injects current skill, allowed next skills, and handoff requirements into every workflow-dispatched skill prompt.
 - **Completion semantics**: `next_skill: "none"` → `decision: "complete"` → `action: "complete"` → `clearWorkflow()`. Distinct from pause.
 - **Config upgrade**: explicit via `/workflow:upgrade-config`; existing project configs never auto-migrate.
+- **Mode ownership**: `/workflow:start` (and `/workflow:auto` / `/workflow:manual`) calls `syncModeToConfig()`, which sets both `default_mode` and `auto_continue.enabled` to match the requested mode. `/workflow:init` mode arg is just an initial fallback that start always overrides.
 
 ## Graph Insights (AST-backed, refreshed)
 

@@ -11,9 +11,18 @@ function parseModeAndRest(args, fallbackMode) {
   const parts = String(args || '').trim().split(/\s+/).filter(Boolean);
   const first = parts[0];
   if (first === 'auto' || first === 'user-in-the-loop') {
-    return { mode: first, rest: parts.slice(1).join(' ') };
+    return { mode: first, rest: parts.slice(1).join(' '), explicit: true };
   }
-  return { mode: fallbackMode, rest: parts.join(' ') };
+  return { mode: fallbackMode, rest: parts.join(' '), explicit: false };
+}
+
+// Make the config agree with the mode being used — start/continue is authoritative over init.
+function syncModeToConfig(config, mode) {
+  return {
+    ...config,
+    default_mode: mode,
+    auto_continue: { ...config.auto_continue, enabled: mode === 'auto' },
+  };
 }
 
 function createCommandEnv(ctx, pi) {
@@ -91,14 +100,18 @@ async function handleStart(args, env, forcedMode) {
   }
 
   const parsed = parseModeAndRest(args, forcedMode || loaded.config.default_mode);
+  const mode = parsed.mode;
   const goal = parsed.rest;
   if (!goal) {
     env.notify('Usage: /workflow:start [auto|user-in-the-loop] <goal>', 'warning');
     return { ok: false, reason: 'missing goal', projectRoot };
   }
 
+  // start is authoritative — sync config mode so init mode and start mode never disagree
+  const syncedConfig = syncModeToConfig(loaded.config, mode);
+
   const firstSkill = firstSkillForGoal(goal);
-  let config = startWorkflow(loaded.config, { mode: parsed.mode, firstSkill });
+  let config = startWorkflow(syncedConfig, { mode, firstSkill });
   saveConfig(projectRoot, config);
   appendAuditEntry(projectRoot, config.active_workflow.artifact_log, {
     event: 'workflow_start',
@@ -107,14 +120,15 @@ async function handleStart(args, env, forcedMode) {
     next_skill: firstSkill,
   });
 
-  const prompt = buildStartPrompt({
-    mode: parsed.mode,
+  const buildStartPromptArgs = {
+    mode,
     goal,
     workflowId: config.active_workflow.id,
     artifactLog: config.active_workflow.artifact_log,
     firstSkill,
     allowedNext: config.transitions?.[firstSkill] || [],
-  });
+  };
+  const prompt = buildStartPrompt(buildStartPromptArgs);
   env.sendUserMessage(prompt);
   return { ok: true, projectRoot, config, prompt };
 }
@@ -228,8 +242,11 @@ async function handleContinue(args, env) {
     env.notify(`Workflow config not available: ${loaded.reason}`, 'warning');
     return { ok: false, reason: loaded.reason, projectRoot };
   }
-  const { mode } = parseModeAndRest(args, loaded.config.active_workflow?.mode || loaded.config.default_mode);
-  const config = { ...loaded.config, active_workflow: { ...loaded.config.active_workflow, mode, paused: false, pause_reason: null } };
+  const parsed = parseModeAndRest(args, loaded.config.active_workflow?.mode || loaded.config.default_mode);
+  const { mode } = parsed;
+  // Only sync config if the user explicitly passed a mode override
+  const baseConfig = parsed.explicit ? syncModeToConfig(loaded.config, mode) : loaded.config;
+  const config = { ...baseConfig, active_workflow: { ...baseConfig.active_workflow, mode, paused: false, pause_reason: null } };
   if (!config.active_workflow.next_skill) {
     env.notify('No active workflow to continue.', 'warning');
     return { ok: false, reason: 'no active workflow', projectRoot };
@@ -307,6 +324,7 @@ async function handlePiSetup(_args, env) {
 
 module.exports = {
   parseModeAndRest,
+  syncModeToConfig,
   createCommandEnv,
   handleInit,
   handleUpgradeConfig,

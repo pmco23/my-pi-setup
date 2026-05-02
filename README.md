@@ -137,16 +137,17 @@ Optionally configure pi theme/settings with:
 /my-pi:setup
 ```
 
-Initialize a project with:
+Initialise a project:
 
 ```text
-/workflow:init user-in-the-loop
+/workflow:init
 ```
 
-or:
+Then start a workflow — the mode you pass here is the single source of truth:
 
 ```text
-/workflow:init auto
+/workflow:auto <goal>        → pi drives automatically
+/workflow:manual <goal>      → you approve every step
 ```
 
 For an existing codebase, onboard/map it before feature work:

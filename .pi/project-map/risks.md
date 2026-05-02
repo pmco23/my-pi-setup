@@ -2,7 +2,7 @@
 
 ## Architecture Risks
 
-- **`commands.js` is the hub**: 12 handlers plus `projectMapStaleness`. Adding more increases coupling. Consider splitting by domain if it grows further.
+- **`commands.js` is the hub**: 12 handlers plus `projectMapStaleness` and `syncModeToConfig`. Adding more increases coupling. Consider splitting by domain if it grows further.
 - **`config.js` is high impact**: `defaultConfig()`, `upgradeConfig()`, and `loadConfig()` are called from every command and auto-continuation. Shape changes require updating config, evaluator, smoke tests, and project-level configs.
 - **Config upgrade is explicit**: existing `.pi/workflow-orchestrator.json` files do not auto-migrate; users must run `/workflow:upgrade-config`.
 - **`index.ts` runtime wiring is hard to unit-test**: `pendingWorkflowSkillResponse` and `projectMapRefreshMarkers` lifecycle are only indirectly validated through pure module tests.

@@ -12,7 +12,7 @@ All under `extensions/workflow-orchestrator/src/`:
 | `state.js` | Active workflow state transitions | `startWorkflow`, `updateActiveWorkflow`, `pauseWorkflow`, `resumeWorkflow`, `clearWorkflow` |
 | `audit.js` | JSONL audit logging with secret redaction (`token(?!s)` pattern) | `appendAuditEntry`, `readAuditEntries`, `sanitize` |
 | `prompts.js` | Build `/skill:<name>` prompts and inject runtime workflow reminders | `workflowReminder`, `buildSkillPrompt`, `buildStartPrompt`, `buildOnboardPrompt`, `buildRefreshPrompt`, `buildContinuePrompt` |
-| `commands.js` | Dependency-injected command handlers + `projectMapStaleness` | `handleInit`, `handleUpgradeConfig`, `handleStart`, `handleOnboard`, `handleRefresh`, `handleContext`, `handleContinue`, `handleStatus`, `handlePause`, `handleResume`, `handlePiSetup`, `projectMapStaleness` |
+| `commands.js` | Dependency-injected command handlers + `projectMapStaleness` + `syncModeToConfig` | `handleInit`, `handleUpgradeConfig`, `handleStart`, `handleOnboard`, `handleRefresh`, `handleContext`, `handleContinue`, `handleStatus`, `handlePause`, `handleResume`, `handlePiSetup`, `projectMapStaleness`, `syncModeToConfig` |
 | `auto.js` | Post-agent handoff evaluation and continuation planning | `planAutoContinuation`, `latestAssistantMarkdown`, `messageText`, `hasActiveWorkflow` |
 | `setup.js` | Deterministic pi settings/theme setup; `readJsonIfPresent` is try/catch safe | `applyPiSetup`, `selectedSettings`, `mergeSettings`, theme/option constants |
 

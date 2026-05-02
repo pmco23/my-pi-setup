@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const { handleInit, handleUpgradeConfig, handleStart, handleOnboard, handleRefresh, handleContext, handleContinue, handleStatus, handlePause, handleResume, handlePiSetup, parseModeAndRest } = require('../src/commands');
+const { handleInit, handleUpgradeConfig, handleStart, handleOnboard, handleRefresh, handleContext, handleContinue, handleStatus, handlePause, handleResume, handlePiSetup, syncModeToConfig, parseModeAndRest } = require('../src/commands');
 const { loadConfig } = require('../src/config');
 
 function tmpdir() { return fs.mkdtempSync(path.join(os.tmpdir(), 'wf-cmd-')); }
@@ -20,8 +20,19 @@ function env(cwd) {
 }
 
 test('parseModeAndRest handles optional mode', () => {
-  assert.deepEqual(parseModeAndRest('auto build app', 'user-in-the-loop'), { mode: 'auto', rest: 'build app' });
-  assert.deepEqual(parseModeAndRest('build app', 'user-in-the-loop'), { mode: 'user-in-the-loop', rest: 'build app' });
+  assert.deepEqual(parseModeAndRest('auto build app', 'user-in-the-loop'), { mode: 'auto', rest: 'build app', explicit: true });
+  assert.deepEqual(parseModeAndRest('build app', 'user-in-the-loop'), { mode: 'user-in-the-loop', rest: 'build app', explicit: false });
+});
+
+test('syncModeToConfig sets auto_continue.enabled and default_mode', () => {
+  const { defaultConfig } = require('../src/config');
+  const manual = defaultConfig('user-in-the-loop');
+  const synced = syncModeToConfig(manual, 'auto');
+  assert.equal(synced.default_mode, 'auto');
+  assert.equal(synced.auto_continue.enabled, true);
+  const backToManual = syncModeToConfig(synced, 'user-in-the-loop');
+  assert.equal(backToManual.default_mode, 'user-in-the-loop');
+  assert.equal(backToManual.auto_continue.enabled, false);
 });
 
 test('handleInit creates config', async () => {
@@ -76,6 +87,49 @@ test('handleInit does not overwrite existing pre-push hook', async () => {
   const e = env(root);
   await handleInit('auto', e);
   assert.equal(fs.readFileSync(hookPath, 'utf8'), '#!/bin/sh\necho custom hook');
+});
+
+test('handleStart syncs config mode — auto start on user-in-the-loop init', async () => {
+  const root = tmpdir();
+  const e = env(root);
+  await handleInit('user-in-the-loop', e);
+  assert.equal(loadConfig(root).config.auto_continue.enabled, false);
+  await handleStart('auto build hello world', e);
+  const config = loadConfig(root).config;
+  assert.equal(config.default_mode, 'auto');
+  assert.equal(config.auto_continue.enabled, true);
+});
+
+test('handleStart syncs config mode — user-in-the-loop start on auto init', async () => {
+  const root = tmpdir();
+  const e = env(root);
+  await handleInit('auto', e);
+  assert.equal(loadConfig(root).config.auto_continue.enabled, true);
+  await handleStart('user-in-the-loop build hello world', e);
+  const config = loadConfig(root).config;
+  assert.equal(config.default_mode, 'user-in-the-loop');
+  assert.equal(config.auto_continue.enabled, false);
+});
+
+test('handleContinue syncs config mode when explicit mode is passed', async () => {
+  const root = tmpdir();
+  const e = env(root);
+  await handleInit('user-in-the-loop', e);
+  await handleStart('user-in-the-loop build hello world', e);
+  assert.equal(loadConfig(root).config.auto_continue.enabled, false);
+  await handleContinue('auto', e);
+  assert.equal(loadConfig(root).config.auto_continue.enabled, true);
+  assert.equal(loadConfig(root).config.default_mode, 'auto');
+});
+
+test('handleContinue does not sync config when no explicit mode is passed', async () => {
+  const root = tmpdir();
+  const e = env(root);
+  await handleInit('user-in-the-loop', e);
+  await handleStart('user-in-the-loop build hello world', e);
+  await handleContinue('', e);
+  assert.equal(loadConfig(root).config.auto_continue.enabled, false);
+  assert.equal(loadConfig(root).config.default_mode, 'user-in-the-loop');
 });
 
 test('handleStart initializes active workflow and sends first skill prompt', async () => {

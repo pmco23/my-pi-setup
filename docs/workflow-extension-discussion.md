@@ -46,15 +46,18 @@ The extension owns workflow commands, config initialization, handoff evaluation,
 Extension-managed commands:
 
 ```text
-/workflow:init [auto|user-in-the-loop]
-/workflow:start [auto|user-in-the-loop] <goal>
-/workflow:auto <goal>
-/workflow:manual <goal>
-/workflow:continue [auto|user-in-the-loop]
+/workflow:init                              → create project config (no mode needed)
+/workflow:auto <goal>                       → start in auto mode (pi drives)
+/workflow:manual <goal>                     → start in user-in-the-loop mode (you approve each step)
+/workflow:start [auto|user-in-the-loop] <goal>  → explicit form of the above two
+/workflow:continue [auto|user-in-the-loop]  → resume; explicit mode syncs config
 /workflow:status
 /workflow:pause [reason]
 /workflow:resume
+/workflow:upgrade-config
 ```
+
+**Mode ownership:** `/workflow:start` (and its aliases `/workflow:auto` and `/workflow:manual`) is the single source of truth for mode. It calls `syncModeToConfig()` which sets both `default_mode` and `auto_continue.enabled` to match the requested mode. `/workflow:init` does not need a mode — its mode argument sets an initial default that start will always override.
 
 Old prompt-template commands such as `/workflow-init` and `/workflow-start` are deprecated and not installed. Historical reference prompt files were removed; extension commands are authoritative.
 

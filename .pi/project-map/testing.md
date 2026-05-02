@@ -31,7 +31,7 @@ All under `extensions/workflow-orchestrator/test/`:
 
 ## Current Coverage
 
-80 tests, 0 failures.
+85 tests, 0 failures.
 
 ## Smoke Chain
 

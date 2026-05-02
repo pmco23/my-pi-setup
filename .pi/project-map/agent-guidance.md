@@ -27,6 +27,7 @@ npm test
 
 - **Add extension command**: implement handler in `src/commands.js`, register in `index.ts`, add/adjust `test/commands.test.js`, update docs/install output.
 - **Change workflow config shape/sequence**: edit `defaultConfig()` and upgrade helpers in `src/config.js`, update config/evaluator/smoke tests.
+- **Change mode sync behaviour**: edit `syncModeToConfig()` in `src/commands.js`, update `commands.test.js` mode sync tests.
 - **Change auto-continuation**: edit `src/auto.js` and/or `src/evaluator.js`, update `auto.test.js`, `evaluator.test.js`, and `workflow-smoke.test.js`.
 - **Change prompt behavior**: edit `src/prompts.js`, update `prompts.test.js`.
 - **Add or rename skill**: create/update `skills/<name>/SKILL.md`, update config transitions/allowed skills/support mappings, update docs and `skills.test.js` expectations if needed.
@@ -36,7 +37,7 @@ npm test
 
 ## Validation Expectations
 
-Current expected test count: 80 tests, 0 failures.
+Current expected test count: 85 tests, 0 failures.
 
 Important coverage:
 - config init/load/save/upgrade

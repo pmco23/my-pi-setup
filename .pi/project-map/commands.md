@@ -24,18 +24,18 @@ cd extensions/workflow-orchestrator && npm test  # direct
 After install and `/reload`:
 
 - `/my-pi:setup` — interactive wizard: configure scope, theme, thinking level, compaction, retry.
-- `/workflow:init [auto|user-in-the-loop]` — create project workflow config.
+- `/workflow:init` — create project workflow config. Mode is optional; start is what sets mode.
+- `/workflow:auto <goal>` — start workflow in auto mode (pi drives).
+- `/workflow:manual <goal>` — start workflow in user-in-the-loop mode (you approve every step).
+- `/workflow:start [auto|user-in-the-loop] <goal>` — explicit form of the above two; always syncs config mode.
 - `/workflow:upgrade-config` — upgrade existing project config to current default sequence/transitions.
 - `/workflow:status` — summarise workflow state.
-- `/workflow:start [auto|user-in-the-loop] <goal>` — start workflow; routes to first skill based on goal text.
-- `/workflow:auto <goal>` — start in auto mode.
-- `/workflow:manual <goal>` — start in user-in-the-loop mode.
+- `/workflow:continue [mode]` — resume; explicit mode also syncs config.
+- `/workflow:pause [reason]` — pause active workflow.
+- `/workflow:resume` — clear pause without continuing.
 - `/workflow:onboard [auto|user-in-the-loop] [optional goal]` — project intake/refresh.
 - `/workflow:refresh` — refresh project map using graphify.
 - `/workflow:context` — show project-map status and staleness.
-- `/workflow:continue [auto|user-in-the-loop]` — continue active workflow.
-- `/workflow:pause [reason]` — pause active workflow.
-- `/workflow:resume` — clear pause without continuing.
 
 ## Keeping Graphify Up to Date
 
