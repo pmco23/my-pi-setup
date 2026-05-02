@@ -313,6 +313,48 @@ test('handleCheckpoint returns ok:false when nextSkill select is cancelled', asy
   assert.equal(result.reason, 'cancelled');
 });
 
+test('handleCheckpoint preserves existing goal when input is empty', async () => {
+  const root = tmpdir();
+  const e1 = env(root,
+    ['Project (.pi/settings.json)', 'auto — pi chains skills until blocked', 'dark', 'medium'],
+    [true, true]
+  );
+  await handleInit('', e1);
+  // Seed a workflow with an existing goal
+  const { saveConfig, loadConfig: lc } = require('../src/config');
+  const { startWorkflow } = require('../src/state');
+  saveConfig(root, startWorkflow(lc(root).config, { firstSkill: 'plan', goal: 'Existing goal', workflowId: 'wf-1' }));
+
+  // User confirms overwrite, picks skills, leaves goal empty
+  const e = env(root, ['plan', 'execute'], [true], ['']);
+  const result = await handleCheckpoint('', e);
+  assert.equal(result.ok, true);
+  assert.equal(loadConfig(root).config.active_workflow.goal, 'Existing goal');
+});
+
+test('handleCheckpoint writes audit entry to artifact log', async () => {
+  const root = tmpdir();
+  const e1 = env(root,
+    ['Project (.pi/settings.json)', 'auto — pi chains skills until blocked', 'dark', 'medium'],
+    [true, true]
+  );
+  await handleInit('', e1);
+
+  const e = env(root, ['plan', 'execute'], [], ['Audit goal']);
+  const result = await handleCheckpoint('', e);
+  assert.equal(result.ok, true);
+
+  const artifactLog = result.config.active_workflow.artifact_log;
+  const logPath = path.join(root, artifactLog);
+  assert.ok(fs.existsSync(logPath), 'artifact log file should exist');
+  const lines = fs.readFileSync(logPath, 'utf8').trim().split('\n').filter(Boolean);
+  const entry = JSON.parse(lines.at(-1));
+  assert.equal(entry.event, 'checkpoint');
+  assert.equal(entry.current_skill, 'plan');
+  assert.equal(entry.next_skill, 'execute');
+  assert.equal(entry.goal, 'Audit goal');
+});
+
 test('handleStart confirms before replacing existing workflow (cancel)', async () => {
   const root = tmpdir();
   const e1 = env(root,

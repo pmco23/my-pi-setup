@@ -231,7 +231,6 @@ async function handleCheckpoint(_args, env) {
   }
 
   const skillList = Object.keys(loaded.config.transitions || {});
-  const goal = await env.input('Goal:', active.goal || '');
 
   const currentSkill = await env.select('Current skill (just completed):', skillList);
   if (!currentSkill) return { ok: false, reason: 'cancelled', projectRoot };
@@ -240,8 +239,19 @@ async function handleCheckpoint(_args, env) {
   const nextSkill = await env.select('Next skill:', nextOptions);
   if (!nextSkill) return { ok: false, reason: 'cancelled', projectRoot };
 
-  const config = checkpointWorkflow(loaded.config, { goal: goal || null, currentSkill, nextSkill });
+  const currentGoal = active.goal || null;
+  const goalTitle = currentGoal ? `Goal (current: "${currentGoal}"):` : 'Goal (optional):';
+  const goalInput = await env.input(goalTitle, '');
+  const goal = goalInput || currentGoal;
+
+  const config = checkpointWorkflow(loaded.config, { goal, currentSkill, nextSkill });
   saveConfig(projectRoot, config);
+
+  const artifactLog = config.active_workflow.artifact_log;
+  if (artifactLog) {
+    appendAuditEntry(projectRoot, artifactLog, { event: 'checkpoint', current_skill: currentSkill, next_skill: nextSkill, goal });
+  }
+
   env.notify(`Checkpoint saved: ${currentSkill} → ${nextSkill}`, 'success');
   return { ok: true, projectRoot, config };
 }
